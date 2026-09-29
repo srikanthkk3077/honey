@@ -15,6 +15,7 @@ import { OurStory } from '../pages/customer/Story/OurStory';
 import { Blog } from '../pages/customer/Blog/Blog';
 import { BlogDetails } from '../pages/customer/Blog/BlogDetails';
 import { Contact } from '../pages/customer/Contact/Contact';
+import { Videos } from '../pages/customer/Videos/Videos';
 
 export const CustomerRoutes = (
   <>
@@ -28,6 +29,7 @@ export const CustomerRoutes = (
     <Route path="orders" element={<Orders />} />
     <Route path="orders/:id" element={<OrderDetails />} />
     <Route path="track-order" element={<TrackOrder />} />
+    <Route path="videos" element={<Videos />} />
     <Route path="about" element={<About />} />
     <Route path="story" element={<OurStory />} />
     <Route path="blog" element={<Blog />} />

@@ -13,6 +13,7 @@ export const MobileMenu: React.FC = () => {
   const links = [
     { name: 'Home', path: '/' },
     { name: 'Shop Honey', path: '/shop' },
+    { name: 'Apiary Videos', path: '/videos' },
     { name: 'Our Story & Hives', path: '/story' },
     { name: 'Ayurveda & Purity', path: '/about' },
     { name: 'Honey Recipes & Blog', path: '/blog' },

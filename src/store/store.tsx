@@ -2,11 +2,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/auth.types';
 import { Product, Category } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
+import { VideoItem } from '../types/video.types';
 import { getInitialUser, saveUser } from './slices/authSlice';
 import { getInitialCart, saveCart } from './slices/cartSlice';
 import { getInitialProducts, saveProducts, getInitialCategories, saveCategories } from './slices/productSlice';
 import { getInitialOrders, saveOrders } from './slices/orderSlice';
 import { getInitialWishlist, saveWishlist } from './slices/wishlistSlice';
+import { getInitialVideos, saveVideos } from './slices/videoSlice';
 import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE, ADMIN_CREDENTIALS } from '../utils/constants';
 
 interface Toast {
@@ -61,6 +63,13 @@ interface StoreContextType {
   toggleWishlist: (productId: string) => void;
   isWishlisted: (productId: string) => boolean;
 
+  // Videos & Reels
+  videos: VideoItem[];
+  addVideo: (video: Omit<VideoItem, 'id' | 'views' | 'createdAt'>) => VideoItem;
+  updateVideo: (id: string, updates: Partial<VideoItem>) => void;
+  deleteVideo: (id: string) => void;
+  incrementVideoViews: (id: string) => void;
+
   // Toast
   toasts: Toast[];
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
@@ -82,6 +91,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [cart, setCart] = useState<CartItem[]>(getInitialCart);
   const [orders, setOrders] = useState<Order[]>(getInitialOrders);
   const [wishlist, setWishlist] = useState<string[]>(getInitialWishlist);
+  const [videos, setVideos] = useState<VideoItem[]>(getInitialVideos);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
@@ -109,6 +119,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     saveWishlist(wishlist);
   }, [wishlist]);
+
+  useEffect(() => {
+    saveVideos(videos);
+  }, [videos]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     const id = Date.now().toString() + Math.random().toString(36).substr(2, 4);
@@ -340,6 +354,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isWishlisted = (productId: string) => wishlist.includes(productId);
 
+  // Videos CRUD
+  const addVideo = (videoData: Omit<VideoItem, 'id' | 'views' | 'createdAt'>): VideoItem => {
+    const newVideo: VideoItem = {
+      ...videoData,
+      id: 'vid-' + Date.now(),
+      views: 1,
+      createdAt: new Date().toISOString()
+    };
+    setVideos((prev) => [newVideo, ...prev]);
+    showToast('Video published successfully!', 'success');
+    return newVideo;
+  };
+
+  const updateVideo = (id: string, updates: Partial<VideoItem>) => {
+    setVideos((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, ...updates } : v))
+    );
+    showToast('Video updated successfully!', 'success');
+  };
+
+  const deleteVideo = (id: string) => {
+    setVideos((prev) => prev.filter((v) => v.id !== id));
+    showToast('Video removed from library', 'info');
+  };
+
+  const incrementVideoViews = (id: string) => {
+    setVideos((prev) =>
+      prev.map((v) => (v.id === id ? { ...v, views: v.views + 1 } : v))
+    );
+  };
+
   return (
     <StoreContext.Provider
       value={{
@@ -376,6 +421,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         wishlist,
         toggleWishlist,
         isWishlisted,
+        videos,
+        addVideo,
+        updateVideo,
+        deleteVideo,
+        incrementVideoViews,
         toasts,
         showToast,
         removeToast,
