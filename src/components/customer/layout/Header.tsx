@@ -38,16 +38,19 @@ export const Header: React.FC = () => {
     { name: 'Contact', path: '/contact' },
   ];
 
+  const isHome = location.pathname === '/';
+
   return (
     <header
       style={{
         position: 'sticky',
         top: 0,
         zIndex: 50,
-        backgroundColor: 'rgba(255, 255, 255, 0.94)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #E7E5E4',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+        backgroundColor: isHome ? 'rgba(15, 12, 9, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: isHome ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E7E5E4',
+        boxShadow: isHome ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 10px rgba(0,0,0,0.03)',
+        transition: 'all 0.3s ease',
       }}
     >
       <div className="container" style={{ padding: '0.85rem 1.5rem' }}>
@@ -60,7 +63,7 @@ export const Header: React.FC = () => {
                 display: 'none',
                 background: 'none',
                 border: 'none',
-                color: '#1C1917',
+                color: isHome ? '#FFFFFF' : '#1C1917',
                 cursor: 'pointer',
                 padding: '4px',
               }}
@@ -94,7 +97,7 @@ export const Header: React.FC = () => {
                     fontSize: '1.45rem',
                     letterSpacing: '-0.02em',
                     lineHeight: 1,
-                    color: '#1C1917',
+                    color: isHome ? '#FFFFFF' : '#1C1917',
                   }}
                 >
                   MADHUVAN
@@ -132,9 +135,10 @@ export const Header: React.FC = () => {
                   style={{
                     fontSize: '0.92rem',
                     fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#D97706' : '#44403C',
+                    color: isActive ? '#F59E0B' : (isHome ? '#E7E5E4' : '#44403C'),
                     position: 'relative',
                     padding: '0.25rem 0',
+                    transition: 'color 0.2s ease',
                   }}
                 >
                   {link.name}
@@ -146,7 +150,7 @@ export const Header: React.FC = () => {
                         left: 0,
                         right: 0,
                         height: '2px',
-                        background: '#D97706',
+                        background: '#F59E0B',
                         borderRadius: '2px',
                       }}
                     />
@@ -165,7 +169,7 @@ export const Header: React.FC = () => {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#44403C',
+                color: isHome ? '#E7E5E4' : '#44403C',
                 padding: '6px',
                 borderRadius: '50%',
                 display: 'flex',
@@ -184,7 +188,7 @@ export const Header: React.FC = () => {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#44403C',
+                color: isHome ? '#E7E5E4' : '#44403C',
                 padding: '6px',
                 position: 'relative',
                 display: 'flex',
@@ -223,7 +227,7 @@ export const Header: React.FC = () => {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#44403C',
+                color: isHome ? '#E7E5E4' : '#44403C',
                 padding: '6px',
                 position: 'relative',
                 display: 'flex',
@@ -261,15 +265,22 @@ export const Header: React.FC = () => {
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
                 style={{
-                  background: isAuthenticated ? '#FEF3C7' : '#F5F5F4',
-                  border: isAuthenticated ? '1px solid #F59E0B' : '1px solid #E7E5E4',
+                  background: isHome
+                    ? 'rgba(255, 255, 255, 0.12)'
+                    : (isAuthenticated ? '#FEF3C7' : '#F5F5F4'),
+                  border: isHome
+                    ? '1px solid rgba(255, 255, 255, 0.25)'
+                    : (isAuthenticated ? '1px solid #F59E0B' : '1px solid #E7E5E4'),
+                  backdropFilter: isHome ? 'blur(8px)' : undefined,
                   cursor: 'pointer',
                   padding: '6px 12px',
                   borderRadius: '20px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  color: isAuthenticated ? '#92400E' : '#44403C',
+                  color: isHome
+                    ? '#FEF3C7'
+                    : (isAuthenticated ? '#92400E' : '#44403C'),
                   fontSize: '0.85rem',
                   fontWeight: 600,
                 }}
