@@ -3,8 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from '../../../components/admin/orders/OrderStatus';
-import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck, Clock, XCircle } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
+import { CONTACT_INFO } from '../../../utils/constants';
 
 export const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +45,149 @@ export const OrderDetails: React.FC = () => {
             </div>
             <OrderStatusBadge status={order.orderStatus} />
           </div>
+
+          {/* Payment Verification Status Banner */}
+          {order.paymentStatus === 'verification_pending' && (
+            <div
+              style={{
+                backgroundColor: '#FFFBEB',
+                border: '1.5px solid #FDE68A',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.75rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: '#FEF3C7',
+                  color: '#D97706',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Clock size={20} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, color: '#92400E', fontSize: '1rem', marginBottom: '2px' }}>
+                  ⏳ Payment Verification in Progress
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#78716C', lineHeight: 1.5, marginBottom: '6px' }}>
+                  We received your transaction reference <strong>(UTR: {order.utrNumber || 'Submitted'})</strong>. Our accounts team verifies bank credits every 15–30 minutes. Once confirmed, your honey jar will be prepped for dispatch.
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#B45309', fontWeight: 600 }}>
+                  Need urgent dispatch? Contact us on WhatsApp: {CONTACT_INFO.whatsapp}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {order.paymentStatus === 'paid' && order.paymentMethod === 'upi' && (
+            <div
+              style={{
+                backgroundColor: '#ECFDF5',
+                border: '1.5px solid #A7F3D0',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.75rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: '#D1FAE5',
+                  color: '#059669',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#065F46', fontSize: '1rem', marginBottom: '2px' }}>
+                  🎉 Payment Verified ✓
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#047857', lineHeight: 1.5 }}>
+                  Your UPI transaction (UTR: {order.utrNumber}) has been verified. Your honey jar is being packed with organic honeycomb cushioning.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {order.paymentStatus === 'rejected' && (
+            <div
+              style={{
+                backgroundColor: '#FEF2F2',
+                border: '1.5px solid #FECACA',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.75rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: '#FEE2E2',
+                  color: '#DC2626',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <XCircle size={20} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#991B1B', fontSize: '1rem', marginBottom: '2px' }}>
+                  ❌ Payment Verification Failed
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#B91C1C', lineHeight: 1.5, marginBottom: '6px' }}>
+                  Reason: {order.paymentRejectedReason || 'Could not locate transaction in bank statement with UTR ' + (order.utrNumber || 'N/A')}.
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#7F1D1D', fontWeight: 600 }}>
+                  Please contact our apiary accounts team on {CONTACT_INFO.phone} or WhatsApp with your bank screenshot.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {order.paymentMethod === 'cod' && (
+            <div
+              style={{
+                backgroundColor: '#EFF6FF',
+                border: '1.5px solid #BFDBFE',
+                borderRadius: '16px',
+                padding: '1rem 1.25rem',
+                marginBottom: '1.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                color: '#1E40AF',
+                fontSize: '0.88rem',
+              }}
+            >
+              <strong>💵 Cash on Delivery:</strong> Please pay {formatPrice(order.total)} to the delivery courier in cash or via courier UPI QR.
+            </div>
+          )}
 
           {/* Delivery Tracker Bar */}
           <div style={{ backgroundColor: '#FAF7F2', borderRadius: '16px', padding: '1.25rem', marginBottom: '2rem', border: '1px solid #E7E5E4' }}>

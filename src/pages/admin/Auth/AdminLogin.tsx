@@ -3,28 +3,21 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { ShieldCheck, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
-import { ADMIN_CREDENTIALS } from '../../../utils/constants';
+import { ShieldCheck, Lock, Mail, ArrowRight, ArrowLeft, Loader } from 'lucide-react';
 
 export const AdminLogin: React.FC = () => {
-  const [email, setEmail] = useState(ADMIN_CREDENTIALS.email);
-  const [password, setPassword] = useState(ADMIN_CREDENTIALS.password);
-  const { adminLogin } = useStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { adminLogin, isAuthLoading } = useStore();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = adminLogin(email, password);
+    if (!email || !password) return;
+    const success = await adminLogin(email, password);
     if (success) {
       navigate('/admin/dashboard');
     }
-  };
-
-  const handleQuickDemo = () => {
-    setEmail(ADMIN_CREDENTIALS.email);
-    setPassword(ADMIN_CREDENTIALS.password);
-    adminLogin(ADMIN_CREDENTIALS.email, ADMIN_CREDENTIALS.password);
-    navigate('/admin/dashboard');
   };
 
   return (
@@ -69,25 +62,8 @@ export const AdminLogin: React.FC = () => {
             Apiary Admin Portal
           </h2>
           <p style={{ color: '#78716C', fontSize: '0.88rem' }}>
-            Authorized apiary management & fulfillment console
+            Authorized apiary management &amp; fulfillment console
           </p>
-        </div>
-
-        {/* Demo Credentials Notice */}
-        <div
-          style={{
-            backgroundColor: '#FFFBEB',
-            border: '1px solid #FDE68A',
-            borderRadius: '12px',
-            padding: '0.85rem 1rem',
-            marginBottom: '1.5rem',
-            fontSize: '0.82rem',
-            color: '#92400E',
-          }}
-        >
-          <div><strong>Demo Admin Credentials:</strong></div>
-          <div>User: <code>{ADMIN_CREDENTIALS.email}</code></div>
-          <div>Pass: <code>{ADMIN_CREDENTIALS.password}</code></div>
         </div>
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -97,6 +73,7 @@ export const AdminLogin: React.FC = () => {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="admin@madhuvanhoney.com"
             leftIcon={<Mail size={16} />}
           />
 
@@ -106,21 +83,18 @@ export const AdminLogin: React.FC = () => {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             leftIcon={<Lock size={16} />}
           />
 
-          <Button type="submit" size="lg" fullWidth rightIcon={<ArrowRight size={18} />}>
-            Sign In to Admin
-          </Button>
-
           <Button
-            type="button"
-            variant="secondary"
-            size="md"
+            type="submit"
+            size="lg"
             fullWidth
-            onClick={handleQuickDemo}
+            rightIcon={isAuthLoading ? <Loader size={18} className="spin" /> : <ArrowRight size={18} />}
+            disabled={isAuthLoading}
           >
-            1-Click Demo Login
+            {isAuthLoading ? 'Signing In…' : 'Sign In to Admin'}
           </Button>
         </form>
 
@@ -139,6 +113,11 @@ export const AdminLogin: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+      `}</style>
     </div>
   );
 };

@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { SectionTitle } from '../../../components/common/SectionTitle';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Loader } from 'lucide-react';
 import { CONTACT_INFO } from '../../../utils/constants';
+import { contactApi } from '../../../services/customerApi';
+import { useStore } from '../../../store/store';
 
 export const Contact: React.FC = () => {
+  const { showToast } = useStore();
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -15,9 +19,17 @@ export const Contact: React.FC = () => {
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await contactApi.submit(form);
+      setSubmitted(true);
+    } catch {
+      showToast('Message could not be sent. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -175,8 +187,14 @@ export const Contact: React.FC = () => {
                   />
                 </div>
 
-                <Button type="submit" size="lg" rightIcon={<Send size={16} />} style={{ width: '100%' }}>
-                  Send Inquiry to Apiary
+                <Button
+                  type="submit"
+                  size="lg"
+                  rightIcon={isSubmitting ? <Loader size={16} className="spin" /> : <Send size={16} />}
+                  disabled={isSubmitting}
+                  style={{ width: '100%' }}
+                >
+                  {isSubmitting ? 'Sending…' : 'Send Inquiry to Apiary'}
                 </Button>
               </form>
             )}

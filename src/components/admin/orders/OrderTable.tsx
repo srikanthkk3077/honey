@@ -42,9 +42,33 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder }) =
                   {formatPrice(order.total)}
                 </td>
                 <td style={{ padding: '1rem' }}>
-                  <span style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 700, color: '#44403C', background: '#F5F5F4', padding: '3px 8px', borderRadius: '6px' }}>
-                    {order.paymentMethod}
-                  </span>
+                  {order.paymentStatus === 'verification_pending' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                        ⏳ Verify UTR
+                      </span>
+                      {order.utrNumber && (
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#78716C', fontWeight: 600 }}>
+                          {order.utrNumber}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {order.paymentStatus === 'paid' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#065F46', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '3px 8px', borderRadius: '6px' }}>
+                      ✓ Paid ({order.paymentMethod.toUpperCase()})
+                    </span>
+                  )}
+                  {order.paymentStatus === 'rejected' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#991B1B', background: '#FEF2F2', border: '1px solid #FECACA', padding: '3px 8px', borderRadius: '6px' }}>
+                      ✕ Rejected
+                    </span>
+                  )}
+                  {order.paymentMethod === 'cod' && order.paymentStatus !== 'paid' && (
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '3px 8px', borderRadius: '6px' }}>
+                      💵 COD Pending
+                    </span>
+                  )}
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <OrderStatusBadge status={order.orderStatus} />

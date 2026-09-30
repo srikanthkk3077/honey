@@ -3,19 +3,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Loader } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useStore();
+  const { login, isAuthLoading } = useStore();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      login(email, password);
-      navigate('/');
+    if (!email || !password) return;
+    const success = await login(email, password);
+    if (success) {
+      navigate('/orders');
     }
   };
 
@@ -76,8 +77,14 @@ export const Login: React.FC = () => {
               leftIcon={<Lock size={16} />}
             />
 
-            <Button type="submit" size="lg" fullWidth rightIcon={<ArrowRight size={18} />}>
-              Sign In to Account
+            <Button
+              type="submit"
+              size="lg"
+              fullWidth
+              rightIcon={isAuthLoading ? <Loader size={18} className="spin" /> : <ArrowRight size={18} />}
+              disabled={isAuthLoading}
+            >
+              {isAuthLoading ? 'Signing In…' : 'Sign In to Account'}
             </Button>
           </form>
 
@@ -105,6 +112,11 @@ export const Login: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+      `}</style>
     </div>
   );
 };

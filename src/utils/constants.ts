@@ -25,3 +25,14 @@ export const SOCIAL_LINKS = {
   youtube: "https://youtube.com/@madhuvanhoney",
   twitter: "https://twitter.com/madhuvanhoney"
 };
+
+export const BUSINESS_PAYMENT_DETAILS = {
+  upiId: "madhuvanhoney@upi",
+  upiName: "Madhuvan Forest Honey Apiaries",
+  bankName: "HDFC Bank",
+  accountName: "Madhuvan Honey Apiaries Pvt Ltd",
+  accountNumber: "50200088912345",
+  ifscCode: "HDFC0001234",
+  branch: "Rishikesh Forest Apiary, Uttarakhand",
+};
+

@@ -25,7 +25,8 @@ export interface ShippingAddress {
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-export type PaymentMethodType = 'upi' | 'card' | 'cod' | 'netbanking';
+export type PaymentMethodType = 'upi' | 'cod' | 'card' | 'netbanking';
+export type PaymentStatus = 'pending' | 'verification_pending' | 'paid' | 'rejected' | 'failed';
 
 export interface OrderItem {
   productId: string;
@@ -49,8 +50,12 @@ export interface Order {
   shippingFee: number;
   total: number;
   paymentMethod: PaymentMethodType;
-  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
+  utrNumber?: string;
+  paymentScreenshot?: string;
+  paymentVerifiedAt?: string;
+  paymentRejectedReason?: string;
   trackingNumber?: string;
   createdAt: string;
   deliveredAt?: string;

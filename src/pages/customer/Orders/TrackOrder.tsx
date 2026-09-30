@@ -1,28 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { Search, CheckCircle, Package, Truck, Home } from 'lucide-react';
+import { Search, CheckCircle, Package, Truck, Home, Loader } from 'lucide-react';
 import { formatPrice } from '../../../utils/formatPrice';
 import { Order } from '../../../types/order.types';
+import orderApi from '../../../services/orderApi';
 
 export const TrackOrder: React.FC = () => {
   const { orders } = useStore();
+  const [searchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [matchedOrder, setMatchedOrder] = useState<Order | null>(null);
   const [searched, setSearched] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const doSearch = async (q: string) => {
+    if (!q.trim()) return;
+    setIsSearching(true);
+    setSearched(true);
+    try {
+      const found = await orderApi.track(q.trim());
+      setMatchedOrder(found);
+    } catch {
+      // Fallback: search local orders
+      const clean = q.trim().toLowerCase();
+      const found = orders.find(
+        (o) =>
+          o.orderNumber.toLowerCase() === clean ||
+          o.trackingNumber?.toLowerCase() === clean ||
+          o.customerPhone.includes(clean)
+      );
+      setMatchedOrder(found || null);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q) {
+      setQuery(q);
+      doSearch(q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearched(true);
-    const clean = query.trim().toLowerCase();
-    const found = orders.find(
-      (o) =>
-        o.orderNumber.toLowerCase() === clean ||
-        o.trackingNumber?.toLowerCase() === clean ||
-        o.customerPhone.includes(clean)
-    );
-    setMatchedOrder(found || null);
+    doSearch(query);
   };
 
   return (
@@ -51,19 +78,19 @@ export const TrackOrder: React.FC = () => {
             marginBottom: '2rem',
           }}
         >
-          <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '240px' }}>
-              <Input
-                placeholder="Enter Order # or Tracking Code..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                leftIcon={<Search size={16} />}
-              />
-            </div>
-            <Button type="submit" size="md">
-              Locate Package
-            </Button>
-          </form>
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '240px' }}>
+                <Input
+                  placeholder="Enter Order # or Tracking Code..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  leftIcon={<Search size={16} />}
+                />
+              </div>
+              <Button type="submit" size="md" disabled={isSearching} rightIcon={isSearching ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : undefined}>
+                {isSearching ? 'Searching…' : 'Locate Package'}
+              </Button>
+            </form>
         </div>
 
         {/* Results */}

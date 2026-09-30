@@ -13,12 +13,12 @@ export const MobileMenu: React.FC = () => {
   const links = [
     { name: 'Home', path: '/' },
     { name: 'Shop Honey', path: '/shop' },
+    { name: 'Ayurveda & Purity', path: '/about' },
+    { name: 'Contact Apiary', path: '/contact' },
+    ...(isAuthenticated ? [{ name: 'My Orders & Tracking', path: '/orders' }] : [{ name: 'Track Order', path: '/track-order' }]),
     { name: 'Apiary Videos', path: '/videos' },
     { name: 'Our Story & Hives', path: '/story' },
-    { name: 'Ayurveda & Purity', path: '/about' },
     { name: 'Honey Recipes & Blog', path: '/blog' },
-    { name: 'Track Order', path: '/orders' },
-    { name: 'Contact Apiary', path: '/contact' },
   ];
 
   return (

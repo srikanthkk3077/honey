@@ -43,15 +43,18 @@ export const Checkout: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (details?: { utrNumber?: string; paymentScreenshot?: string }) => {
     setIsProcessing(true);
-    // Simulate payment transaction delay
-    await new Promise((resolve) => setTimeout(resolve, 800));
 
-    const order = placeOrder(address, paymentMethod);
-    setCompletedOrder(order);
-    setCurrentStep(3);
-    setIsProcessing(false);
+    try {
+      const order = await placeOrder(address, paymentMethod, details);
+      setCompletedOrder(order);
+      setCurrentStep(3);
+    } catch (err) {
+      console.error('Order placement failed:', err);
+    } finally {
+      setIsProcessing(false);
+    }
 
     try {
       confetti({
@@ -101,8 +104,8 @@ export const Checkout: React.FC = () => {
                 width: '74px',
                 height: '74px',
                 borderRadius: '50%',
-                backgroundColor: '#ECFDF5',
-                color: '#059669',
+                backgroundColor: completedOrder.paymentMethod === 'upi' ? '#FEF3C7' : '#ECFDF5',
+                color: completedOrder.paymentMethod === 'upi' ? '#D97706' : '#059669',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -113,11 +116,53 @@ export const Checkout: React.FC = () => {
             </div>
 
             <h2 style={{ fontSize: '2rem', color: '#1C1917', marginBottom: '0.5rem' }}>
-              Order Placed Successfully!
+              {completedOrder.paymentMethod === 'upi' ? 'Order Placed — Verifying Payment!' : 'Order Placed Successfully!'}
             </h2>
             <p style={{ color: '#57534E', fontSize: '1rem', lineHeight: 1.6, marginBottom: '2rem' }}>
-              Thank you, <strong>{completedOrder.customerName}</strong>! Your pure raw honey jar(s) are being carefully packed at our apiary with tamper-evident beeswax seal.
+              Thank you, <strong>{completedOrder.customerName}</strong>! Your pure raw honey consignment has been booked under <strong>{completedOrder.orderNumber}</strong>.
             </p>
+
+            {/* UPI Verification Pending Box */}
+            {completedOrder.paymentMethod === 'upi' && (
+              <div
+                style={{
+                  backgroundColor: '#FFFBEB',
+                  borderRadius: '16px',
+                  border: '1.5px solid #FDE68A',
+                  padding: '1.25rem',
+                  textAlign: 'left',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400E', fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
+                  <span>⏳ Payment Verification in Progress</span>
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#78716C', lineHeight: 1.5 }}>
+                  We received your transaction reference <strong>(UTR: {completedOrder.utrNumber})</strong>. Our accounts team verifies bank credits every 15–30 minutes. Once confirmed, your dispatch radar will activate immediately.
+                </div>
+              </div>
+            )}
+
+            {/* COD Confirmation Box */}
+            {completedOrder.paymentMethod === 'cod' && (
+              <div
+                style={{
+                  backgroundColor: '#EFF6FF',
+                  borderRadius: '16px',
+                  border: '1.5px solid #BFDBFE',
+                  padding: '1.25rem',
+                  textAlign: 'left',
+                  marginBottom: '1.5rem',
+                }}
+              >
+                <div style={{ color: '#1E40AF', fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>
+                  💵 Cash on Delivery Confirmed
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#3B82F6', lineHeight: 1.5 }}>
+                  No advance payment needed. Please keep <strong>{formatPrice(completedOrder.total)}</strong> ready in cash or UPI QR when the courier arrives at your doorstep.
+                </div>
+              </div>
+            )}
 
             {/* Order Card Details */}
             <div
@@ -138,15 +183,34 @@ export const Checkout: React.FC = () => {
                 <span style={{ fontWeight: 800, color: '#1C1917', fontSize: '1.05rem' }}>{completedOrder.orderNumber}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span style={{ color: '#78716C' }}>Estimated Dispatch:</span>
-                <span style={{ fontWeight: 600, color: '#059669' }}>Within 24 Hours</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span style={{ color: '#78716C' }}>Payment Mode:</span>
-                <span style={{ textTransform: 'uppercase', fontWeight: 600 }}>{completedOrder.paymentMethod}</span>
+                <span style={{ fontWeight: 700, textTransform: 'uppercase', color: '#1C1917' }}>
+                  {completedOrder.paymentMethod === 'upi' ? 'Direct UPI / Bank Transfer' : 'Cash on Delivery'}
+                </span>
+              </div>
+              {completedOrder.utrNumber && (
+                <div className="flex items-center justify-between">
+                  <span style={{ color: '#78716C' }}>UTR Reference:</span>
+                  <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#D97706' }}>{completedOrder.utrNumber}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between">
+                <span style={{ color: '#78716C' }}>Payment Status:</span>
+                <span
+                  style={{
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    padding: '3px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: completedOrder.paymentStatus === 'paid' ? '#ECFDF5' : (completedOrder.paymentStatus === 'verification_pending' ? '#FEF3C7' : '#EFF6FF'),
+                    color: completedOrder.paymentStatus === 'paid' ? '#065F46' : (completedOrder.paymentStatus === 'verification_pending' ? '#92400E' : '#1E40AF'),
+                  }}
+                >
+                  {completedOrder.paymentStatus === 'paid' ? '✓ Paid' : (completedOrder.paymentStatus === 'verification_pending' ? '⏳ Verification Pending' : '💵 Pay on Delivery')}
+                </span>
               </div>
               <div className="flex items-center justify-between">
-                <span style={{ color: '#78716C' }}>Amount Paid:</span>
+                <span style={{ color: '#78716C' }}>Order Total:</span>
                 <span style={{ fontWeight: 800, color: '#D97706', fontSize: '1.15rem' }}>{formatPrice(completedOrder.total)}</span>
               </div>
               <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.75rem', fontSize: '0.85rem', color: '#57534E' }}>

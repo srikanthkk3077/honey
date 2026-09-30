@@ -1,9 +1,47 @@
 import { Order } from '../../types/order.types';
 import { storage } from '../../utils/storage';
 
-const STORAGE_KEY = 'madhuvan_orders_v3';
+const STORAGE_KEY = 'madhuvan_orders_v4';
 
 export const INITIAL_ORDERS: Order[] = [
+  {
+    id: 'ord-1003',
+    orderNumber: 'MDH-8823',
+    customerName: 'Srikanth',
+    customerEmail: 'srikanth@example.com',
+    customerPhone: '+91 98450 12345',
+    shippingAddress: {
+      fullName: 'Srikanth',
+      email: 'srikanth@example.com',
+      phone: '+91 98450 12345',
+      addressLine1: 'Plot 45, Golden Honey Colony',
+      city: 'Hyderabad',
+      state: 'Telangana',
+      pincode: '500081',
+      country: 'India'
+    },
+    items: [
+      {
+        productId: 'prod-wild-forest',
+        productName: 'Madhuvan Sundarbans Wild Forest Honey',
+        size: '500g',
+        image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
+        price: 649,
+        quantity: 2
+      }
+    ],
+    subtotal: 1298,
+    discount: 0,
+    shippingFee: 0,
+    total: 1298,
+    paymentMethod: 'upi',
+    paymentStatus: 'verification_pending',
+    orderStatus: 'pending',
+    utrNumber: '408219485721',
+    paymentScreenshot: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=600&q=80',
+    trackingNumber: 'DELHIVERY-88392102',
+    createdAt: new Date().toISOString()
+  },
   {
     id: 'ord-1001',
     orderNumber: 'MDH-8821',

@@ -3,21 +3,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { Lock, Mail, User, Phone, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, Phone, ArrowRight, Loader } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const { register } = useStore();
+  const { register, isAuthLoading } = useStore();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && email) {
-      register(name, email, phone, password);
-      navigate('/');
+    if (!name || !email || !password) return;
+    const success = await register(name, email, phone, password);
+    if (success) {
+      navigate('/orders');
     }
   };
 
@@ -98,8 +99,14 @@ export const Register: React.FC = () => {
               leftIcon={<Lock size={16} />}
             />
 
-            <Button type="submit" size="lg" fullWidth rightIcon={<ArrowRight size={18} />}>
-              Create My Account
+            <Button
+              type="submit"
+              size="lg"
+              fullWidth
+              rightIcon={isAuthLoading ? <Loader size={18} className="spin" /> : <ArrowRight size={18} />}
+              disabled={isAuthLoading}
+            >
+              {isAuthLoading ? 'Creating Account…' : 'Create My Account'}
             </Button>
           </form>
 
@@ -111,6 +118,11 @@ export const Register: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+      `}</style>
     </div>
   );
 };

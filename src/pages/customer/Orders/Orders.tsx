@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { SectionTitle } from '../../../components/common/SectionTitle';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from '../../../components/admin/orders/OrderStatus';
-import { Package, ArrowRight, Truck } from 'lucide-react';
+import { Package, ArrowRight, Truck, Loader } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 
 export const Orders: React.FC = () => {
-  const { orders } = useStore();
+  const { orders, isOrdersLoading, refreshOrders, isAuthenticated } = useStore();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshOrders();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   return (
     <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
@@ -18,7 +25,7 @@ export const Orders: React.FC = () => {
             <SectionTitle
               align="left"
               subtitle="Your Account"
-              title="Orders & Parcel Tracking"
+              title="Orders &amp; Parcel Tracking"
               description="Review your order history and live dispatch status."
             />
           </div>
@@ -29,7 +36,12 @@ export const Orders: React.FC = () => {
           </Link>
         </div>
 
-        {orders.length === 0 ? (
+        {isOrdersLoading ? (
+          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+            <Loader size={36} color="#D97706" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} />
+            <p style={{ color: '#78716C', marginTop: '1rem' }}>Loading your orders…</p>
+          </div>
+        ) : orders.length === 0 ? (
           <div
             style={{
               backgroundColor: '#FFFFFF',
@@ -69,9 +81,29 @@ export const Orders: React.FC = () => {
                       Placed {new Date(ord.createdAt).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {ord.paymentStatus === 'verification_pending' && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}>
+                        ⏳ Verifying UTR
+                      </span>
+                    )}
+                    {ord.paymentStatus === 'paid' && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0' }}>
+                        ✓ Paid
+                      </span>
+                    )}
+                    {ord.paymentStatus === 'rejected' && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+                        ✕ Payment Rejected
+                      </span>
+                    )}
+                    {ord.paymentMethod === 'cod' && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px', background: '#EFF6FF', color: '#1E40AF', border: '1px solid #BFDBFE' }}>
+                        💵 COD
+                      </span>
+                    )}
                     <OrderStatusBadge status={ord.orderStatus} />
-                    <span style={{ fontWeight: 800, fontSize: '1.15rem', color: '#D97706' }}>
+                    <span style={{ fontWeight: 800, fontSize: '1.15rem', color: '#D97706', marginLeft: '6px' }}>
                       {formatPrice(ord.total)}
                     </span>
                   </div>
@@ -100,26 +132,51 @@ export const Orders: React.FC = () => {
                   <div style={{ fontSize: '0.82rem', color: '#78716C' }}>
                     Tracking: <strong>{ord.trackingNumber || 'Processing dispatch'}</strong>
                   </div>
-                  <Link
-                    to={`/orders/${ord.id}`}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      color: '#D97706',
-                      fontWeight: 700,
-                      fontSize: '0.88rem',
-                    }}
-                  >
-                    <span>View Invoice & Details</span>
-                    <ArrowRight size={14} />
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      to={`/track-order?q=${encodeURIComponent(ord.orderNumber)}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: '#FEF3C7',
+                        color: '#92400E',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        border: '1px solid #FDE68A',
+                      }}
+                    >
+                      <Truck size={14} />
+                      <span>Track Shipment</span>
+                    </Link>
+                    <Link
+                      to={`/orders/${ord.id}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: '#D97706',
+                        fontWeight: 700,
+                        fontSize: '0.88rem',
+                      }}
+                    >
+                      <span>View Invoice &amp; Details</span>
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 };

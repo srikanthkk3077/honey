@@ -36,6 +36,7 @@ export const Header: React.FC = () => {
     { name: 'About Purity', path: '/about' },
     // { name: 'Blog & Recipes', path: '/blog' },
     { name: 'Contact', path: '/contact' },
+    ...(isAuthenticated ? [{ name: 'My Orders', path: '/orders' }] : []),
   ];
 
   const isHome = location.pathname === '/';
@@ -151,7 +152,10 @@ export const Header: React.FC = () => {
             id="desktop-nav"
           >
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.path;
+              const isActive =
+                location.pathname === link.path ||
+                (link.path === '/orders' &&
+                  (location.pathname.startsWith('/orders') || location.pathname.startsWith('/track-order')));
               return (
                 <Link
                   key={link.name}

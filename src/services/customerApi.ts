@@ -1,46 +1,119 @@
-import { Customer } from '../types/customer.types';
+import api from './api';
 
-export const INITIAL_CUSTOMERS: Customer[] = [
-  {
-    id: 'cust-1',
-    name: 'Aarav Patel',
-    email: 'aarav.patel@example.com',
-    phone: '+91 98201 44521',
-    totalOrders: 3,
-    totalSpent: 4290,
-    lastOrderDate: '2026-03-27',
-    status: 'active',
-    joinedDate: '2025-11-12',
-    city: 'Bengaluru'
-  },
-  {
-    id: 'cust-2',
-    name: 'Pooja Iyer',
-    email: 'pooja.iyer@example.com',
-    phone: '+91 97112 33412',
-    totalOrders: 2,
-    totalSpent: 2150,
-    lastOrderDate: '2026-03-24',
-    status: 'active',
-    joinedDate: '2026-01-08',
-    city: 'New Delhi'
-  },
-  {
-    id: 'cust-3',
-    name: 'Vikramaditya Verma',
-    email: 'vikram.verma@example.com',
-    phone: '+91 98722 11983',
-    totalOrders: 5,
-    totalSpent: 8740,
-    lastOrderDate: '2026-03-19',
-    status: 'active',
-    joinedDate: '2025-08-20',
-    city: 'Chandigarh'
-  }
-];
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
 
+export interface ContactPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+}
+
+export interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  recentOrders: any[];
+  topProducts: any[];
+  monthlySales: { month: string; revenue: number; orders: number }[];
+}
+
+// ─── Contact API ──────────────────────────────────────────────────────────────
+export const contactApi = {
+  /** POST /api/contact */
+  submit: async (payload: ContactPayload): Promise<void> => {
+    await api.post('/contact', payload);
+  },
+
+  /** POST /api/contact/newsletter */
+  subscribeNewsletter: async (email: string, name?: string): Promise<void> => {
+    await api.post('/contact/newsletter', { email, name });
+  },
+
+  // ── Admin ────────────────────────────────────────────────────────────────────
+
+  /** GET /api/contact/inquiries (admin) */
+  getInquiries: async (): Promise<any[]> => {
+    const { data } = await api.get<ApiResponse<any>>('/contact/inquiries');
+    return data.data || [];
+  },
+
+  /** PUT /api/contact/inquiries/:id (admin) */
+  updateInquiryStatus: async (id: string, status: string): Promise<void> => {
+    await api.put(`/contact/inquiries/${id}`, { status });
+  },
+
+  /** GET /api/contact/subscribers (admin) */
+  getSubscribers: async (): Promise<any[]> => {
+    const { data } = await api.get<ApiResponse<any>>('/contact/subscribers');
+    return data.data || [];
+  },
+};
+
+// ─── Dashboard API (admin) ────────────────────────────────────────────────────
+export const dashboardApi = {
+  /** GET /api/dashboard/stats */
+  getStats: async (): Promise<DashboardStats> => {
+    const { data } = await api.get<ApiResponse<any>>('/dashboard/stats');
+    return data.data;
+  },
+};
+
+// ─── Settings API ─────────────────────────────────────────────────────────────
+export const settingsApi = {
+  /** GET /api/settings */
+  get: async (): Promise<any> => {
+    const { data } = await api.get<ApiResponse<any>>('/settings');
+    return data.data;
+  },
+
+  /** PUT /api/settings (admin) */
+  update: async (settings: any): Promise<any> => {
+    const { data } = await api.put<ApiResponse<any>>('/settings', settings);
+    return data.data;
+  },
+};
+
+// ─── Wishlist API (authenticated) ─────────────────────────────────────────────
+export const wishlistApi = {
+  /** GET /api/wishlist */
+  get: async (): Promise<string[]> => {
+    const { data } = await api.get<ApiResponse<any>>('/wishlist');
+    const items = data.data?.products || data.data || [];
+    return Array.isArray(items)
+      ? items.map((p: any) => p._id || p.id || p)
+      : [];
+  },
+
+  /** POST /api/wishlist/:productId */
+  toggle: async (productId: string): Promise<{ added: boolean }> => {
+    const { data } = await api.post<ApiResponse<any>>(`/wishlist/${productId}`);
+    return { added: data.data?.added ?? true };
+  },
+};
+
+// ─── Customer API (admin) ─────────────────────────────────────────────────────
 export const customerApi = {
-  getAll: async (): Promise<Customer[]> => {
-    return INITIAL_CUSTOMERS;
-  }
+  /** GET /api/customers (admin) */
+  getAll: async (params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ customers: any[]; total: number }> => {
+    const { data } = await api.get<any>('/customers', { params });
+    const raw = data.data?.customers || data.data || [];
+    return { customers: raw, total: data.data?.total || raw.length };
+  },
+
+  /** GET /api/customers/:id (admin) */
+  getById: async (id: string): Promise<any> => {
+    const { data } = await api.get<ApiResponse<any>>(`/customers/${id}`);
+    return data.data;
+  },
 };

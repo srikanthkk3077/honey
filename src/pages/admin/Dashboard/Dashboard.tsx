@@ -4,7 +4,7 @@ import { StatsCard } from '../../../components/admin/dashboard/StatsCard';
 import { SalesChart } from '../../../components/admin/dashboard/SalesChart';
 import { RecentOrders } from '../../../components/admin/dashboard/RecentOrders';
 import { TopProducts } from '../../../components/admin/dashboard/TopProducts';
-import { IndianRupee, ShoppingBag, Package, Users, Plus } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Package, Users, Plus, Clock } from 'lucide-react';
 import { formatPrice } from '../../../utils/formatPrice';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/common/Button';
@@ -14,6 +14,7 @@ export const Dashboard: React.FC = () => {
 
   const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0) + 478000;
   const totalOrdersCount = orders.length + 142;
+  const pendingPaymentsCount = orders.filter((o) => o.paymentStatus === 'verification_pending').length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -34,6 +35,55 @@ export const Dashboard: React.FC = () => {
           </Button>
         </Link>
       </div>
+
+      {/* Pending Payment Verification Alert Banner */}
+      {pendingPaymentsCount > 0 && (
+        <div
+          style={{
+            backgroundColor: '#FFFBEB',
+            border: '1.5px solid #FCD34D',
+            borderRadius: '16px',
+            padding: '1rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            boxShadow: '0 4px 15px rgba(217, 119, 6, 0.08)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '10px',
+                background: '#D97706',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Clock size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, color: '#92400E', fontSize: '1.05rem' }}>
+                {pendingPaymentsCount} UPI Payment{pendingPaymentsCount > 1 ? 's' : ''} Awaiting Admin Verification
+              </div>
+              <div style={{ fontSize: '0.84rem', color: '#78716C' }}>
+                Customers have transferred funds and entered UTR reference numbers. Match with your bank portal to confirm orders.
+              </div>
+            </div>
+          </div>
+          <Link to="/admin/orders">
+            <Button size="sm" style={{ backgroundColor: '#D97706', borderColor: '#D97706' }}>
+              Review & Verify Now ({pendingPaymentsCount})
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-4 gap-6">

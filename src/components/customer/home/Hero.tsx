@@ -317,7 +317,7 @@ export const Hero: React.FC = () => {
             {/* Audio Toggle & Stories Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Live Apiary Stories ({currentIndex + 1}/{heroVideos.length})
+                {/* Live Apiary Stories ({currentIndex + 1}/{heroVideos.length}) */}
               </div>
 
               {/* Audio Toggle Button */}
