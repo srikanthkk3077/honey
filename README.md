@@ -240,3 +240,5 @@ npm run build
 - **Smooth E-Commerce Checkout:** Delivery address form, promo code validation (`MADHUVAN10`), multi-payment options (UPI/Card/COD), and celebratory confetti animation upon completion.
 - **Live Dispatch Tracker:** Real-time consignment timeline tracker with order number search.
 - **Full Admin Control Suite:** Add/Edit/Delete products with image uploads, status management (Pending ➔ Processing ➔ Shipped ➔ Delivered), patron CRM, and sales analytics charts.
+#   h o n e y  
+ 
