@@ -1,13 +1,19 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { Sparkles, ShieldCheck, Truck } from 'lucide-react';
 import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 
 export const AnnouncementBar: React.FC = () => {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
+  if (isHome) return null;
+
   return (
     <div
       style={{
         background: 'linear-gradient(90deg, #78350F 0%, #92400E 50%, #78350F 100%)',
-        color: '#FEF3C7',
+        color: '#FDE68A',
         fontSize: '0.8rem',
         padding: '0.45rem 1rem',
         textAlign: 'center',

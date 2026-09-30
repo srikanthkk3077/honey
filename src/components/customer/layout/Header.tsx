@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Heart, User as UserIcon, Menu, Search, ShieldCheck } from 'lucide-react';
 import { useStore } from '../../../store/store';
@@ -39,18 +39,40 @@ export const Header: React.FC = () => {
   ];
 
   const isHome = location.pathname === '/';
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <header
       style={{
-        position: 'sticky',
+        position: isHome ? (isScrolled ? 'fixed' : 'absolute') : 'sticky',
         top: 0,
+        left: 0,
+        right: 0,
         zIndex: 50,
-        backgroundColor: isHome ? 'rgba(15, 12, 9, 0.88)' : 'rgba(255, 255, 255, 0.94)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: isHome ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #E7E5E4',
-        boxShadow: isHome ? '0 4px 20px rgba(0,0,0,0.3)' : '0 2px 10px rgba(0,0,0,0.03)',
-        transition: 'all 0.3s ease',
+        backgroundColor: isHome
+          ? (isScrolled ? 'rgba(12, 10, 8, 0.85)' : 'transparent')
+          : 'rgba(255, 255, 255, 0.94)',
+        backdropFilter: isHome
+          ? (isScrolled ? 'blur(16px)' : 'none')
+          : 'blur(12px)',
+        WebkitBackdropFilter: isHome
+          ? (isScrolled ? 'blur(16px)' : 'none')
+          : 'blur(12px)',
+        borderBottom: isHome
+          ? (isScrolled ? '1px solid rgba(255, 255, 255, 0.08)' : 'none')
+          : '1px solid #E7E5E4',
+        boxShadow: isHome
+          ? (isScrolled ? '0 4px 20px rgba(0,0,0,0.3)' : 'none')
+          : '0 2px 10px rgba(0,0,0,0.03)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       <div className="container" style={{ padding: '0.85rem 1.5rem' }}>
