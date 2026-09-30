@@ -16,7 +16,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <AdminHeader onMobileToggle={() => setMobileMenuOpen(true)} />
-        <main style={{ padding: '2rem', flex: 1 }}>
+        <main className="admin-main-content" style={{ padding: 'clamp(1rem, 2.5vw, 2rem)', flex: 1, minWidth: 0 }}>
           {children}
         </main>
       </div>
@@ -25,6 +25,11 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
         @media (max-width: 900px) {
           #desktop-admin-sidebar { display: none !important; }
           #admin-menu-toggle { display: block !important; }
+        }
+        @media (max-width: 640px) {
+          .admin-main-content {
+            padding: 1rem 0.75rem !important;
+          }
         }
       `}</style>
     </div>

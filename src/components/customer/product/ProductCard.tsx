@@ -226,37 +226,37 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             )}
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            style={{
-              width: '100%',
-              padding: '0.7rem',
-              borderRadius: '10px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
-              color: '#FFFFFF',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
-              transition: 'all 0.2s',
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(217, 119, 6, 0.35)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(217, 119, 6, 0.25)';
-            }}
-          >
-            <ShoppingBag size={16} />
-            <span>Add to Basket ({selectedSize})</span>
-          </button>
+            <button
+              onClick={handleAddToCart}
+              style={{
+                width: '100%',
+                padding: '0.7rem 0.5rem',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                color: '#FFFFFF',
+                fontWeight: 600,
+                fontSize: 'clamp(0.82rem, 2.5vw, 0.9rem)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
+                transition: 'all 0.2s',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(217, 119, 6, 0.35)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(217, 119, 6, 0.25)';
+              }}
+            >
+              <ShoppingBag size={16} />
+              <span>Add to Basket ({selectedSize})</span>
+            </button>
         </div>
       </div>
     </div>

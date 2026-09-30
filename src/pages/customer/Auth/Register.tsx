@@ -22,13 +22,14 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
+    <div style={{ padding: 'clamp(2.5rem, 5vw, 5rem) 0 clamp(3rem, 6vw, 6rem) 0', backgroundColor: '#FAF7F2' }}>
       <div className="container" style={{ maxWidth: '460px' }}>
         <div
+          className="auth-card"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
-            padding: '2.5rem',
+            padding: 'clamp(1.25rem, 4vw, 2.5rem)',
             border: '1px solid #E7E5E4',
             boxShadow: '0 10px 30px rgba(0,0,0,0.04)',
           }}

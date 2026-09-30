@@ -24,7 +24,7 @@ export const RecentOrders: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '1.5rem', border: '1px solid #E7E5E4' }}>
+    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: 'clamp(1rem, 2.5vw, 1.5rem)', border: '1px solid #E7E5E4' }}>
       <div className="flex items-center justify-between" style={{ marginBottom: '1.25rem' }}>
         <h3 style={{ fontSize: '1.15rem', color: '#1C1917', margin: 0 }}>Recent Orders</h3>
         <Link to="/admin/orders" style={{ fontSize: '0.85rem', color: '#D97706', fontWeight: 600 }}>
@@ -32,7 +32,7 @@ export const RecentOrders: React.FC = () => {
         </Link>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
+      <div className="table-responsive" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #E7E5E4', color: '#78716C' }}>

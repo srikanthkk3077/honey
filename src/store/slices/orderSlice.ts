@@ -1,7 +1,7 @@
 import { Order } from '../../types/order.types';
 import { storage } from '../../utils/storage';
 
-const STORAGE_KEY = 'madhuvan_orders';
+const STORAGE_KEY = 'madhuvan_orders_v3';
 
 export const INITIAL_ORDERS: Order[] = [
   {
@@ -26,7 +26,7 @@ export const INITIAL_ORDERS: Order[] = [
         productId: 'prod-wild-forest',
         productName: 'Madhuvan Sundarbans Wild Forest Honey',
         size: '500g',
-        image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80',
+        image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
         price: 649,
         quantity: 2
       },

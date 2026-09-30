@@ -10,9 +10,9 @@ export const OurStory: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
             alignItems: 'center',
-            gap: '4rem',
+            gap: '3rem',
           }}
         >
           {/* Images Grid */}
@@ -22,13 +22,13 @@ export const OurStory: React.FC = () => {
                 borderRadius: '24px',
                 overflow: 'hidden',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-                border: '6px solid #FFFFFF',
+                border: '4px solid #FFFFFF',
               }}
             >
               <img
                 src="https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80"
                 alt="Beekeeper holding wooden honeycomb frame"
-                style={{ width: '100%', height: '380px', objectFit: 'cover' }}
+                style={{ width: '100%', height: '340px', objectFit: 'cover' }}
               />
             </div>
 
@@ -36,21 +36,21 @@ export const OurStory: React.FC = () => {
             <div
               style={{
                 position: 'absolute',
-                bottom: '-25px',
-                right: '20px',
+                bottom: '-15px',
+                right: '15px',
                 background: '#181511',
                 color: '#FFFFFF',
                 borderRadius: '16px',
-                padding: '1.25rem',
+                padding: '1rem',
                 boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                maxWidth: '240px',
+                maxWidth: '220px',
                 border: '1px solid rgba(245, 158, 11, 0.4)',
               }}
             >
-              <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#FBBF24', fontFamily: 'var(--font-serif)' }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#FBBF24', fontFamily: 'var(--font-serif)' }}>
                 100%
               </div>
-              <div style={{ fontSize: '0.85rem', color: '#E7E5E4' }}>
+              <div style={{ fontSize: '0.8rem', color: '#E7E5E4' }}>
                 Ethical forest harvesting with indigenous Mowal communities.
               </div>
             </div>
@@ -91,9 +91,9 @@ export const OurStory: React.FC = () => {
               We work directly with traditional tribal forest harvesters and nomadic Himalayan beekeepers. We pay over 40% above market rates to ensure that forest trees remain standing, wild hives flourish without smoke harm, and you receive uncompromised golden nectar.
             </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
               <div className="flex items-center gap-3">
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#FEF3C7', color: '#D97706', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <TreePine size={22} />
                 </div>
                 <div>
@@ -103,7 +103,7 @@ export const OurStory: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <HeartHandshake size={22} />
                 </div>
                 <div>

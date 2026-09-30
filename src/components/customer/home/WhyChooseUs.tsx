@@ -40,7 +40,9 @@ export const WhyChooseUs: React.FC = () => {
           description="Most honey found in supermarkets is heated, ultra-filtered sugar syrup. Here is how authentic forest honey makes a world of difference."
         />
 
+        {/* Desktop / Tablet Table View */}
         <div
+          className="why-choose-desktop-table"
           style={{
             maxWidth: '900px',
             margin: '0 auto',
@@ -51,53 +53,102 @@ export const WhyChooseUs: React.FC = () => {
             overflow: 'hidden',
           }}
         >
-          {/* Table Header */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1.2fr 2fr 2fr',
-              background: '#181511',
-              color: '#FFFFFF',
-              padding: '1.25rem 1.5rem',
-              fontWeight: 700,
-              fontSize: '0.95rem',
-            }}
-          >
-            <div>Standard</div>
-            <div style={{ color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>Madhuvan Forest Honey</span>
-            </div>
-            <div style={{ color: '#A8A29E' }}>Commercial Supermarket Honey</div>
-          </div>
+          <div className="table-responsive">
+            <div style={{ minWidth: '640px' }}>
+              {/* Table Header */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1.2fr 2fr 2fr',
+                  background: '#181511',
+                  color: '#FFFFFF',
+                  padding: '1.25rem 1.5rem',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                }}
+              >
+                <div>Standard</div>
+                <div style={{ color: '#FBBF24', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>Madhuvan Forest Honey</span>
+                </div>
+                <div style={{ color: '#A8A29E' }}>Commercial Supermarket Honey</div>
+              </div>
 
-          {/* Rows */}
+              {/* Rows */}
+              {comparisons.map((row, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1.2fr 2fr 2fr',
+                    padding: '1.25rem 1.5rem',
+                    borderBottom: idx !== comparisons.length - 1 ? '1px solid #F5F1E9' : 'none',
+                    backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FCFBF9',
+                    alignItems: 'center',
+                    gap: '1rem',
+                  }}
+                >
+                  <div style={{ fontWeight: 700, color: '#1C1917', fontSize: '0.9rem' }}>
+                    {row.feature}
+                  </div>
+                  <div style={{ color: '#065F46', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }}><Check size={18} /></span>
+                    <span>{row.madhuvan}</span>
+                  </div>
+                  <div style={{ color: '#78716C', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span style={{ color: '#DC2626', marginTop: '2px', flexShrink: 0 }}><X size={18} /></span>
+                    <span>{row.commercial}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Card View (renders under 640px) */}
+        <div className="why-choose-mobile-cards" style={{ display: 'none', flexDirection: 'column', gap: '1rem' }}>
           {comparisons.map((row, idx) => (
             <div
               key={idx}
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1.2fr 2fr 2fr',
-                padding: '1.25rem 1.5rem',
-                borderBottom: idx !== comparisons.length - 1 ? '1px solid #F5F1E9' : 'none',
-                backgroundColor: idx % 2 === 0 ? '#FFFFFF' : '#FCFBF9',
-                alignItems: 'center',
-                gap: '1rem',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                border: '1px solid #E7E5E4',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
               }}
             >
-              <div style={{ fontWeight: 700, color: '#1C1917', fontSize: '0.9rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#1C1917', marginBottom: '0.75rem', borderBottom: '1px solid #F5F1E9', paddingBottom: '0.5rem' }}>
                 {row.feature}
               </div>
-              <div style={{ color: '#065F46', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#059669', marginTop: '2px' }}><Check size={18} /></span>
-                <span>{row.madhuvan}</span>
-              </div>
-              <div style={{ color: '#78716C', fontSize: '0.88rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#DC2626', marginTop: '2px' }}><X size={18} /></span>
-                <span>{row.commercial}</span>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ backgroundColor: '#ECFDF5', padding: '0.75rem', borderRadius: '10px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#059669', marginTop: '2px', flexShrink: 0 }}><Check size={18} /></span>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Madhuvan Honey</div>
+                    <div style={{ color: '#064E3B', fontSize: '0.85rem', marginTop: '2px', lineHeight: 1.4 }}>{row.madhuvan}</div>
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#FEF2F2', padding: '0.75rem', borderRadius: '10px', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#DC2626', marginTop: '2px', flexShrink: 0 }}><X size={18} /></span>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Commercial Honey</div>
+                    <div style={{ color: '#7F1D1D', fontSize: '0.85rem', marginTop: '2px', lineHeight: 1.4 }}>{row.commercial}</div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </div>
+
+        <style>{`
+          @media (max-width: 640px) {
+            .why-choose-desktop-table { display: none !important; }
+            .why-choose-mobile-cards { display: flex !important; }
+          }
+        `}</style>
       </div>
     </section>
   );

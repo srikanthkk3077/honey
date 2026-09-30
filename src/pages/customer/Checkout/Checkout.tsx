@@ -84,6 +84,7 @@ export const Checkout: React.FC = () => {
         {currentStep === 3 && completedOrder ? (
           /* Order Confirmation Screen */
           <div
+            className="checkout-confirmation-card"
             style={{
               maxWidth: '680px',
               margin: '0 auto',
@@ -173,15 +174,17 @@ export const Checkout: React.FC = () => {
         ) : (
           /* Checkout Steps 1 & 2 */
           <div
+            className="checkout-form-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '3rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: '2.5rem',
               alignItems: 'start',
             }}
           >
             {/* Left Column: Form */}
             <div
+              className="checkout-form-card"
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '24px',
@@ -210,12 +213,28 @@ export const Checkout: React.FC = () => {
             </div>
 
             {/* Right Column: Order Summary Preview */}
-            <div style={{ position: 'sticky', top: '90px' }}>
+            <div className="checkout-summary-col" style={{ position: 'sticky', top: '90px' }}>
               <OrderSummary />
             </div>
           </div>
         )}
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .checkout-confirmation-card,
+          .checkout-form-card {
+            padding: 1.25rem !important;
+            border-radius: 18px !important;
+          }
+          .checkout-form-grid {
+            gap: 1.5rem !important;
+          }
+          .checkout-summary-col {
+            position: static !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

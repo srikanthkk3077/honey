@@ -19,7 +19,7 @@ import confetti from 'canvas-confetti';
 
 // 100% Guaranteed Pure Honey & Beekeeping Photography (Zero Watermelon / Food)
 const PURE_HONEY_THUMBNAILS = [
-  'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80', // Honey jar with wooden dipper
+  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80', // Golden raw honey jar with dipper
   'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&q=80', // Honeycomb dripping in sunlight
   'https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=600&q=80', // Bees on honeycomb
   'https://images.unsplash.com/photo-1579294800821-694d95e86143?auto=format&fit=crop&w=600&q=80', // Raw amber honey pouring into jar
@@ -119,7 +119,12 @@ export const Hero: React.FC = () => {
 
   // Helper to ensure 100% pure honey thumbnail
   const getHoneyThumbnail = (video: VideoItem, idx: number) => {
-    if (!video.thumbnailUrl || video.thumbnailUrl.includes('photo-1546554137') || video.thumbnailUrl.includes('photo-1582794543')) {
+    if (
+      !video.thumbnailUrl ||
+      video.thumbnailUrl.includes('photo-1546554137') ||
+      video.thumbnailUrl.includes('photo-1582794543') ||
+      video.thumbnailUrl.includes('photo-1587049352846')
+    ) {
       return PURE_HONEY_THUMBNAILS[idx % PURE_HONEY_THUMBNAILS.length];
     }
     return video.thumbnailUrl;
@@ -130,9 +135,7 @@ export const Hero: React.FC = () => {
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: '90vh',
-        height: '92vh',
-        maxHeight: '920px',
+        minHeight: '100svh',
         backgroundColor: '#0C0A08',
         overflow: 'hidden',
         display: 'flex',
@@ -144,7 +147,7 @@ export const Hero: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
       id="ott-hero-section"
     >
-      {/* 1. Full-Length Video (Highlighted & Crystal Clear) */}
+      {/* 1. Full-Length Video */}
       {currentVideo && (
         <video
           key={currentVideo.videoUrl}
@@ -163,7 +166,7 @@ export const Hero: React.FC = () => {
             height: '100%',
             objectFit: 'cover',
             zIndex: 1,
-            filter: 'brightness(0.95) contrast(1.04)',
+            filter: 'brightness(0.92) contrast(1.05)',
             transition: 'opacity 0.5s ease-in-out',
             opacity: isVideoLoading ? 0.9 : 1,
           }}
@@ -184,32 +187,32 @@ export const Hero: React.FC = () => {
         />
       )}
 
-      {/* 2. Soft, Subtle Gradient Overlays (Allows Video to be Highlighted) */}
-      {/* Soft left vignette for text legibility without blocking the video */}
+      {/* 2. Soft, Seamless Gradient Overlays */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(90deg, rgba(12, 10, 8, 0.8) 0%, rgba(12, 10, 8, 0.45) 38%, transparent 75%)',
+            'linear-gradient(90deg, rgba(12, 10, 8, 0.88) 0%, rgba(12, 10, 8, 0.55) 45%, rgba(12, 10, 8, 0.3) 100%)',
           zIndex: 2,
           pointerEvents: 'none',
         }}
         id="hero-left-gradient"
       />
 
-      {/* Soft bottom vignette for page flow */}
+      {/* Sleek light black bottom gradient vignette for depth and button legibility */}
       <div
         style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: '160px',
-          background: 'linear-gradient(0deg, #181511 0%, rgba(24, 21, 17, 0.6) 35%, transparent 100%)',
+          height: '340px',
+          background: 'linear-gradient(0deg, rgba(10, 8, 6, 0.92) 0%, rgba(10, 8, 6, 0.55) 50%, transparent 100%)',
           zIndex: 2,
           pointerEvents: 'none',
         }}
+        id="hero-bottom-fade"
       />
 
       {/* 3. Main Hero Content Layout */}
@@ -219,57 +222,60 @@ export const Hero: React.FC = () => {
           position: 'relative',
           zIndex: 3,
           paddingTop: '6rem',
-          paddingBottom: '3rem',
+          paddingBottom: 'clamp(1.75rem, 4vh, 2.75rem)',
           width: '100%',
         }}
       >
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(300px, 1.15fr) minmax(260px, 1fr)',
+            gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(260px, 1fr)',
             alignItems: 'flex-end',
             gap: '2.5rem',
           }}
           id="hero-content-grid"
         >
           {/* ==============================================================
-              LEFT COLUMN: Simple, Refined Text (Video is the Highlight)
+              LEFT COLUMN: Main Text & CTA Action Buttons
               ============================================================== */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            {/* Simple Subtle Eyebrow Badge */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+            {/* Eyebrow Badge */}
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(245, 158, 11, 0.18)',
-                border: '1px solid rgba(245, 158, 11, 0.35)',
+                background: 'rgba(245, 158, 11, 0.22)',
+                border: '1px solid rgba(245, 158, 11, 0.45)',
                 backdropFilter: 'blur(8px)',
-                padding: '5px 12px',
+                padding: '6px 14px',
                 borderRadius: '9999px',
                 color: '#FEF3C7',
-                fontSize: '0.78rem',
-                fontWeight: 600,
+                fontSize: 'clamp(0.72rem, 2vw, 0.8rem)',
+                fontWeight: 700,
                 letterSpacing: '0.04em',
-                marginBottom: '0.75rem',
+                marginBottom: '1rem',
               }}
             >
-              <Sparkles size={13} color="#F59E0B" />
+              <Sparkles size={14} color="#F59E0B" />
               <span>100% Pure Raw Honey • Single-Origin Harvest</span>
             </div>
 
-            {/* Clean, Simple Title (Refined size, not giant) */}
+            {/* Main Headline */}
             <h1
+              id="hero-headline"
               style={{
                 fontFamily: 'var(--font-serif)',
-                fontSize: 'clamp(1.9rem, 3.4vw, 2.75rem)',
+                fontSize: 'clamp(2.1rem, 5vw, 3.25rem)',
                 lineHeight: 1.15,
                 fontWeight: 800,
                 color: '#FFFFFF',
                 letterSpacing: '-0.02em',
-                margin: '0 0 0.75rem 0',
-                textShadow: '0 3px 18px rgba(0, 0, 0, 0.7)',
-                maxWidth: '580px',
+                margin: '0 0 1rem 0',
+                textShadow: '0 3px 20px rgba(0, 0, 0, 0.8)',
+                maxWidth: '620px',
+                wordBreak: 'normal',
+                overflowWrap: 'break-word',
               }}
             >
               Taste the Liquid Gold of{' '}
@@ -278,183 +284,96 @@ export const Hero: React.FC = () => {
               </span>
             </h1>
 
-            {/* Simple, Concise Description Text */}
+            {/* Description Text */}
             <p
+              id="hero-description"
               style={{
-                fontSize: '1rem',
-                color: 'rgba(255, 255, 255, 0.88)',
+                fontSize: 'clamp(0.95rem, 2.5vw, 1.05rem)',
+                color: 'rgba(255, 255, 255, 0.92)',
                 lineHeight: 1.6,
-                margin: '0 0 1.5rem 0',
-                maxWidth: '500px',
-                textShadow: '0 2px 8px rgba(0, 0, 0, 0.7)',
+                margin: '0 0 1.75rem 0',
+                maxWidth: '540px',
+                textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
               }}
             >
-              Direct from wild Sundarbans and Himalayan apiaries. Unheated, raw, and NMR lab certified pure with live natural enzymes.
+              Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and NMR lab certified pure with live natural enzymes.
             </p>
 
-            {/* Simple, Clean Honey CTAs */}
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Primary Golden Button: Watch Story */}
-              <button
-                onClick={() => setSelectedModalVideo(currentVideo)}
-                style={{
-                  background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 60%, #B45309 100%)',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  padding: '11px 22px',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '0.92rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(217, 119, 6, 0.4)',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 10px 25px rgba(217, 119, 6, 0.55)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(217, 119, 6, 0.4)';
-                }}
-                id="hero-watch-story-btn"
-              >
-                <Play size={16} fill="#FFFFFF" />
-                <span>Watch Story</span>
-              </button>
+          </div>
 
-              {/* Secondary Frosted Glass Button: "+" Quick Add */}
+          {/* ==============================================================
+              RIGHT COLUMN: Video Stories / Reels Carousel & Audio Toggle
+              ============================================================== */}
+          <div
+            id="hero-right-col"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '1rem',
+              width: '100%',
+            }}
+          >
+            {/* Audio Toggle & Stories Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Live Apiary Stories ({currentIndex + 1}/{heroVideos.length})
+              </div>
+
+              {/* Audio Toggle Button */}
               <button
-                onClick={handleQuickAdd}
-                title={`Quick Order ${taggedProduct?.name || 'Honey'}`}
+                onClick={toggleSound}
                 style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
-                  background: addedAnimation ? '#059669' : 'rgba(255, 255, 255, 0.12)',
-                  backdropFilter: 'blur(10px)',
-                  border: addedAnimation ? '1px solid #10B981' : '1px solid rgba(255, 255, 255, 0.25)',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '50%',
+                  background: 'rgba(0, 0, 0, 0.55)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  backdropFilter: 'blur(8px)',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
+                  flexShrink: 0,
                 }}
                 onMouseOver={(e) => {
-                  if (!addedAnimation) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.22)';
-                    e.currentTarget.style.borderColor = '#F59E0B';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (!addedAnimation) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                  }
-                }}
-                id="hero-quick-add-btn"
-              >
-                {addedAnimation ? <Check size={18} color="#FFFFFF" /> : <Plus size={20} />}
-              </button>
-
-              {/* Tertiary Link: Shop Honey */}
-              <Link
-                to="/shop"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  backdropFilter: 'blur(10px)',
-                  padding: '11px 18px',
-                  borderRadius: '10px',
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  fontSize: '0.88rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(245, 158, 11, 0.2)';
+                  e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
                   e.currentTarget.style.borderColor = '#F59E0B';
-                  e.currentTarget.style.color = '#FEF3C7';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
                 }}
+                title={isMuted ? 'Unmute Ambient Sound' : 'Mute Sound'}
+                aria-label={isMuted ? 'Unmute' : 'Mute'}
               >
-                <ShoppingBag size={15} color="#F59E0B" />
-                <span>Shop Honey ({taggedProduct ? `₹${taggedProduct.price}` : '₹649'})</span>
-                <ArrowRight size={14} />
-              </Link>
+                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} color="#F59E0B" />}
+              </button>
             </div>
-          </div>
-
-          {/* ==============================================================
-              RIGHT COLUMN: Sound Toggle & Pure Honey Thumbnail Strip
-              ============================================================== */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '0.85rem',
-            }}
-          >
-            {/* Audio Toggle Button */}
-            <button
-              onClick={toggleSound}
-              style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                background: 'rgba(0, 0, 0, 0.45)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                backdropFilter: 'blur(8px)',
-                color: '#FFFFFF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
-                e.currentTarget.style.borderColor = '#F59E0B';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.background = 'rgba(0, 0, 0, 0.45)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-              }}
-              title={isMuted ? 'Unmute Ambient Sound' : 'Mute Sound'}
-              aria-label={isMuted ? 'Unmute' : 'Mute'}
-            >
-              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} color="#F59E0B" />}
-            </button>
 
             {/* Horizontal Video Progress Bars / Pure Honey Thumbnails */}
             <div
+              id="hero-thumbnails-wrapper"
               style={{
                 width: '100%',
+                maxWidth: '100%',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 justifyContent: 'flex-end',
+                overflow: 'hidden',
               }}
             >
               {/* Prev Arrow */}
               {heroVideos.length > 3 && (
                 <button
                   onClick={handlePrev}
+                  className="hero-nav-arrow"
                   style={{
                     width: '30px',
-                    height: '50px',
+                    height: '46px',
                     borderRadius: '8px',
                     background: 'rgba(0, 0, 0, 0.5)',
                     border: '1px solid rgba(255, 255, 255, 0.18)',
@@ -484,6 +403,7 @@ export const Hero: React.FC = () => {
                   scrollbarWidth: 'none',
                   msOverflowStyle: 'none',
                   padding: '4px',
+                  WebkitOverflowScrolling: 'touch',
                 }}
                 id="hero-thumbnail-strip"
               >
@@ -497,12 +417,12 @@ export const Hero: React.FC = () => {
                       style={{
                         position: 'relative',
                         width: '74px',
-                        height: '46px',
-                        borderRadius: '8px',
+                        height: '48px',
+                        borderRadius: '10px',
                         overflow: 'hidden',
                         cursor: 'pointer',
                         border: isActive ? '2px solid #F59E0B' : '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: isActive ? '0 0 14px rgba(245, 158, 11, 0.65)' : 'none',
+                        boxShadow: isActive ? '0 0 14px rgba(245, 158, 11, 0.7)' : 'none',
                         transform: isActive ? 'scale(1.05)' : 'scale(1)',
                         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                         flexShrink: 0,
@@ -548,8 +468,8 @@ export const Hero: React.FC = () => {
                             position: 'absolute',
                             top: '3px',
                             right: '3px',
-                            width: '13px',
-                            height: '13px',
+                            width: '14px',
+                            height: '14px',
                             borderRadius: '50%',
                             background: '#D97706',
                             display: 'flex',
@@ -566,27 +486,30 @@ export const Hero: React.FC = () => {
               </div>
 
               {/* Next Arrow */}
-              <button
-                onClick={handleNext}
-                style={{
-                  width: '30px',
-                  height: '50px',
-                  borderRadius: '8px',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  backdropFilter: 'blur(6px)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-                title="Next Honey Story"
-              >
-                <ChevronRight size={16} />
-              </button>
+              {heroVideos.length > 3 && (
+                <button
+                  onClick={handleNext}
+                  className="hero-nav-arrow"
+                  style={{
+                    width: '30px',
+                    height: '46px',
+                    borderRadius: '8px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.18)',
+                    backdropFilter: 'blur(6px)',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                  title="Next Honey Story"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -598,7 +521,7 @@ export const Hero: React.FC = () => {
         onClose={() => setSelectedModalVideo(null)}
       />
 
-      {/* Keyframe Animations */}
+      {/* Keyframe Animations & Responsive Styles */}
       <style>{`
         @keyframes thumbProgress {
           from { width: 0%; }
@@ -611,29 +534,64 @@ export const Hero: React.FC = () => {
 
         @media (max-width: 992px) {
           #ott-hero-section {
-            min-height: 92vh !important;
+            min-height: 100svh !important;
             height: auto !important;
             padding-top: 5rem !important;
+            padding-bottom: 2rem !important;
+            justify-content: flex-end !important;
           }
 
           #hero-content-grid {
             grid-template-columns: 1fr !important;
-            gap: 2rem !important;
+            gap: 1.75rem !important;
           }
 
           #hero-left-gradient {
-            background: linear-gradient(180deg, rgba(12, 10, 8, 0.7) 0%, rgba(12, 10, 8, 0.9) 70%, #181511 100%) !important;
+            background: linear-gradient(180deg, rgba(12, 10, 8, 0.88) 0%, rgba(12, 10, 8, 0.45) 45%, rgba(12, 10, 8, 0.82) 100%) !important;
           }
-        }
 
-        @media (max-width: 640px) {
-          #ott-hero-section {
-            min-height: 95vh !important;
-            padding-bottom: 2rem !important;
+          #hero-right-col {
+            align-items: flex-start !important;
+          }
+
+          #hero-thumbnails-wrapper {
+            justify-content: flex-start !important;
           }
 
           #hero-thumbnail-strip {
             justify-content: flex-start !important;
+          }
+
+          .hero-nav-arrow {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          #ott-hero-section {
+            padding-top: 4.85rem !important;
+            padding-bottom: 2.25rem !important;
+          }
+
+          .hero-cta-group {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 0.75rem !important;
+          }
+
+          .hero-cta-group a,
+          .hero-cta-group button {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+
+          .hero-featured-pill {
+            width: 100% !important;
+          }
+
+          #hero-thumbnail-strip > div {
+            width: 64px !important;
+            height: 42px !important;
           }
         }
       `}</style>

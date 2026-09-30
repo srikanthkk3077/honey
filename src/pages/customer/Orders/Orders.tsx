@@ -96,7 +96,7 @@ export const Orders: React.FC = () => {
                 </div>
 
                 {/* Footer action */}
-                <div className="flex items-center justify-between" style={{ borderTop: '1px solid #F5F1E9', paddingTop: '1rem' }}>
+                <div className="flex items-center justify-between flex-wrap gap-2" style={{ borderTop: '1px solid #F5F1E9', paddingTop: '1rem' }}>
                   <div style={{ fontSize: '0.82rem', color: '#78716C' }}>
                     Tracking: <strong>{ord.trackingNumber || 'Processing dispatch'}</strong>
                   </div>

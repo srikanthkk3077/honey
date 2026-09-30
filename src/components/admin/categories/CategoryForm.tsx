@@ -12,7 +12,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, onCancel }
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
-  const [image, setImage] = useState('https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80');
+  const [image, setImage] = useState('https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80');
 
   const handleNameChange = (val: string) => {
     setName(val);

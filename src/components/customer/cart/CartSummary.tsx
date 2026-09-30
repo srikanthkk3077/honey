@@ -28,10 +28,11 @@ export const CartSummary: React.FC = () => {
 
   return (
     <div
+      className="cart-summary-card"
       style={{
         backgroundColor: '#FFFFFF',
         borderRadius: '20px',
-        padding: '1.75rem',
+        padding: 'clamp(1.25rem, 3vw, 1.75rem)',
         border: '1px solid #E7E5E4',
         boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
       }}
@@ -127,6 +128,7 @@ export const CartSummary: React.FC = () => {
           onChange={(e) => setPromoCode(e.target.value)}
           style={{
             flex: 1,
+            minWidth: 0,
             padding: '0.65rem 0.85rem',
             borderRadius: '10px',
             border: '1px solid #D6D3D1',

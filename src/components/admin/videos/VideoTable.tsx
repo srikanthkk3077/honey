@@ -13,7 +13,7 @@ interface VideoTableProps {
 export const VideoTable: React.FC<VideoTableProps> = ({ videos, onPlay, onEdit, onDelete }) => {
   return (
     <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E7E5E4', overflow: 'hidden' }}>
-      <div style={{ overflowX: 'auto' }}>
+      <div className="table-responsive" style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
           <thead>
             <tr style={{ backgroundColor: '#FAF7F2', borderBottom: '1px solid #E7E5E4', color: '#57534E' }}>

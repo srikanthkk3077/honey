@@ -31,10 +31,10 @@ export const Header: React.FC = () => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Shop Honey', path: '/shop' },
-    { name: 'Videos', path: '/videos' },
-    { name: 'Our Story', path: '/story' },
+    // { name: 'Videos', path: '/videos' },
+    // { name: 'Our Story', path: '/story' },
     { name: 'About Purity', path: '/about' },
-    { name: 'Blog & Recipes', path: '/blog' },
+    // { name: 'Blog & Recipes', path: '/blog' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -75,7 +75,7 @@ export const Header: React.FC = () => {
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
-      <div className="container" style={{ padding: '0.85rem 1.5rem' }}>
+      <div className="container" style={{ padding: '0.85rem clamp(0.75rem, 3vw, 1.5rem)' }}>
         <div className="flex items-center justify-between">
           {/* Mobile hamburger */}
           <div className="flex items-center gap-3">
@@ -99,24 +99,25 @@ export const Header: React.FC = () => {
             <Link to="/" className="flex items-center gap-2">
               <div
                 style={{
-                  width: '42px',
-                  height: '42px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: '12px',
                   background: 'linear-gradient(135deg, #FEF3C7 0%, #F59E0B 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   boxShadow: '0 4px 10px rgba(245, 158, 11, 0.25)',
+                  flexShrink: 0,
                 }}
               >
-                <img src="/icons/bee.svg" alt="Madhuvan Honey" width="28" height="28" />
+                <img src="/icons/bee.svg" alt="Madhuvan Honey" width="26" height="26" />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span
                   style={{
                     fontFamily: 'var(--font-serif)',
                     fontWeight: 800,
-                    fontSize: '1.45rem',
+                    fontSize: 'clamp(1.2rem, 3.5vw, 1.45rem)',
                     letterSpacing: '-0.02em',
                     lineHeight: 1,
                     color: isHome ? '#FFFFFF' : '#1C1917',
@@ -125,8 +126,9 @@ export const Header: React.FC = () => {
                   MADHUVAN
                 </span>
                 <span
+                  className="brand-subtitle"
                   style={{
-                    fontSize: '0.68rem',
+                    fontSize: '0.65rem',
                     fontWeight: 700,
                     letterSpacing: '0.18em',
                     color: '#D97706',
@@ -206,6 +208,7 @@ export const Header: React.FC = () => {
             {/* Wishlist */}
             <Link
               to="/shop?filter=wishlist"
+              className="header-wishlist-link"
               style={{
                 background: 'none',
                 border: 'none',
@@ -308,7 +311,7 @@ export const Header: React.FC = () => {
                 }}
               >
                 <UserIcon size={16} />
-                <span style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span className="account-label" style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {isAuthenticated ? user?.name : 'Account'}
                 </span>
               </button>
@@ -444,6 +447,7 @@ export const Header: React.FC = () => {
               autoFocus
               style={{
                 flex: 1,
+                minWidth: 0,
                 padding: '0.65rem 1rem',
                 borderRadius: '8px',
                 border: '1px solid #D6D3D1',
@@ -473,6 +477,12 @@ export const Header: React.FC = () => {
         @media (max-width: 920px) {
           #desktop-nav { display: none !important; }
           #mobile-nav-toggle { display: block !important; }
+        }
+
+        @media (max-width: 520px) {
+          .account-label { display: none !important; }
+          .brand-subtitle { display: none !important; }
+          .header-wishlist-link { display: none !important; }
         }
       `}</style>
     </header>

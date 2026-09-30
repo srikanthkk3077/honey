@@ -7,20 +7,22 @@ export const AdminHeader: React.FC<{ onMobileToggle?: () => void }> = ({ onMobil
 
   return (
     <header
+      className="admin-header"
       style={{
         height: '70px',
         backgroundColor: '#FFFFFF',
         borderBottom: '1px solid #E7E5E4',
-        padding: '0 2rem',
+        padding: '0 clamp(0.75rem, 3vw, 2rem)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 30,
+        gap: '0.75rem',
       }}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2" style={{ minWidth: 0 }}>
         {onMobileToggle && (
           <button
             onClick={onMobileToggle}
@@ -28,23 +30,26 @@ export const AdminHeader: React.FC<{ onMobileToggle?: () => void }> = ({ onMobil
               display: 'none',
               background: 'none',
               border: 'none',
-              padding: '4px',
+              padding: '6px',
               cursor: 'pointer',
+              color: '#1C1917',
+              borderRadius: '8px',
             }}
             id="admin-menu-toggle"
+            aria-label="Open Admin Menu"
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <ShieldCheck size={20} color="#059669" />
-          <span style={{ fontWeight: 700, fontSize: '1rem', color: '#1C1917' }}>
-            Madhuvan Apiary Control Center
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+          <ShieldCheck size={20} color="#059669" style={{ flexShrink: 0 }} />
+          <span style={{ fontWeight: 700, fontSize: 'clamp(0.85rem, 2.5vw, 1rem)', color: '#1C1917', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            Madhuvan <span className="admin-header-title-suffix">Control Center</span>
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3" style={{ flexShrink: 0 }}>
         <div
           style={{
             position: 'relative',
@@ -53,6 +58,7 @@ export const AdminHeader: React.FC<{ onMobileToggle?: () => void }> = ({ onMobil
             borderRadius: '50%',
             color: '#57534E',
           }}
+          aria-label="Notifications"
         >
           <Bell size={20} />
           <span
@@ -68,7 +74,7 @@ export const AdminHeader: React.FC<{ onMobileToggle?: () => void }> = ({ onMobil
           />
         </div>
 
-        <div className="flex items-center gap-3" style={{ borderLeft: '1px solid #E7E5E4', paddingLeft: '1rem' }}>
+        <div className="flex items-center gap-2" style={{ borderLeft: '1px solid #E7E5E4', paddingLeft: '0.75rem' }}>
           <div
             style={{
               width: '36px',
@@ -81,18 +87,30 @@ export const AdminHeader: React.FC<{ onMobileToggle?: () => void }> = ({ onMobil
               justifyContent: 'center',
               fontWeight: 800,
               fontSize: '0.9rem',
+              flexShrink: 0,
             }}
           >
             A
           </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1C1917' }}>
+          <div className="admin-user-info">
+            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#1C1917', whiteSpace: 'nowrap' }}>
               {user?.name || 'Administrator'}
             </div>
             <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 600 }}>Super Admin</div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 540px) {
+          .admin-header-title-suffix {
+            display: none;
+          }
+          .admin-user-info {
+            display: none;
+          }
+        }
+      `}</style>
     </header>
   );
 };

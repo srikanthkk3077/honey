@@ -6,7 +6,7 @@ export const INITIAL_VIDEOS: VideoItem[] = [
     title: 'Extracting Golden Amber Nectar from Sundarbans Wild Comb',
     description: 'Watch how tribal Mowals ethically harvest giant wild Apis dorsata honeycombs deep in the Sundarbans mangrove biosphere without harming the bee colony.',
     videoUrl: 'https://upload.wikimedia.org/wikipedia/commons/6/61/Slow_Motion_Bee_Flight_-_Close-up_video_of_honey_bees.webm',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=600&q=80',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
     category: 'harvest',
     duration: '1:15',
     taggedProductId: 'prod-wild-forest',

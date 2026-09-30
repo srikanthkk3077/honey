@@ -31,6 +31,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   return (
     <div
+      className="modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -38,13 +39,14 @@ export const Modal: React.FC<ModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.5rem',
+        padding: 'clamp(0.5rem, 2vw, 1.5rem)',
         backgroundColor: 'rgba(28, 25, 23, 0.65)',
         backdropFilter: 'blur(5px)',
       }}
       onClick={onClose}
     >
       <div
+        className="modal-container"
         style={{
           width: '100%',
           maxWidth,
@@ -58,7 +60,7 @@ export const Modal: React.FC<ModalProps> = ({
       >
         <div
           style={{
-            padding: '1.25rem 1.75rem',
+            padding: '1rem clamp(1rem, 3vw, 1.75rem)',
             borderBottom: '1px solid #E7E5E4',
             display: 'flex',
             alignItems: 'center',
@@ -66,9 +68,10 @@ export const Modal: React.FC<ModalProps> = ({
             background: '#FAF7F2'
           }}
         >
-          {title && <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#1C1917' }}>{title}</h3>}
+          {title && <h3 style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.25rem)', margin: 0, color: '#1C1917' }}>{title}</h3>}
           <button
             onClick={onClose}
+            aria-label="Close Modal"
             style={{
               background: 'none',
               border: 'none',
@@ -85,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
             <X size={20} />
           </button>
         </div>
-        <div style={{ padding: '1.75rem', maxHeight: '80vh', overflowY: 'auto' }}>
+        <div style={{ padding: 'clamp(1rem, 3vw, 1.75rem)', maxHeight: '85vh', overflowY: 'auto' }}>
           {children}
         </div>
       </div>

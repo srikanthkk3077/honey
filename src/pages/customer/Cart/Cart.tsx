@@ -9,7 +9,7 @@ export const Cart: React.FC = () => {
   const { cart, cartCount, clearCart } = useStore();
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
+    <div style={{ padding: 'clamp(2rem, 4vw, 3.5rem) 0 5rem 0', backgroundColor: '#FAF7F2' }}>
       <div className="container">
         <SectionTitle
           subtitle="Your Selection"
@@ -23,8 +23,8 @@ export const Cart: React.FC = () => {
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-              gap: '2.5rem',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+              gap: '2rem',
               alignItems: 'start',
             }}
           >
@@ -33,7 +33,7 @@ export const Cart: React.FC = () => {
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '24px',
-                padding: '2rem',
+                padding: 'clamp(1rem, 3vw, 2rem)',
                 border: '1px solid #E7E5E4',
               }}
             >

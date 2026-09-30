@@ -48,6 +48,7 @@ export const CustomerLayout: React.FC = () => {
           onClick={() => setCartDrawerOpen(false)}
         >
           <div
+            className="cart-drawer-panel"
             style={{
               width: '100%',
               maxWidth: '440px',
@@ -62,6 +63,7 @@ export const CustomerLayout: React.FC = () => {
           >
             {/* Drawer Header */}
             <div
+              className="cart-drawer-header"
               style={{
                 padding: '1.25rem 1.5rem',
                 borderBottom: '1px solid #E7E5E4',
@@ -93,7 +95,7 @@ export const CustomerLayout: React.FC = () => {
             </div>
 
             {/* Drawer Body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+            <div className="cart-drawer-body" style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
               {cart.length === 0 ? (
                 <EmptyCart />
               ) : (
@@ -107,7 +109,7 @@ export const CustomerLayout: React.FC = () => {
 
             {/* Drawer Footer */}
             {cart.length > 0 && (
-              <div style={{ padding: '1.25rem 1.5rem', borderTop: '1px solid #E7E5E4', backgroundColor: '#FAF7F2' }}>
+              <div className="cart-drawer-footer" style={{ padding: '1rem', borderTop: '1px solid #E7E5E4', backgroundColor: '#FAF7F2' }}>
                 <CartSummary />
               </div>
             )}
@@ -138,6 +140,23 @@ export const CustomerLayout: React.FC = () => {
         @keyframes slideInLeft {
           from { transform: translateX(-100%); }
           to { transform: translateX(0); }
+        }
+        @media (max-width: 480px) {
+          .cart-drawer-header {
+            padding: 1rem !important;
+          }
+          .cart-drawer-body {
+            padding: 0.85rem !important;
+          }
+          .cart-drawer-footer {
+            padding: 0.75rem !important;
+          }
+          .toast-container {
+            left: 16px !important;
+            right: 16px !important;
+            bottom: 16px !important;
+            max-width: 100% !important;
+          }
         }
       `}</style>
     </div>

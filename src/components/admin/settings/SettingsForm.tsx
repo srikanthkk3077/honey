@@ -20,7 +20,7 @@ export const SettingsForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '700px' }}>
-      <div style={{ backgroundColor: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ backgroundColor: '#FFFFFF', padding: 'clamp(1rem, 3vw, 1.75rem)', borderRadius: '16px', border: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <h4 style={{ fontSize: '1.1rem', color: '#1C1917', margin: 0 }}>General Store Details</h4>
 
         <Input
@@ -29,7 +29,7 @@ export const SettingsForm: React.FC = () => {
           onChange={(e) => setStoreName(e.target.value)}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem' }}>
           <Input
             label="Support Phone"
             value={phone}
@@ -50,15 +50,15 @@ export const SettingsForm: React.FC = () => {
             rows={2}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
+            style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
           />
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ backgroundColor: '#FFFFFF', padding: 'clamp(1rem, 3vw, 1.75rem)', borderRadius: '16px', border: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <h4 style={{ fontSize: '1.1rem', color: '#1C1917', margin: 0 }}>Shipping & Fulfillment Rates</h4>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem' }}>
           <Input
             label="Free Shipping Minimum Order (₹)"
             type="number"

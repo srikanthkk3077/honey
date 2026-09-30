@@ -74,6 +74,7 @@ export const Shop: React.FC = () => {
 
         {/* Filter Navigation Bar */}
         <div
+          className="shop-filter-bar"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '20px',
@@ -213,6 +214,15 @@ export const Shop: React.FC = () => {
         {/* Product Grid */}
         <ProductGrid products={filteredProducts} />
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .shop-filter-bar {
+            padding: 1rem !important;
+            border-radius: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

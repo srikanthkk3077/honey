@@ -49,6 +49,7 @@ export const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ isOpen, onClos
       <div
         style={{
           width: '280px',
+          maxWidth: '85%',
           backgroundColor: '#181511',
           color: '#E7E5E4',
           height: '100%',
@@ -56,6 +57,7 @@ export const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ isOpen, onClos
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
+          overflowY: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -39,7 +39,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [images, setImages] = useState<string[]>(
     initialData?.images && initialData.images.length > 0
       ? initialData.images
-      : ['https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80']
+      : ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80']
   );
 
   const handleNameChange = (val: string) => {
@@ -158,7 +158,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </select>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))', gap: '1rem' }}>
         <Input
           label="Price (₹)"
           required
@@ -191,14 +191,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           required
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
+          style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
         />
       </div>
 
       <ProductImageUpload images={images} onChange={setImages} />
 
       {/* Origin, Nectar, Harvest */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
         <Input
           label="Harvest Origin"
           value={origin}
@@ -219,7 +219,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </div>
 
       {/* Checkboxes */}
-      <div className="flex items-center gap-6" style={{ marginTop: '0.5rem' }}>
+      <div className="flex items-center gap-4 flex-wrap" style={{ marginTop: '0.5rem' }}>
         <label className="flex items-center gap-2" style={{ cursor: 'pointer', fontSize: '0.9rem' }}>
           <input
             type="checkbox"
@@ -252,7 +252,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </div>
 
       {/* Form Buttons */}
-      <div className="flex items-center justify-end gap-3" style={{ marginTop: '1rem', borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}>
+      <div className="flex items-center justify-end gap-3 flex-wrap" style={{ marginTop: '1rem', borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}>
         <Button variant="ghost" type="button" onClick={onCancel}>
           Cancel
         </Button>

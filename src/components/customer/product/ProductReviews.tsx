@@ -71,7 +71,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
           onSubmit={handleReviewSubmit}
           style={{
             backgroundColor: '#FAF7F2',
-            padding: '1.75rem',
+            padding: 'clamp(1rem, 3vw, 1.75rem)',
             borderRadius: '16px',
             border: '1px solid #E7E5E4',
             marginBottom: '2.5rem',
@@ -119,6 +119,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
                 placeholder="e.g. Dr. Priyanshu Sen"
                 style={{
                   width: '100%',
+                  boxSizing: 'border-box',
                   padding: '0.65rem 0.95rem',
                   borderRadius: '10px',
                   border: '1px solid #D6D3D1',
@@ -139,6 +140,7 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
                 placeholder="Describe flavor notes, floral smell, texture, or health benefits noticed..."
                 style={{
                   width: '100%',
+                  boxSizing: 'border-box',
                   padding: '0.65rem 0.95rem',
                   borderRadius: '10px',
                   border: '1px solid #D6D3D1',
@@ -161,14 +163,14 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
           <div
             key={rev.id}
             style={{
-              padding: '1.5rem',
+              padding: 'clamp(1rem, 3vw, 1.5rem)',
               borderRadius: '16px',
               backgroundColor: '#FFFFFF',
               border: '1px solid #E7E5E4',
             }}
           >
-            <div className="flex items-center justify-between" style={{ marginBottom: '0.6rem' }}>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2" style={{ marginBottom: '0.6rem' }}>
+              <div className="flex items-center gap-2 flex-wrap">
                 <span style={{ fontWeight: 700, color: '#1C1917' }}>{rev.userName}</span>
                 {rev.verified && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', color: '#059669', background: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>

@@ -9,7 +9,7 @@ export const BlogDetails: React.FC = () => {
   const post = BLOG_POSTS.find((p) => p.slug === slug) || BLOG_POSTS[0];
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
+    <div style={{ padding: 'clamp(2rem, 4vw, 3.5rem) 0 5rem 0', backgroundColor: '#FAF7F2' }}>
       <div className="container" style={{ maxWidth: '820px' }}>
         {/* Breadcrumb */}
         <div className="flex items-center gap-2" style={{ fontSize: '0.85rem', color: '#78716C', marginBottom: '2rem' }}>
@@ -20,15 +20,15 @@ export const BlogDetails: React.FC = () => {
           <span style={{ color: '#1C1917', fontWeight: 600 }}>Article</span>
         </div>
 
-        <article style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '3rem', border: '1px solid #E7E5E4' }}>
+        <article className="blog-details-article" style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: 'clamp(1.25rem, 4vw, 3rem)', border: '1px solid #E7E5E4' }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               {post.category}
             </span>
-            <h1 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.75rem)', color: '#1C1917', margin: '8px 0 1rem 0', lineHeight: 1.2 }}>
+            <h1 style={{ fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', color: '#1C1917', margin: '8px 0 1rem 0', lineHeight: 1.25, wordBreak: 'break-word' }}>
               {post.title}
             </h1>
-            <div className="flex items-center gap-4 flex-wrap" style={{ fontSize: '0.85rem', color: '#78716C' }}>
+            <div className="flex items-center gap-3 flex-wrap" style={{ fontSize: '0.85rem', color: '#78716C' }}>
               <div className="flex items-center gap-1"><User size={14} /> {post.author}</div>
               <span>•</span>
               <div className="flex items-center gap-1"><Calendar size={14} /> {post.date}</div>
@@ -64,13 +64,13 @@ export const BlogDetails: React.FC = () => {
             </ol>
           </div>
 
-          <div style={{ borderTop: '1px solid #E7E5E4', marginTop: '3rem', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link to="/blog">
+          <div className="blog-details-nav" style={{ borderTop: '1px solid #E7E5E4', marginTop: '3rem', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <Link to="/blog" style={{ textDecoration: 'none' }}>
               <Button variant="ghost" leftIcon={<ArrowLeft size={16} />}>
                 Back to All Articles
               </Button>
             </Link>
-            <Link to="/shop">
+            <Link to="/shop" style={{ textDecoration: 'none' }}>
               <Button size="md">Shop Pure Honey</Button>
             </Link>
           </div>

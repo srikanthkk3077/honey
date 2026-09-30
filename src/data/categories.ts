@@ -6,7 +6,7 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: 'Wild Forest Honey',
     slug: 'wild-forest-honey',
     description: 'Dark, enzyme-rich raw nectar collected from deep forest flora & untouched wild hives.',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
     productCount: 4,
   },
   {

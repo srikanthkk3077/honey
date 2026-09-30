@@ -160,14 +160,43 @@ button, input, select, textarea {
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
+/* Responsive Grid Breakpoints */
 @media (max-width: 1024px) {
-  .grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  .grid-3 { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  .container { padding: 0 1.25rem; }
+  .container-narrow { padding: 0 1.25rem; }
+}
+
+@media (max-width: 768px) {
+  .container-fluid { padding: 0 1rem; }
 }
 
 @media (max-width: 640px) {
-  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 1.25rem; }
   .container { padding: 0 1rem; }
+  .container-narrow { padding: 0 1rem; }
+}
+
+@media (max-width: 400px) {
+  .container { padding: 0 0.75rem; }
+  .container-narrow { padding: 0 0.75rem; }
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #D97706;
+  border-radius: 3px;
 }
 
 /* Common Card */

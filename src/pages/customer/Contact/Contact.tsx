@@ -21,7 +21,7 @@ export const Contact: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
+    <div style={{ padding: 'clamp(2rem, 4vw, 3.5rem) 0 5rem 0', backgroundColor: '#FAF7F2' }}>
       <div className="container">
         <SectionTitle
           subtitle="Get in Touch"
@@ -32,15 +32,25 @@ export const Contact: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '3rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
+            gap: 'clamp(1.5rem, 3vw, 3rem)',
             alignItems: 'start',
           }}
         >
           {/* Info Side */}
           <div>
-            <div style={{ backgroundColor: '#181511', color: '#FFFFFF', padding: '2.5rem', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.3)', marginBottom: '2rem' }}>
-              <h3 style={{ fontSize: '1.4rem', color: '#FFFFFF', marginBottom: '1.25rem' }}>
+            <div
+              className="contact-info-card"
+              style={{
+                backgroundColor: '#181511',
+                color: '#FFFFFF',
+                padding: 'clamp(1.25rem, 3.5vw, 2.5rem)',
+                borderRadius: '24px',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              <h3 style={{ fontSize: 'clamp(1.2rem, 2.5vw, 1.4rem)', color: '#FFFFFF', marginBottom: '1.25rem' }}>
                 Apiary Headquarters & Honey House
               </h3>
 
@@ -49,7 +59,7 @@ export const Contact: React.FC = () => {
                   <MapPin size={20} color="#F59E0B" style={{ marginTop: '2px', flexShrink: 0 }} />
                   <div>
                     <div style={{ fontWeight: 700, color: '#FFFFFF' }}>Madhuvan Reserve Apiary</div>
-                    <div style={{ color: '#A8A29E', fontSize: '0.85rem' }}>{CONTACT_INFO.address}</div>
+                    <div style={{ color: '#A8A29E', fontSize: '0.85rem', wordBreak: 'break-word' }}>{CONTACT_INFO.address}</div>
                   </div>
                 </div>
 
@@ -65,14 +75,14 @@ export const Contact: React.FC = () => {
                   <Mail size={20} color="#F59E0B" style={{ flexShrink: 0 }} />
                   <div>
                     <div style={{ fontWeight: 700, color: '#FFFFFF' }}>Direct Email</div>
-                    <div style={{ color: '#A8A29E', fontSize: '0.85rem' }}>{CONTACT_INFO.email}</div>
+                    <div style={{ color: '#A8A29E', fontSize: '0.85rem', wordBreak: 'break-all' }}>{CONTACT_INFO.email}</div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Quick WhatsApp helper card */}
-            <div style={{ backgroundColor: '#ECFDF5', padding: '1.5rem', borderRadius: '18px', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ backgroundColor: '#ECFDF5', padding: '1.25rem', borderRadius: '18px', border: '1px solid #A7F3D0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#059669', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <MessageSquare size={22} />
               </div>
@@ -85,9 +95,10 @@ export const Contact: React.FC = () => {
 
           {/* Form Side */}
           <div
+            className="contact-form-card"
             style={{
               backgroundColor: '#FFFFFF',
-              padding: '2.5rem',
+              padding: 'clamp(1.25rem, 3.5vw, 2.5rem)',
               borderRadius: '24px',
               border: '1px solid #E7E5E4',
               boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
@@ -108,7 +119,7 @@ export const Contact: React.FC = () => {
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <h3 style={{ fontSize: '1.25rem', color: '#1C1917', margin: 0 }}>Send a Message</h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
                   <Input
                     label="Full Name"
                     required
@@ -141,7 +152,7 @@ export const Contact: React.FC = () => {
                   <select
                     value={form.subject}
                     onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
                   >
                     <option value="General Question">General Product Question</option>
                     <option value="Bulk Order">Bulk / Corporate Gifting (20+ Jars)</option>
@@ -160,11 +171,11 @@ export const Contact: React.FC = () => {
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     placeholder="How can we assist you with our raw honey harvests?"
-                    style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
+                    style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
                   />
                 </div>
 
-                <Button type="submit" size="lg" rightIcon={<Send size={16} />}>
+                <Button type="submit" size="lg" rightIcon={<Send size={16} />} style={{ width: '100%' }}>
                   Send Inquiry to Apiary
                 </Button>
               </form>

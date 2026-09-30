@@ -20,7 +20,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
   const [description, setDescription] = useState(initialData?.description || '');
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(
-    initialData?.thumbnailUrl || 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80'
+    initialData?.thumbnailUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
   );
   const [category, setCategory] = useState<VideoCategory>(initialData?.category || 'harvest');
   const [duration, setDuration] = useState(initialData?.duration || '0:45');
@@ -60,7 +60,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
       title,
       description,
       videoUrl,
-      thumbnailUrl: thumbnailUrl || 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+      thumbnailUrl: thumbnailUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
       category,
       duration: duration || '0:30',
       taggedProductId: selectedProduct ? selectedProduct.id : undefined,
@@ -89,7 +89,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.5rem',
+        padding: 'clamp(0.5rem, 2vw, 1.5rem)',
       }}
       onClick={onClose}
     >
@@ -102,7 +102,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           borderRadius: '24px',
           overflowY: 'auto',
           boxShadow: '0 25px 50px rgba(0,0,0,0.25)',
-          padding: '2rem',
+          padding: 'clamp(1rem, 3.5vw, 2rem)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -121,7 +121,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
             <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.5rem' }}>
               Video Source Method:
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.75rem' }}>
               <button
                 type="button"
                 onClick={() => setUploadMode('file')}
@@ -220,7 +220,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           )}
 
           {/* Title & Duration */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
             <Input
               label="Video Title"
               required
@@ -238,7 +238,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           </div>
 
           {/* Category & Tagged Product */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
                 Reel Category
@@ -246,7 +246,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as VideoCategory)}
-                style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
               >
                 <option value="harvest">Wild Apiary Harvest</option>
                 <option value="purity">NMR Purity Test</option>
@@ -262,7 +262,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
               <select
                 value={taggedProductId}
                 onChange={(e) => setTaggedProductId(e.target.value)}
-                style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
+                style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
               >
                 <option value="">-- No Tagged Product --</option>
                 {products.map((p) => (
@@ -294,7 +294,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happens in this video? E.g., Watch Mowals harvest wild honeycomb..."
-              style={{ width: '100%', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
             />
           </div>
 
@@ -314,7 +314,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           )}
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3" style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}>
+          <div className="flex items-center justify-end gap-3 flex-wrap" style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}>
             <Button variant="ghost" type="button" onClick={onClose}>
               Cancel
             </Button>

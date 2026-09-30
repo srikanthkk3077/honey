@@ -33,6 +33,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
 
   return (
     <div
+      className="video-modal-backdrop"
       style={{
         position: 'fixed',
         inset: 0,
@@ -42,7 +43,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.5rem',
+        padding: 'clamp(0.5rem, 2vw, 1.5rem)',
       }}
       onClick={onClose}
     >
@@ -121,10 +122,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
         </div>
 
         {/* Video Information & Tagged Product Banner */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', color: '#FFFFFF' }}>
+        <div style={{ padding: 'clamp(1rem, 3vw, 1.5rem)', display: 'flex', flexDirection: 'column', gap: '1rem', color: '#FFFFFF' }}>
           <div>
             <div className="flex items-center justify-between gap-4" style={{ marginBottom: '0.5rem' }}>
-              <h3 style={{ fontSize: '1.25rem', color: '#FFFFFF', margin: 0 }}>
+              <h3 style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.25rem)', color: '#FFFFFF', margin: 0 }}>
                 {video.title}
               </h3>
               <div className="flex items-center gap-1" style={{ fontSize: '0.8rem', color: '#A8A29E', flexShrink: 0 }}>
@@ -143,12 +144,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({ video, onClose }) => {
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid rgba(245, 158, 11, 0.4)',
                 borderRadius: '16px',
-                padding: '0.85rem 1.25rem',
+                padding: '0.75rem 1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: '1rem',
+                gap: '0.75rem',
               }}
             >
               <div className="flex items-center gap-3">

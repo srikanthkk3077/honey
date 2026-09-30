@@ -21,11 +21,12 @@ export const OurStory: React.FC = () => {
 
         {/* Feature Image Banner */}
         <div
+          className="story-banner-card"
           style={{
             borderRadius: '28px',
             overflow: 'hidden',
             boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
-            marginBottom: '4.5rem',
+            marginBottom: '4rem',
             position: 'relative',
             maxHeight: '440px',
           }}
@@ -36,6 +37,7 @@ export const OurStory: React.FC = () => {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
           <div
+            className="story-banner-overlay"
             style={{
               position: 'absolute',
               inset: 0,
@@ -46,10 +48,10 @@ export const OurStory: React.FC = () => {
             }}
           >
             <div style={{ color: '#FFFFFF' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+              <div style={{ fontSize: 'clamp(1.15rem, 3vw, 1.4rem)', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
                 Protected Wild Flora Biomes
               </div>
-              <p style={{ margin: '4px 0 0 0', color: '#E7E5E4', fontSize: '0.95rem' }}>
+              <p style={{ margin: '4px 0 0 0', color: '#E7E5E4', fontSize: '0.9rem' }}>
                 Himalayan pine valleys, Uttarakhand foothills, and pristine mangrove reserves.
               </p>
             </div>
@@ -57,27 +59,27 @@ export const OurStory: React.FC = () => {
         </div>
 
         {/* Narrative Sections */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '3.5rem', marginBottom: '5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '3rem', marginBottom: '4rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.8rem', color: '#1C1917', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.75rem', color: '#1C1917', marginBottom: '1rem' }}>
               The Courage of the Mowals
             </h2>
-            <p style={{ color: '#57534E', lineHeight: 1.7, marginBottom: '1rem', fontSize: '0.98rem' }}>
+            <p style={{ color: '#57534E', lineHeight: 1.7, marginBottom: '1rem', fontSize: '0.95rem' }}>
               Every spring, the indigenous honey hunters (Mowals) of Bengal navigate tidal mangrove rivers to forage wild Apis dorsata honey. This ancient trade requires deep forest reverence and instinct.
             </p>
-            <p style={{ color: '#57534E', lineHeight: 1.7, fontSize: '0.98rem' }}>
+            <p style={{ color: '#57534E', lineHeight: 1.7, fontSize: '0.95rem' }}>
               Historically, middlemen paid Mowals meager prices while blending their pure wild nectar with cheap corn syrup. Madhuvan eliminated all intermediaries, paying collectors directly and providing safety gear and colony preservation training.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: '1.8rem', color: '#1C1917', marginBottom: '1rem' }}>
+            <h2 style={{ fontSize: '1.75rem', color: '#1C1917', marginBottom: '1rem' }}>
               Nomadic Himalayan Beekeepers
             </h2>
-            <p style={{ color: '#57534E', lineHeight: 1.7, marginBottom: '1rem', fontSize: '0.98rem' }}>
+            <p style={{ color: '#57534E', lineHeight: 1.7, marginBottom: '1rem', fontSize: '0.95rem' }}>
               Across Kashmir and Himachal, our partner beekeepers migrate with their bee colonies following nature’s flower calendar. In May they follow Black Locust acacia blooms; in July, high-altitude wildflower meadows.
             </p>
-            <p style={{ color: '#57534E', lineHeight: 1.7, fontSize: '0.98rem' }}>
+            <p style={{ color: '#57534E', lineHeight: 1.7, fontSize: '0.95rem' }}>
               By following seasonal migrations without artificial sugar-feeding, our bees produce the authentic single-flora honey varieties that connoisseurs and herbalists cherish.
             </p>
           </div>
@@ -85,13 +87,14 @@ export const OurStory: React.FC = () => {
 
         {/* Impact numbers */}
         <div
+          className="story-impact-grid"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
             padding: '3rem',
             border: '1px solid #E7E5E4',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
             gap: '2rem',
             textAlign: 'center',
           }}
@@ -129,6 +132,19 @@ export const OurStory: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .story-banner-overlay {
+            padding: 1.25rem !important;
+          }
+          .story-impact-grid {
+            padding: 1.5rem 1rem !important;
+            border-radius: 18px !important;
+            gap: 1.5rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

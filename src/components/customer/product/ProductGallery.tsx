@@ -31,15 +31,15 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productN
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {images.map((img, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setActiveImage(idx)}
               style={{
-                width: '74px',
-                height: '74px',
+                width: 'clamp(56px, 16vw, 74px)',
+                height: 'clamp(56px, 16vw, 74px)',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 border: activeImage === idx ? '2px solid #D97706' : '1px solid #E7E5E4',
@@ -48,6 +48,7 @@ export const ProductGallery: React.FC<ProductGalleryProps> = ({ images, productN
                 cursor: 'pointer',
                 opacity: activeImage === idx ? 1 : 0.65,
                 transition: 'all 0.2s',
+                flexShrink: 0,
               }}
             >
               <img src={img} alt={`${productName} thumbnail ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />

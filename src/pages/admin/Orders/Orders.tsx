@@ -46,7 +46,7 @@ export const Orders: React.FC = () => {
 
       {/* Filter bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', backgroundColor: '#FFFFFF', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid #E7E5E4' }}>
-        <div style={{ maxWidth: '300px', flex: 1 }}>
+        <div style={{ flex: '1 1 240px', minWidth: 0, maxWidth: '400px' }}>
           <Input
             placeholder="Search order # or customer..."
             value={search}
@@ -55,7 +55,7 @@ export const Orders: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((st) => (
             <button
               key={st}

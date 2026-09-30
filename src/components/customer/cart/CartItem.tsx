@@ -11,23 +11,25 @@ export const CartItem: React.FC<{ item: CartItemType }> = ({ item }) => {
 
   return (
     <div
+      className="cart-item-row"
       style={{
         display: 'flex',
+        flexWrap: 'wrap',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '1.25rem 0',
+        padding: '1.15rem 0',
         borderBottom: '1px solid #E7E5E4',
-        gap: '1rem',
+        gap: '0.85rem',
       }}
     >
       {/* Product Image & Info */}
-      <div className="flex items-center gap-3" style={{ flex: 1 }}>
+      <div className="flex items-start gap-3" style={{ flex: '1 1 200px', minWidth: 0 }}>
         <Link
           to={`/product/${item.slug}`}
           onClick={() => setCartDrawerOpen(false)}
           style={{
-            width: '74px',
-            height: '74px',
+            width: '64px',
+            height: '64px',
             borderRadius: '12px',
             overflow: 'hidden',
             backgroundColor: '#FAF7F2',
@@ -38,23 +40,32 @@ export const CartItem: React.FC<{ item: CartItemType }> = ({ item }) => {
           <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </Link>
 
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <Link
             to={`/product/${item.slug}`}
             onClick={() => setCartDrawerOpen(false)}
-            style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917', lineHeight: 1.3, display: 'block' }}
+            style={{
+              fontWeight: 700,
+              fontSize: '0.92rem',
+              color: '#1C1917',
+              lineHeight: 1.3,
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'normal',
+            }}
           >
             {item.name}
           </Link>
           <div style={{ fontSize: '0.8rem', color: '#78716C', marginTop: '2px' }}>
             Size: <span style={{ fontWeight: 600, color: '#D97706' }}>{item.size}</span>
           </div>
-          <div className="flex items-baseline gap-2" style={{ marginTop: '4px' }}>
-            <span style={{ fontWeight: 700, color: '#1C1917', fontSize: '0.92rem' }}>
+          <div className="flex items-baseline gap-2" style={{ marginTop: '2px' }}>
+            <span style={{ fontWeight: 700, color: '#1C1917', fontSize: '0.9rem' }}>
               {formatPrice(item.price)}
             </span>
             {item.originalPrice > item.price && (
-              <span style={{ fontSize: '0.8rem', color: '#A8A29E', textDecoration: 'line-through' }}>
+              <span style={{ fontSize: '0.78rem', color: '#A8A29E', textDecoration: 'line-through' }}>
                 {formatPrice(item.originalPrice)}
               </span>
             )}
@@ -62,8 +73,8 @@ export const CartItem: React.FC<{ item: CartItemType }> = ({ item }) => {
         </div>
       </div>
 
-      {/* Quantity & Delete */}
-      <div className="flex items-center gap-3">
+      {/* Quantity, Total & Delete */}
+      <div className="flex items-center justify-between gap-3" style={{ flex: '0 0 auto', marginLeft: 'auto' }}>
         <QuantitySelector
           quantity={item.quantity}
           onDecrease={() => updateCartQuantity(item.id, item.quantity - 1)}
@@ -71,7 +82,7 @@ export const CartItem: React.FC<{ item: CartItemType }> = ({ item }) => {
           size="sm"
         />
 
-        <div style={{ minWidth: '70px', textAlign: 'right', fontWeight: 800, fontSize: '1rem', color: '#1C1917' }}>
+        <div style={{ minWidth: '65px', textAlign: 'right', fontWeight: 800, fontSize: '0.98rem', color: '#1C1917' }}>
           {formatPrice(item.price * item.quantity)}
         </div>
 
@@ -93,7 +104,7 @@ export const CartItem: React.FC<{ item: CartItemType }> = ({ item }) => {
           onMouseOut={(e) => (e.currentTarget.style.color = '#A8A29E')}
           title="Remove item"
         >
-          <Trash2 size={18} />
+          <Trash2 size={17} />
         </button>
       </div>
     </div>

@@ -76,7 +76,7 @@ export const Dashboard: React.FC = () => {
       <SalesChart />
 
       {/* Bottom Grid: Recent Orders & Top Products */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '2rem' }}>
         <RecentOrders />
         <TopProducts />
       </div>

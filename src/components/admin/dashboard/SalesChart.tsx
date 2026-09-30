@@ -17,11 +17,11 @@ export const SalesChart: React.FC = () => {
       style={{
         backgroundColor: '#FFFFFF',
         borderRadius: '16px',
-        padding: '1.5rem',
+        padding: 'clamp(1rem, 2.5vw, 1.5rem)',
         border: '1px solid #E7E5E4',
       }}
     >
-      <div className="flex items-center justify-between" style={{ marginBottom: '1.5rem' }}>
+      <div className="flex items-center justify-between" style={{ marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h3 style={{ fontSize: '1.15rem', color: '#1C1917', margin: 0 }}>Revenue & Harvest Trends</h3>
           <p style={{ fontSize: '0.8rem', color: '#78716C', margin: '4px 0 0 0' }}>Monthly sales in INR (Past 6 months)</p>
@@ -33,7 +33,7 @@ export const SalesChart: React.FC = () => {
       </div>
 
       {/* Bar Chart Visual */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', gap: '1rem', paddingTop: '1rem', borderBottom: '1px solid #E7E5E4' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', gap: 'clamp(0.25rem, 1.5vw, 1rem)', paddingTop: '1rem', borderBottom: '1px solid #E7E5E4' }}>
         {data.map((item) => {
           const heightPercent = (item.revenue / maxRev) * 100;
           return (

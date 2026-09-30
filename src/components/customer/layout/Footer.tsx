@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
       style={{
         backgroundColor: '#181511',
         color: '#E7E5E4',
-        paddingTop: '4rem',
+        paddingTop: 'clamp(2.5rem, 5vw, 4rem)',
         paddingBottom: '2rem',
         borderTop: '3px solid #D97706',
         marginTop: 'auto',
@@ -20,15 +20,15 @@ export const Footer: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
             gap: '1.5rem',
-            paddingBottom: '3rem',
+            paddingBottom: '2.5rem',
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            marginBottom: '3.5rem',
+            marginBottom: '3rem',
           }}
         >
           <div className="flex items-center gap-3">
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B', flexShrink: 0 }}>
               <ShieldCheck size={26} />
             </div>
             <div>
@@ -38,7 +38,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(5, 150, 105, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(5, 150, 105, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', flexShrink: 0 }}>
               <Award size={26} />
             </div>
             <div>
@@ -48,7 +48,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B', flexShrink: 0 }}>
               <Heart size={26} />
             </div>
             <div>
@@ -58,7 +58,7 @@ export const Footer: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#60A5FA', flexShrink: 0 }}>
               <CheckCircle size={26} />
             </div>
             <div>
@@ -72,7 +72,7 @@ export const Footer: React.FC = () => {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
             gap: '2.5rem',
             marginBottom: '3rem',
           }}

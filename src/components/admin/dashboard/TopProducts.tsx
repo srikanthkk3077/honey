@@ -7,7 +7,7 @@ export const TopProducts: React.FC = () => {
   const top = products.slice(0, 4);
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '1.5rem', border: '1px solid #E7E5E4' }}>
+    <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: 'clamp(1rem, 2.5vw, 1.5rem)', border: '1px solid #E7E5E4' }}>
       <h3 style={{ fontSize: '1.15rem', color: '#1C1917', marginBottom: '1.25rem' }}>
         Best Selling Harvests
       </h3>
@@ -18,10 +18,10 @@ export const TopProducts: React.FC = () => {
             <img
               src={p.images[0]}
               alt={p.name}
-              style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #E7E5E4' }}
+              style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover', border: '1px solid #E7E5E4', flexShrink: 0 }}
             />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1C1917', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1C1917', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {p.name}
               </div>
               <div style={{ fontSize: '0.78rem', color: '#78716C' }}>

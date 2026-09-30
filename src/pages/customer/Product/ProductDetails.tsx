@@ -53,9 +53,10 @@ export const ProductDetails: React.FC = () => {
 
         {/* Product Main Showcase */}
         <div
+          className="product-showcase-card"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
             gap: '3.5rem',
             alignItems: 'start',
             backgroundColor: '#FFFFFF',
@@ -71,6 +72,7 @@ export const ProductDetails: React.FC = () => {
 
         {/* Deep Dive: Story, Benefits, Nutrition */}
         <div
+          className="product-deep-dive-card"
           style={{
             marginTop: '3.5rem',
             backgroundColor: '#FFFFFF',
@@ -79,7 +81,7 @@ export const ProductDetails: React.FC = () => {
             border: '1px solid #E7E5E4',
           }}
         >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '3rem' }}>
             {/* Story & Description */}
             <div>
               <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -195,6 +197,30 @@ export const ProductDetails: React.FC = () => {
           category={product.category}
         />
       </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .product-showcase-card {
+            padding: 1.5rem !important;
+            gap: 2rem !important;
+            border-radius: 20px !important;
+          }
+          .product-deep-dive-card {
+            padding: 1.5rem !important;
+            border-radius: 20px !important;
+            margin-top: 2rem !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .product-showcase-card {
+            padding: 1rem !important;
+            gap: 1.5rem !important;
+          }
+          .product-deep-dive-card {
+            padding: 1rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

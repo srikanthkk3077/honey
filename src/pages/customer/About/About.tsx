@@ -72,7 +72,7 @@ export const About: React.FC = () => {
         </div>
 
         {/* DIY Purity Tests */}
-        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '3rem', border: '1px solid #E7E5E4', marginBottom: '4rem' }}>
+        <div className="about-tests-card" style={{ backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '3rem', border: '1px solid #E7E5E4', marginBottom: '4rem' }}>
           <SectionTitle
             subtitle="At-Home Authenticity"
             title="4 Simple DIY Tests to Verify Raw Honey"
@@ -81,9 +81,9 @@ export const About: React.FC = () => {
 
           <div className="grid grid-2 gap-6">
             {purityTests.map((t, idx) => (
-              <div key={idx} style={{ padding: '1.5rem', backgroundColor: '#FAF7F2', borderRadius: '16px', border: '1px solid #E7E5E4' }}>
-                <h4 style={{ fontSize: '1.1rem', color: '#1C1917', marginBottom: '0.5rem' }}>{t.title}</h4>
-                <p style={{ fontSize: '0.9rem', color: '#57534E', lineHeight: 1.6 }}>{t.desc}</p>
+              <div key={idx} style={{ padding: '1.25rem', backgroundColor: '#FAF7F2', borderRadius: '16px', border: '1px solid #E7E5E4' }}>
+                <h4 style={{ fontSize: '1.05rem', color: '#1C1917', marginBottom: '0.5rem' }}>{t.title}</h4>
+                <p style={{ fontSize: '0.88rem', color: '#57534E', lineHeight: 1.6 }}>{t.desc}</p>
               </div>
             ))}
           </div>
@@ -91,6 +91,7 @@ export const About: React.FC = () => {
 
         {/* Certificate banner */}
         <div
+          className="about-cert-banner"
           style={{
             backgroundColor: '#181511',
             color: '#FFFFFF',
@@ -118,6 +119,7 @@ export const About: React.FC = () => {
 
           <a
             href="mailto:quality@madhuvanhoney.com?subject=Batch NMR Certificate Request"
+            className="about-cert-btn"
             style={{
               padding: '0.85rem 1.75rem',
               backgroundColor: '#D97706',
@@ -125,12 +127,27 @@ export const About: React.FC = () => {
               borderRadius: '12px',
               fontWeight: 700,
               fontSize: '0.95rem',
+              display: 'inline-block',
+              textAlign: 'center',
             }}
           >
             Request Batch NMR
           </a>
         </div>
       </div>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .about-tests-card,
+          .about-cert-banner {
+            padding: 1.5rem !important;
+            border-radius: 18px !important;
+          }
+          .about-cert-btn {
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

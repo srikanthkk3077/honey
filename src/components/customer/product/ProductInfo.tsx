@@ -143,24 +143,28 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
           />
         </div>
 
-        <div className="flex items-center gap-3" style={{ flex: 1, minWidth: '240px', marginTop: '1.4rem' }}>
-          <Button
-            size="lg"
-            fullWidth
-            onClick={handleAddToCart}
-            leftIcon={<Droplet size={18} />}
-          >
-            Add to Basket
-          </Button>
+        <div className="flex items-center gap-3 flex-wrap" style={{ flex: 1, minWidth: 'min(100%, 280px)', marginTop: '1rem' }}>
+          <div style={{ flex: '1 1 180px' }}>
+            <Button
+              size="lg"
+              fullWidth
+              onClick={handleAddToCart}
+              leftIcon={<Droplet size={18} />}
+            >
+              Add to Basket
+            </Button>
+          </div>
 
-          <Button
-            size="lg"
-            variant="forest"
-            fullWidth
-            onClick={handleBuyNow}
-          >
-            Instant Buy Now
-          </Button>
+          <div style={{ flex: '1 1 180px' }}>
+            <Button
+              size="lg"
+              variant="forest"
+              fullWidth
+              onClick={handleBuyNow}
+            >
+              Instant Buy Now
+            </Button>
+          </div>
 
           <button
             onClick={() => toggleWishlist(product.id)}
@@ -174,6 +178,7 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
             title="Wishlist"
           >
@@ -186,7 +191,7 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
           gap: '1rem',
           padding: '1rem 0',
           borderTop: '1px solid #E7E5E4',
@@ -194,37 +199,37 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
         }}
       >
         <div className="flex items-center gap-2">
-          <Truck size={18} color="#D97706" />
+          <Truck size={18} color="#D97706" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>Express 2-4 Day Safe Delivery</span>
         </div>
         <div className="flex items-center gap-2">
-          <ShieldCheck size={18} color="#059669" />
+          <ShieldCheck size={18} color="#059669" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>100% Raw Certified Guarantee</span>
         </div>
         <div className="flex items-center gap-2">
-          <RotateCcw size={18} color="#3B82F6" />
+          <RotateCcw size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>Damage Free Glass Jar Transit</span>
         </div>
       </div>
 
       {/* Harvest Spec Sheet */}
-      <div style={{ backgroundColor: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E7E5E4' }}>
+      <div style={{ backgroundColor: '#FFFFFF', padding: '1.25rem', borderRadius: '16px', border: '1px solid #E7E5E4' }}>
         <h4 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#1C1917' }}>Apiary Spec Sheet</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', fontSize: '0.88rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '0.85rem', fontSize: '0.88rem' }}>
           <div>
-            <span style={{ color: '#78716C' }}>Geographic Origin:</span>
+            <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Geographic Origin:</span>
             <div style={{ fontWeight: 600, color: '#1C1917' }}>{product.origin}</div>
           </div>
           <div>
-            <span style={{ color: '#78716C' }}>Floral Source:</span>
+            <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Floral Source:</span>
             <div style={{ fontWeight: 600, color: '#1C1917' }}>{product.nectarSource}</div>
           </div>
           <div>
-            <span style={{ color: '#78716C' }}>Harvest Season:</span>
+            <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Harvest Season:</span>
             <div style={{ fontWeight: 600, color: '#1C1917' }}>{product.harvestSeason}</div>
           </div>
           <div>
-            <span style={{ color: '#78716C' }}>Lab NMR Purity:</span>
+            <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Lab NMR Purity:</span>
             <div style={{ fontWeight: 600, color: '#059669' }}>{product.purityScore}% (Unheated)</div>
           </div>
         </div>

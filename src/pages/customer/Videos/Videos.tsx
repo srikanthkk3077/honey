@@ -34,7 +34,7 @@ export const Videos: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
+    <div style={{ padding: 'clamp(2rem, 4vw, 3.5rem) 0 5rem 0', backgroundColor: '#FAF7F2' }}>
       <div className="container">
         <SectionTitle
           subtitle="Madhuvan Visual Chronicle"
@@ -47,7 +47,7 @@ export const Videos: React.FC = () => {
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '20px',
-            padding: '1.25rem 1.5rem',
+            padding: 'clamp(1rem, 2.5vw, 1.25rem) clamp(1rem, 3vw, 1.5rem)',
             border: '1px solid #E7E5E4',
             marginBottom: '2.5rem',
             boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
@@ -64,9 +64,9 @@ export const Videos: React.FC = () => {
                 key={cat.id}
                 onClick={() => setCategoryFilter(cat.id)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '7px 14px',
                   borderRadius: '10px',
-                  fontSize: '0.88rem',
+                  fontSize: '0.85rem',
                   fontWeight: categoryFilter === cat.id ? 700 : 500,
                   border: categoryFilter === cat.id ? '1.5px solid #D97706' : '1px solid #E7E5E4',
                   background: categoryFilter === cat.id ? '#FEF3C7' : '#FFFFFF',
@@ -79,7 +79,7 @@ export const Videos: React.FC = () => {
             ))}
           </div>
 
-          <div style={{ width: '100%', maxWidth: '300px' }}>
+          <div style={{ flex: '1 1 220px', minWidth: 0, maxWidth: '320px' }}>
             <Input
               placeholder="Search video clips..."
               value={search}

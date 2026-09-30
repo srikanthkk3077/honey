@@ -35,16 +35,17 @@ export const AdminLogin: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '2rem 1.5rem',
+        padding: '2rem clamp(0.75rem, 3vw, 1.5rem)',
       }}
     >
       <div
+        className="admin-login-card"
         style={{
           width: '100%',
           maxWidth: '440px',
           backgroundColor: '#FFFFFF',
           borderRadius: '24px',
-          padding: '2.5rem',
+          padding: 'clamp(1.25rem, 4vw, 2.5rem)',
           boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
         }}
       >

@@ -97,7 +97,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
         ))}
       </div>
 
-      <div className="flex items-center justify-between" style={{ marginTop: '1.5rem' }}>
+      <div className="payment-action-buttons" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
         <Button variant="ghost" onClick={onBack} disabled={isProcessing}>
           Back to Address
         </Button>
@@ -110,6 +110,18 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
         <ShieldCheck size={16} color="#059669" />
         <span>Bank-grade 256-bit encrypted checkout</span>
       </div>
+
+      <style>{`
+        @media (max-width: 480px) {
+          .payment-action-buttons {
+            flex-direction: column-reverse !important;
+            align-items: stretch !important;
+          }
+          .payment-action-buttons button {
+            width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

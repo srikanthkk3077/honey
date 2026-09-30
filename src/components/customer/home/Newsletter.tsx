@@ -91,7 +91,7 @@ export const Newsletter: React.FC = () => {
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
               <input
                 type="email"
                 required
@@ -99,8 +99,9 @@ export const Newsletter: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
-                  flex: 1,
-                  minWidth: '260px',
+                  flex: '1 1 240px',
+                  minWidth: 0,
+                  maxWidth: '100%',
                   padding: '0.85rem 1.25rem',
                   borderRadius: '12px',
                   border: '1px solid rgba(255,255,255,0.2)',
@@ -110,7 +111,7 @@ export const Newsletter: React.FC = () => {
                   outline: 'none',
                 }}
               />
-              <Button type="submit" size="lg" rightIcon={<Send size={16} />}>
+              <Button type="submit" size="lg" rightIcon={<Send size={16} />} style={{ flex: '1 1 auto' }}>
                 Claim 10% Off
               </Button>
             </form>

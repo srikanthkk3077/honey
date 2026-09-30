@@ -31,7 +31,7 @@ export const BLOG_POSTS = [
     slug: 'raw-honey-for-immunity-enzymes',
     title: 'Living Food: What Diastase & Invertase Enzymes Actually Do in Your Body',
     snippet: 'Why the commercial honeys lining supermarket shelves are biologically dead, and how raw enzymatically active nectar supports gut microbiome health.',
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
     category: 'Nutrition & Health',
     readTime: '6 min read',
     date: 'March 12, 2026',
