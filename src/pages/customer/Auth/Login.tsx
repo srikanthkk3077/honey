@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
@@ -10,13 +10,18 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const { login, isAuthLoading } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read ?redirect=/checkout (or any path) from query string
+  const searchParams = new URLSearchParams(location.search);
+  const redirectTo = searchParams.get('redirect') || '/orders';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     const success = await login(email, password);
     if (success) {
-      navigate('/orders');
+      navigate(redirectTo);
     }
   };
 
@@ -90,7 +95,7 @@ export const Login: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.88rem', color: '#78716C' }}>
             Don't have an account?{' '}
-            <Link to="/register" style={{ color: '#D97706', fontWeight: 700 }}>
+            <Link to={`/register${location.search}`} style={{ color: '#D97706', fontWeight: 700 }}>
               Create Account
             </Link>
           </div>

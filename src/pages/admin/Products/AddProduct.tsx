@@ -7,8 +7,8 @@ export const AddProduct: React.FC = () => {
   const { addProduct } = useStore();
   const navigate = useNavigate();
 
-  const handleAdd = (data: any) => {
-    addProduct(data);
+  const handleAdd = async (data: any) => {
+    await addProduct(data);
     navigate('/admin/products');
   };
 

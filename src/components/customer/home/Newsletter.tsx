@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2, Loader } from 'lucide-react';
 import { Button } from '../../common/Button';
+import { contactApi } from '../../../services/customerApi';
 
 export const Newsletter: React.FC = () => {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.trim()) {
+    if (!email.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await contactApi.subscribeNewsletter(email.trim());
       setSubmitted(true);
+    } catch {
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

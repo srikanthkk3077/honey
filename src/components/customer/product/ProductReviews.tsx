@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ProductReview } from '../../../types/product.types';
-import { Star, CheckCircle, MessageSquarePlus } from 'lucide-react';
+import { Star, CheckCircle, MessageSquarePlus, Loader } from 'lucide-react';
 import { Button } from '../../common/Button';
 import { useStore } from '../../../store/store';
+import productApi from '../../../services/productApi';
 
 interface ProductReviewsProps {
   productId: string;
@@ -17,8 +18,9 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
   const [formRating, setFormRating] = useState(5);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !comment.trim()) return;
 
@@ -28,14 +30,27 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
       rating: formRating,
       comment: comment.trim(),
       date: new Date().toISOString().split('T')[0],
-      verified: true
+      verified: true,
     };
 
     setLocalReviews([newRev, ...localReviews]);
-    setName('');
-    setComment('');
-    setShowAddForm(false);
-    showToast('Thank you for sharing your experience with Madhuvan Honey!', 'success');
+    setIsSubmitting(true);
+
+    try {
+      await productApi.addReview(productId, {
+        userName: name.trim(),
+        rating: formRating,
+        comment: comment.trim(),
+      });
+      showToast('Thank you for sharing your experience with Madhuvan Honey!', 'success');
+    } catch {
+      showToast('Review submitted locally.', 'info');
+    } finally {
+      setIsSubmitting(false);
+      setName('');
+      setComment('');
+      setShowAddForm(false);
+    }
   };
 
   return (

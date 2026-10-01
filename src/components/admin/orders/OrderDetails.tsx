@@ -9,9 +9,10 @@ import { Button } from '../../common/Button';
 interface OrderDetailsProps {
   order: Order;
   onUpdateStatus: (status: OrderStatus) => void;
+  onOrderUpdated?: (order: Order) => void;
 }
 
-export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, onUpdateStatus }) => {
+export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, onUpdateStatus, onOrderUpdated }) => {
   const { verifyPayment, rejectPayment, showToast } = useStore();
   const [copiedUtr, setCopiedUtr] = useState(false);
   const [showRejectInput, setShowRejectInput] = useState(false);
@@ -25,13 +26,18 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
     setTimeout(() => setCopiedUtr(false), 2000);
   };
 
-  const handleVerify = () => {
-    verifyPayment(order.id);
+  const handleVerify = async () => {
+    await verifyPayment(order.id);
+    // Build updated order locally and notify parent
+    const updated: Order = { ...order, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() };
+    onOrderUpdated?.(updated);
   };
 
-  const handleConfirmReject = () => {
-    rejectPayment(order.id, rejectReason.trim());
+  const handleConfirmReject = async () => {
+    await rejectPayment(order.id, rejectReason.trim());
     setShowRejectInput(false);
+    const updated: Order = { ...order, paymentStatus: 'rejected', paymentRejectedReason: rejectReason.trim() };
+    onOrderUpdated?.(updated);
   };
 
   return (

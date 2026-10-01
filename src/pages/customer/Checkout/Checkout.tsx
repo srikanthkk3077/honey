@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { ShippingAddress, PaymentMethodType, Order } from '../../../types/order.types';
@@ -32,6 +32,22 @@ export const Checkout: React.FC = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('upi');
+
+  // Auto-fill address whenever user data changes (e.g., after login redirect)
+  useEffect(() => {
+    if (user) {
+      setAddress((prev) => ({
+        ...prev,
+        fullName: user.name || prev.fullName,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        addressLine1: user.address?.street || prev.addressLine1,
+        city: user.address?.city || prev.city,
+        state: user.address?.state || prev.state,
+        pincode: user.address?.pincode || prev.pincode,
+      }));
+    }
+  }, [user?.id]);
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,6 +99,39 @@ export const Checkout: React.FC = () => {
     <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
       <div className="container">
         <CheckoutSteps currentStep={currentStep} />
+
+        {/* Guest notice banner */}
+        {!user && currentStep !== 3 && (
+          <div
+            style={{
+              backgroundColor: '#FFFBEB',
+              border: '1.5px solid #FDE68A',
+              borderRadius: '14px',
+              padding: '0.85rem 1.25rem',
+              marginBottom: '1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+              fontSize: '0.9rem',
+              color: '#92400E',
+            }}
+          >
+            <span>🛒 You're checking out as a guest. Your details won't be saved.</span>
+            <Link
+              to="/login?redirect=/checkout"
+              style={{
+                color: '#B45309',
+                fontWeight: 700,
+                textDecoration: 'underline',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Sign in to auto-fill your details →
+            </Link>
+          </div>
+        )}
 
         {currentStep === 3 && completedOrder ? (
           /* Order Confirmation Screen */

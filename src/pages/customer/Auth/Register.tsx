@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
@@ -12,13 +12,18 @@ export const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const { register, isAuthLoading } = useStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Preserve redirect param (e.g., if coming from cart → login → register)
+  const searchParams = new URLSearchParams(location.search);
+  const redirectTo = searchParams.get('redirect') || '/orders';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) return;
     const success = await register(name, email, phone, password);
     if (success) {
-      navigate('/orders');
+      navigate(redirectTo);
     }
   };
 
@@ -112,7 +117,7 @@ export const Register: React.FC = () => {
 
           <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.88rem', color: '#78716C' }}>
             Already have an account?{' '}
-            <Link to="/login" style={{ color: '#D97706', fontWeight: 700 }}>
+            <Link to={`/login${location.search}`} style={{ color: '#D97706', fontWeight: 700 }}>
               Sign In
             </Link>
           </div>

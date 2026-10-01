@@ -1,16 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from '../../../components/admin/orders/OrderStatus';
-import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck, Clock, XCircle, Loader } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 import { CONTACT_INFO } from '../../../utils/constants';
+import orderApi from '../../../services/orderApi';
+import { Order } from '../../../types/order.types';
 
 export const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { getOrderById } = useStore();
-  const order = id ? getOrderById(id) : undefined;
+  const [fetchedOrder, setFetchedOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const localOrder = id ? getOrderById(id) : undefined;
+  const order = localOrder || fetchedOrder;
+
+  useEffect(() => {
+    if (!localOrder && id) {
+      setIsLoading(true);
+      orderApi
+        .getById(id)
+        .then(setFetchedOrder)
+        .catch(() => {
+          return orderApi.track(id).then(setFetchedOrder);
+        })
+        .catch(() => {})
+        .finally(() => setIsLoading(false));
+    }
+  }, [id, localOrder]);
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: '8rem 0', textAlign: 'center', backgroundColor: '#FAF7F2' }}>
+        <Loader size={40} color="#D97706" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1rem auto' }} />
+        <h3 style={{ color: '#1C1917' }}>Retrieving your order details…</h3>
+      </div>
+    );
+  }
 
   if (!order) {
     return (

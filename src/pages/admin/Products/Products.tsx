@@ -23,9 +23,9 @@ export const Products: React.FC = () => {
     navigate(`/admin/products/edit/${p.id}`);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to remove this honey product from store inventory?')) {
-      deleteProduct(id);
+      await deleteProduct(id);
     }
   };
 

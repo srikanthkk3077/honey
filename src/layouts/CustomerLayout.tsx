@@ -22,6 +22,7 @@ export const CustomerLayout: React.FC = () => {
     setCartDrawerOpen,
     toasts,
     removeToast,
+    isAuthenticated,
   } = useStore();
   const navigate = useNavigate();
 
@@ -212,7 +213,11 @@ export const CustomerLayout: React.FC = () => {
                   type="button"
                   onClick={() => {
                     setCartDrawerOpen(false);
-                    navigate('/checkout');
+                    if (!isAuthenticated) {
+                      navigate('/login?redirect=/checkout');
+                    } else {
+                      navigate('/checkout');
+                    }
                   }}
                   style={{
                     width: '100%',

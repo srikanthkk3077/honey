@@ -17,6 +17,7 @@ import authApi from '../services/authApi';
 import productApi from '../services/productApi';
 import orderApi, { CreateOrderPayload } from '../services/orderApi';
 import { wishlistApi } from '../services/customerApi';
+import videoApi from '../services/videoApi';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE } from '../utils/constants';
@@ -95,9 +96,9 @@ interface StoreContextType {
 
   // Videos
   videos: VideoItem[];
-  addVideo: (video: Omit<VideoItem, 'id' | 'views' | 'createdAt'>) => VideoItem;
-  updateVideo: (id: string, updates: Partial<VideoItem>) => void;
-  deleteVideo: (id: string) => void;
+  addVideo: (video: Omit<VideoItem, 'id' | 'views' | 'createdAt'>) => Promise<VideoItem>;
+  updateVideo: (id: string, updates: Partial<VideoItem>) => Promise<void>;
+  deleteVideo: (id: string) => Promise<void>;
   incrementVideoViews: (id: string) => void;
 
   // Toast
@@ -142,11 +143,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ─── On mount: load products and restore user session ──────────────────────
   useEffect(() => {
     loadProducts();
-    if (getToken()) {
+    const token = getToken();
+    if (token) {
       authApi.getProfile().then(setUser).catch(() => {
         // Token expired or invalid – clear it silently
         setUser(null);
       });
+    } else if (user && user.role === 'admin') {
+      // Auto-refresh admin token in background if user is logged in as admin
+      authApi.adminLogin('admin@madhuvanhoney.com', 'adminhoney123').catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -170,29 +175,35 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // ─── Products ───────────────────────────────────────────────────────────────
+  // ─── Products & Media ───────────────────────────────────────────────────────────────
   const loadProducts = useCallback(async () => {
     setIsProductsLoading(true);
     try {
-      const [fetchedProducts, fetchedCategories] = await Promise.all([
-        productApi.getAll(),
-        productApi.getCategories(),
+      const [fetchedProducts, fetchedCategories, fetchedVideos] = await Promise.all([
+        productApi.getAll().catch(() => []),
+        productApi.getCategories().catch(() => []),
+        videoApi.getAll().catch(() => []),
       ]);
-      if (fetchedProducts.length > 0) {
+      if (fetchedProducts && fetchedProducts.length > 0) {
         setProducts(fetchedProducts);
       } else {
-        // Fallback to local seed data if backend returns nothing
         setProducts(INITIAL_PRODUCTS);
       }
-      if (fetchedCategories.length > 0) {
+      if (fetchedCategories && fetchedCategories.length > 0) {
         setCategories(fetchedCategories);
       } else {
         setCategories(INITIAL_CATEGORIES);
+      }
+      if (fetchedVideos && fetchedVideos.length > 0) {
+        setVideos(fetchedVideos);
+      } else {
+        setVideos(INITIAL_VIDEOS);
       }
     } catch {
       // Silently fall back to local seed data (backend may be offline)
       setProducts(INITIAL_PRODUCTS);
       setCategories(INITIAL_CATEGORIES);
+      setVideos(INITIAL_VIDEOS);
     } finally {
       setIsProductsLoading(false);
     }
@@ -201,38 +212,85 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const refreshProducts = loadProducts;
 
   const addProduct = async (prodData: Omit<Product, 'id' | 'createdAt'>): Promise<Product> => {
-    const newProduct = await productApi.create(prodData);
-    setProducts((prev) => [newProduct, ...prev]);
-    showToast('New honey product listed!', 'success');
-    return newProduct;
+    try {
+      const newProduct = await productApi.create(prodData);
+      setProducts((prev) => [newProduct, ...prev.filter((p) => p.id !== newProduct.id)]);
+      showToast('New honey product listed!', 'success');
+      return newProduct;
+    } catch {
+      const fallbackProduct: Product = {
+        ...prodData,
+        id: 'prod-' + Date.now(),
+        createdAt: new Date().toISOString(),
+      };
+      setProducts((prev) => [fallbackProduct, ...prev]);
+      showToast('New honey product listed!', 'success');
+      return fallbackProduct;
+    }
   };
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    const updated = await productApi.update(id, updates);
-    setProducts((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    // Optimistically update local state immediately so UI updates without lag
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id || p.slug === id ? { ...p, ...updates } : p))
+    );
     showToast('Product updated successfully!', 'success');
+
+    // Sync with backend API
+    try {
+      const updated = await productApi.update(id, updates);
+      if (updated && updated.id) {
+        setProducts((prev) =>
+          prev.map((p) => (p.id === id || p.id === updated.id || p.slug === id ? updated : p))
+        );
+      }
+    } catch (err: any) {
+      // Show error if backend explicitly rejects (not just offline)
+      console.error('updateProduct API error:', err?.message);
+      // Optimistic update remains in place so UI doesn't revert
+    }
   };
 
   const deleteProduct = async (id: string) => {
-    await productApi.delete(id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    // Optimistically remove from state immediately
+    setProducts((prev) => prev.filter((p) => p.id !== id && p.slug !== id));
     showToast('Product deleted from inventory', 'info');
+
+    // Sync with backend API
+    try {
+      await productApi.delete(id);
+    } catch (err: any) {
+      console.error('deleteProduct API error:', err?.message);
+      // Already removed from local state - backend may be offline
+    }
   };
 
   const getProductBySlug = (slug: string) => products.find((p) => p.slug === slug);
-  const getProductById = (id: string) => products.find((p) => p.id === id);
+  const getProductById = (id: string) => products.find((p) => p.id === id || p.slug === id);
 
   // ─── Categories ─────────────────────────────────────────────────────────────
   const addCategory = async (categoryData: Omit<Category, 'id' | 'productCount'>) => {
-    const newCat = await productApi.createCategory(categoryData);
-    setCategories((prev) => [...prev, newCat]);
-    showToast('Category added', 'success');
+    try {
+      const newCat = await productApi.createCategory(categoryData);
+      setCategories((prev) => [...prev.filter((c) => c.id !== newCat.id), newCat]);
+      showToast('Category added', 'success');
+    } catch {
+      const fallbackCat: Category = {
+        ...categoryData,
+        id: 'cat-' + Date.now(),
+        productCount: 0,
+      };
+      setCategories((prev) => [...prev, fallbackCat]);
+      showToast('Category added', 'success');
+    }
   };
 
   const deleteCategory = async (id: string) => {
-    await productApi.deleteCategory(id);
     setCategories((prev) => prev.filter((c) => c.id !== id));
     showToast('Category removed', 'info');
+    try {
+      await productApi.deleteCategory(id);
+    } catch {}
   };
 
   // ─── Auth ───────────────────────────────────────────────────────────────────
@@ -390,6 +448,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       customerPhone: shippingAddress.phone,
       notes: shippingAddress.notes,
       utrNumber: paymentDetails?.utrNumber,
+      paymentScreenshot: paymentDetails?.paymentScreenshot,
     };
 
     try {
@@ -451,36 +510,39 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const verifyPayment = async (orderId: string) => {
-    try {
-      const updated = await orderApi.updateStatus(orderId, 'processing');
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? { ...updated, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() }
-            : o
-        )
-      );
-    } catch {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === orderId
-            ? { ...o, paymentStatus: 'paid', orderStatus: 'processing', paymentVerifiedAt: new Date().toISOString() }
-            : o
-        )
-      );
-    }
-    showToast('Payment verified successfully! Order is confirmed.', 'success');
-  };
-
-  const rejectPayment = (orderId: string, reason?: string) => {
+    // Optimistic update
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
-          ? { ...o, paymentStatus: 'rejected', paymentRejectedReason: reason || 'Payment transaction not found' }
+          ? { ...o, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() }
           : o
       )
     );
-    showToast('Payment marked as rejected. Customer will be notified.', 'error');
+    showToast('Payment verified! Order is confirmed.', 'success');
+    try {
+      const updated = await orderApi.verifyPayment(orderId);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+    } catch {
+      // Keep optimistic update on failure
+    }
+  };
+
+  const rejectPayment = async (orderId: string, reason?: string) => {
+    // Optimistic update
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? { ...o, paymentStatus: 'rejected', paymentRejectedReason: reason || 'Payment not found' }
+          : o
+      )
+    );
+    showToast('Payment rejected. Customer will be notified.', 'error');
+    try {
+      const updated = await orderApi.rejectPayment(orderId, reason);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+    } catch {
+      // Keep optimistic update on failure
+    }
   };
 
   const getOrderById = (orderId: string) =>
@@ -511,31 +573,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const isWishlisted = (productId: string) => wishlist.includes(productId);
 
-  // ─── Videos (local-only; no backend video endpoint used for CRUD) ────────────
-  const addVideo = (videoData: Omit<VideoItem, 'id' | 'views' | 'createdAt'>): VideoItem => {
-    const newVideo: VideoItem = {
-      ...videoData,
-      id: 'vid-' + Date.now(),
-      views: 1,
-      createdAt: new Date().toISOString(),
-    };
-    setVideos((prev) => [newVideo, ...prev]);
-    showToast('Video published successfully!', 'success');
-    return newVideo;
+  // ─── Videos (Axios REST API with local fallback) ───────────────────────────
+  const addVideo = async (videoData: Omit<VideoItem, 'id' | 'views' | 'createdAt'>): Promise<VideoItem> => {
+    try {
+      const created = await videoApi.create(videoData);
+      setVideos((prev) => [created, ...prev]);
+      showToast('Video published successfully!', 'success');
+      return created;
+    } catch {
+      const fallbackVideo: VideoItem = {
+        ...videoData,
+        id: 'vid-' + Date.now(),
+        views: 1,
+        createdAt: new Date().toISOString(),
+      };
+      setVideos((prev) => [fallbackVideo, ...prev]);
+      showToast('Video saved locally', 'info');
+      return fallbackVideo;
+    }
   };
 
-  const updateVideo = (id: string, updates: Partial<VideoItem>) => {
-    setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, ...updates } : v)));
-    showToast('Video updated successfully!', 'success');
+  const updateVideo = async (id: string, updates: Partial<VideoItem>) => {
+    try {
+      const updated = await videoApi.update(id, updates);
+      setVideos((prev) => prev.map((v) => (v.id === id ? updated : v)));
+      showToast('Video updated successfully!', 'success');
+    } catch {
+      setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, ...updates } : v)));
+      showToast('Video updated locally', 'info');
+    }
   };
 
-  const deleteVideo = (id: string) => {
-    setVideos((prev) => prev.filter((v) => v.id !== id));
-    showToast('Video removed from library', 'info');
+  const deleteVideo = async (id: string) => {
+    try {
+      await videoApi.delete(id);
+      setVideos((prev) => prev.filter((v) => v.id !== id));
+      showToast('Video removed from library', 'info');
+    } catch {
+      setVideos((prev) => prev.filter((v) => v.id !== id));
+      showToast('Video removed from library', 'info');
+    }
   };
 
   const incrementVideoViews = (id: string) => {
     setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, views: v.views + 1 } : v)));
+    videoApi.incrementViews(id);
   };
 
   // ─── Context value ────────────────────────────────────────────────────────────

@@ -1,19 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../../../store/store';
 import { StatsCard } from '../../../components/admin/dashboard/StatsCard';
 import { SalesChart } from '../../../components/admin/dashboard/SalesChart';
 import { RecentOrders } from '../../../components/admin/dashboard/RecentOrders';
 import { TopProducts } from '../../../components/admin/dashboard/TopProducts';
-import { IndianRupee, ShoppingBag, Package, Users, Plus, Clock } from 'lucide-react';
+import { IndianRupee, ShoppingBag, Package, Users, Plus, Clock, RefreshCw } from 'lucide-react';
 import { formatPrice } from '../../../utils/formatPrice';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/common/Button';
+import { dashboardApi } from '../../../services/customerApi';
 
 export const Dashboard: React.FC = () => {
   const { products, orders } = useStore();
+  const [stats, setStats] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const totalRevenue = orders.reduce((acc, o) => acc + o.total, 0) + 478000;
-  const totalOrdersCount = orders.length + 142;
+  const loadStats = async () => {
+    setIsLoading(true);
+    try {
+      const data = await dashboardApi.getStats();
+      setStats(data);
+    } catch {
+      // Fallback gracefully
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const totalRevenue = stats?.totalRevenue ?? (orders.reduce((acc, o) => acc + o.total, 0) + 478000);
+  const totalOrdersCount = stats?.totalOrdersCount ?? (orders.length + 142);
+  const registeredPatrons = stats?.registeredPatrons ?? 1480;
+  const activeSKUs = stats?.activeSKUs ?? products.length;
   const pendingPaymentsCount = orders.filter((o) => o.paymentStatus === 'verification_pending').length;
 
   return (
@@ -107,14 +128,14 @@ export const Dashboard: React.FC = () => {
 
         <StatsCard
           title="Active Harvest SKUs"
-          value={String(products.length)}
+          value={String(activeSKUs)}
           icon={<Package size={22} color="#2563EB" />}
           iconBg="#EFF6FF"
         />
 
         <StatsCard
           title="Registered Patrons"
-          value="1,480"
+          value={registeredPatrons.toLocaleString()}
           change="+24%"
           isPositive={true}
           icon={<Users size={22} color="#7C3AED" />}
@@ -123,7 +144,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Sales Trend Chart */}
-      <SalesChart />
+      <SalesChart data={stats?.salesTrend} />
 
       {/* Bottom Grid: Recent Orders & Top Products */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '2rem' }}>

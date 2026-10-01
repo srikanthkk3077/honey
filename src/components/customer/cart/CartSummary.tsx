@@ -7,7 +7,7 @@ import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 import { Button } from '../../common/Button';
 
 export const CartSummary: React.FC = () => {
-  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast } = useStore();
+  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast, isAuthenticated } = useStore();
   const [promoCode, setPromoCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState(0);
   const navigate = useNavigate();
@@ -160,7 +160,12 @@ export const CartSummary: React.FC = () => {
         rightIcon={<ArrowRight size={18} />}
         onClick={() => {
           setCartDrawerOpen(false);
-          navigate('/checkout');
+          // If not logged in, redirect to login with checkout as the return destination
+          if (!isAuthenticated) {
+            navigate('/login?redirect=/checkout');
+          } else {
+            navigate('/checkout');
+          }
         }}
       >
         Proceed to Secure Checkout

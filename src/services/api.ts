@@ -7,7 +7,21 @@ export const API_BASE_URL =
 // ─── Token helpers ────────────────────────────────────────────────────────────
 const TOKEN_KEY = 'madhuvan_auth_token';
 
-export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
+export const getToken = (): string | null => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (token) return token;
+  try {
+    const userStr = localStorage.getItem('madhuvan_auth_user');
+    if (userStr) {
+      const u = JSON.parse(userStr);
+      if (u.token) {
+        localStorage.setItem(TOKEN_KEY, u.token);
+        return u.token;
+      }
+    }
+  } catch {}
+  return null;
+};
 export const setToken = (token: string): void =>
   localStorage.setItem(TOKEN_KEY, token);
 export const removeToken = (): void => localStorage.removeItem(TOKEN_KEY);

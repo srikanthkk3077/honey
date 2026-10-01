@@ -1,7 +1,11 @@
 import React from 'react';
 
-export const SalesChart: React.FC = () => {
-  const data = [
+interface SalesChartProps {
+  data?: Array<{ month: string; revenue: number; jars?: number }>;
+}
+
+export const SalesChart: React.FC<SalesChartProps> = ({ data: propData }) => {
+  const defaultData = [
     { month: 'Oct', revenue: 42000, jars: 84 },
     { month: 'Nov', revenue: 58000, jars: 112 },
     { month: 'Dec', revenue: 86000, jars: 174 },
@@ -10,7 +14,8 @@ export const SalesChart: React.FC = () => {
     { month: 'Mar', revenue: 124000, jars: 260 },
   ];
 
-  const maxRev = 140000;
+  const data = propData && propData.length > 0 ? propData : defaultData;
+  const maxRev = Math.max(...data.map((d) => d.revenue), 100000);
 
   return (
     <div

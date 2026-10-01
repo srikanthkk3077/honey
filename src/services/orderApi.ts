@@ -43,10 +43,15 @@ function normaliseOrder(raw: any): Order {
     paymentMethod: raw.paymentMethod as PaymentMethodType,
     paymentStatus: mapPaymentStatus(raw.paymentStatus),
     orderStatus: (raw.orderStatus || 'pending') as OrderStatus,
-    utrNumber: raw.paymentResult?.transactionId || undefined,
+    // Read UTR from multiple possible backend fields
+    utrNumber: raw.utrNumber || raw.paymentResult?.transactionId || undefined,
+    // Read screenshot from backend
+    paymentScreenshot: raw.paymentScreenshot || raw.paymentResult?.screenshot || undefined,
     trackingNumber: raw.trackingNumber || undefined,
     createdAt: raw.createdAt || new Date().toISOString(),
     deliveredAt: raw.deliveredAt,
+    paymentVerifiedAt: raw.paymentVerifiedAt || undefined,
+    paymentRejectedReason: raw.paymentRejectedReason || undefined,
   };
 }
 
@@ -77,6 +82,7 @@ export interface CreateOrderPayload {
   customerPhone: string;
   notes?: string;
   utrNumber?: string;
+  paymentScreenshot?: string;
 }
 
 // ─── Order API ────────────────────────────────────────────────────────────────
@@ -143,9 +149,9 @@ export const orderApi = {
     const raw = data.data?.orders || data.data || [];
     return {
       orders: Array.isArray(raw) ? raw.map(normaliseOrder) : [],
-      total: data.data?.total || raw.length,
-      page: data.data?.page || 1,
-      pages: data.data?.pages || 1,
+      total: data.data?.pagination?.total ?? data.data?.total ?? (Array.isArray(raw) ? raw.length : 0),
+      page: data.data?.pagination?.page ?? data.data?.page ?? 1,
+      pages: data.data?.pagination?.totalPages ?? data.data?.pages ?? 1,
     };
   },
 
@@ -172,6 +178,17 @@ export const orderApi = {
       trackingNumber,
       trackingCourier,
     });
+    return normaliseOrder(data.data);
+  },
+  /** PUT /api/orders/:id/verify-payment – admin marks payment as verified (paid) */
+  verifyPayment: async (id: string): Promise<Order> => {
+    const { data } = await api.put<ApiResponse<any>>(`/orders/${id}/verify-payment`);
+    return normaliseOrder(data.data);
+  },
+
+  /** PUT /api/orders/:id/reject-payment – admin rejects payment with a reason */
+  rejectPayment: async (id: string, reason?: string): Promise<Order> => {
+    const { data } = await api.put<ApiResponse<any>>(`/orders/${id}/reject-payment`, { reason });
     return normaliseOrder(data.data);
   },
 };

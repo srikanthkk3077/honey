@@ -9,7 +9,7 @@ import { Search, RefreshCw } from 'lucide-react';
 import orderApi from '../../../services/orderApi';
 
 export const Orders: React.FC = () => {
-  const { updateOrderStatus, showToast } = useStore();
+  const { updateOrderStatus, verifyPayment, rejectPayment, showToast } = useStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -19,7 +19,7 @@ export const Orders: React.FC = () => {
   const loadAdminOrders = async () => {
     setIsLoading(true);
     try {
-      const result = await orderApi.getAll({ limit: 100 });
+      const result = await orderApi.getAll({ limit: 200 });
       setOrders(result.orders);
     } catch (err: any) {
       showToast('Could not load orders from server.', 'error');
@@ -30,6 +30,9 @@ export const Orders: React.FC = () => {
 
   useEffect(() => {
     loadAdminOrders();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadAdminOrders, 30000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,11 +61,16 @@ export const Orders: React.FC = () => {
   const handleUpdateStatus = async (st: OrderStatus) => {
     if (selectedOrder) {
       await updateOrderStatus(selectedOrder.id, st);
-      setOrders((prev) =>
-        prev.map((o) => (o.id === selectedOrder.id ? { ...o, orderStatus: st } : o))
-      );
-      setSelectedOrder({ ...selectedOrder, orderStatus: st });
+      const updated = { ...selectedOrder, orderStatus: st };
+      setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? updated : o)));
+      setSelectedOrder(updated);
     }
+  };
+
+  // Called by OrderDetailsModalContent after verify/reject payment
+  const handleOrderUpdated = (updatedOrder: Order) => {
+    setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+    setSelectedOrder(updatedOrder);
   };
 
   return (
@@ -192,6 +200,7 @@ export const Orders: React.FC = () => {
           <OrderDetailsModalContent
             order={selectedOrder}
             onUpdateStatus={handleUpdateStatus}
+            onOrderUpdated={handleOrderUpdated}
           />
         )}
       </Modal>
