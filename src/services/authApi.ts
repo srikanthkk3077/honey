@@ -2,7 +2,7 @@ import api, { setToken, removeToken } from './api';
 import { User } from '../types/auth.types';
 
 // ─── Response shapes from backend ────────────────────────────────────────────
-interface AuthResponse {
+export interface AuthResponse {
   success: boolean;
   message: string;
   data: {
@@ -26,20 +26,42 @@ interface AuthResponse {
   };
 }
 
-interface ProfileResponse {
+export interface ProfileResponse {
   success: boolean;
   data: AuthResponse['data']['user'];
 }
 
+export interface ForgotPasswordResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    email: string;
+    message: string;
+    otp?: string;
+    resetToken?: string;
+  };
+}
+
+export interface VerifyOtpResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    valid: boolean;
+    email: string;
+    resetToken?: string;
+    message?: string;
+  };
+}
+
 // ─── Helper: normalise backend user → frontend User ──────────────────────────
-function normaliseUser(raw: AuthResponse['data']['user']): User {
+export function normaliseUser(raw: any): User {
   return {
     id: raw._id || raw.id || '',
-    name: raw.name,
-    email: raw.email,
-    phone: raw.phone,
-    role: raw.role,
-    createdAt: raw.createdAt,
+    name: raw.name || '',
+    email: raw.email || '',
+    phone: raw.phone || '',
+    role: raw.role || 'customer',
+    createdAt: raw.createdAt || new Date().toISOString(),
     address: raw.address,
   };
 }
@@ -52,7 +74,9 @@ export const authApi = {
       email,
       password,
     });
-    setToken(data.data.token);
+    if (data.data?.token) {
+      setToken(data.data.token);
+    }
     return normaliseUser(data.data.user);
   },
 
@@ -62,7 +86,9 @@ export const authApi = {
       email,
       password,
     });
-    setToken(data.data.token);
+    if (data.data?.token) {
+      setToken(data.data.token);
+    }
     return normaliseUser(data.data.user);
   },
 
@@ -79,8 +105,51 @@ export const authApi = {
       phone,
       password,
     });
-    setToken(data.data.token);
+    if (data.data?.token) {
+      setToken(data.data.token);
+    }
     return normaliseUser(data.data.user);
+  },
+
+  /** Request password reset OTP – POST /api/auth/forgot-password */
+  forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
+    const { data } = await api.post<ForgotPasswordResponse>('/auth/forgot-password', {
+      email,
+    });
+    return data;
+  },
+
+  /** Verify OTP code – POST /api/auth/verify-otp */
+  verifyResetOtp: async (email: string, otp: string): Promise<VerifyOtpResponse> => {
+    const { data } = await api.post<VerifyOtpResponse>('/auth/verify-otp', {
+      email,
+      otp,
+    });
+    return data;
+  },
+
+  /** Reset password – POST /api/auth/reset-password */
+  resetPassword: async (
+    email: string,
+    otpOrToken: string,
+    newPassword: string
+  ): Promise<{ user: User; token: string; message: string }> => {
+    const { data } = await api.post<any>('/auth/reset-password', {
+      email,
+      otp: otpOrToken,
+      resetToken: otpOrToken,
+      newPassword,
+    });
+
+    if (data.data?.token) {
+      setToken(data.data.token);
+    }
+
+    return {
+      user: normaliseUser(data.data?.user || data.data),
+      token: data.data?.token || '',
+      message: data.message || 'Password reset successfully',
+    };
   },
 
   /** Get logged-in user profile – GET /api/auth/me */

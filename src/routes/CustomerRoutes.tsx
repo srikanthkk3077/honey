@@ -7,6 +7,8 @@ import { Cart } from '../pages/customer/Cart/Cart';
 import { Checkout } from '../pages/customer/Checkout/Checkout';
 import { Login } from '../pages/customer/Auth/Login';
 import { Register } from '../pages/customer/Auth/Register';
+import { ForgotPassword } from '../pages/customer/Auth/ForgotPassword';
+import { ResetPassword } from '../pages/customer/Auth/ResetPassword';
 import { Orders } from '../pages/customer/Orders/Orders';
 import { OrderDetails } from '../pages/customer/Orders/OrderDetails';
 import { TrackOrder } from '../pages/customer/Orders/TrackOrder';
@@ -26,6 +28,8 @@ export const CustomerRoutes = (
     <Route path="checkout" element={<Checkout />} />
     <Route path="login" element={<Login />} />
     <Route path="register" element={<Register />} />
+    <Route path="forgot-password" element={<ForgotPassword />} />
+    <Route path="reset-password" element={<ResetPassword />} />
     <Route path="orders" element={<Orders />} />
     <Route path="orders/:id" element={<OrderDetails />} />
     <Route path="track-order" element={<TrackOrder />} />

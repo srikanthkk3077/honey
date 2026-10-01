@@ -21,10 +21,6 @@ export const AnnouncementBar: React.FC = () => {
       }}
     >
       <div className="container flex items-center justify-between" style={{ padding: 0 }}>
-        <div className="flex items-center gap-2" style={{ display: 'none' }} id="announcement-left">
-          <ShieldCheck size={14} color="#F59E0B" />
-          <span>FSSAI & Lab Certified 100% Raw Unheated Honey</span>
-        </div>
         <div style={{ margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
           <Sparkles size={14} color="#FBBF24" />
           <span>Spring Harvest Fest: Free Wooden Honey Dipper + Free Shipping over ₹{FREE_SHIPPING_THRESHOLD}! Code: <strong>MADHUVAN10</strong></span>

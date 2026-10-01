@@ -56,6 +56,9 @@ interface StoreContextType {
   login: (email: string, pass: string) => Promise<boolean>;
   adminLogin: (email: string, pass: string) => Promise<boolean>;
   register: (name: string, email: string, phone: string, pass: string) => Promise<boolean>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message: string; otp?: string }>;
+  verifyResetOtp: (email: string, otp: string) => Promise<{ success: boolean; message: string; resetToken?: string }>;
+  resetPassword: (email: string, otpOrToken: string, newPassword: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 
@@ -452,6 +455,51 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    setIsAuthLoading(true);
+    try {
+      const res = await authApi.forgotPassword(email);
+      showToast(res.message || 'Verification code sent to your email!', 'success');
+      return { success: true, message: res.message, otp: res.data?.otp };
+    } catch (err: any) {
+      showToast(err.message || 'Failed to request password reset code.', 'error');
+      return { success: false, message: err.message || 'Failed to request reset' };
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const verifyResetOtp = async (email: string, otp: string) => {
+    setIsAuthLoading(true);
+    try {
+      const res = await authApi.verifyResetOtp(email, otp);
+      showToast(res.message || 'Verification code confirmed!', 'success');
+      return { success: true, message: res.message, resetToken: res.data?.resetToken };
+    } catch (err: any) {
+      showToast(err.message || 'Invalid or expired verification code.', 'error');
+      return { success: false, message: err.message || 'Invalid code' };
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string, otpOrToken: string, newPass: string): Promise<boolean> => {
+    setIsAuthLoading(true);
+    try {
+      const res = await authApi.resetPassword(email, otpOrToken, newPass);
+      if (res.user) {
+        setUser(res.user);
+      }
+      showToast('Password reset successfully! You are now signed in.', 'success');
+      return true;
+    } catch (err: any) {
+      showToast(err.message || 'Failed to reset password. Please try again.', 'error');
+      return false;
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
   const logout = () => {
     authApi.logout();
     setUser(null);
@@ -741,6 +789,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         login,
         adminLogin,
         register,
+        forgotPassword,
+        verifyResetOtp,
+        resetPassword,
         logout,
         updateProfile,
 

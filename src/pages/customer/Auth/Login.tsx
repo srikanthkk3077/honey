@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { Lock, Mail, ArrowRight, ShieldCheck, Loader } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Loader, KeyRound } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -72,15 +72,33 @@ export const Login: React.FC = () => {
               leftIcon={<Mail size={16} />}
             />
 
-            <Input
-              label="Password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              leftIcon={<Lock size={16} />}
-            />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <label style={{ fontSize: '0.88rem', fontWeight: 600, color: '#44403C' }}>
+                  Password
+                </label>
+                <Link
+                  to={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                  style={{
+                    fontSize: '0.8rem',
+                    color: '#D97706',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+              <Input
+                label=""
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                leftIcon={<Lock size={16} />}
+              />
+            </div>
 
             <Button
               type="submit"

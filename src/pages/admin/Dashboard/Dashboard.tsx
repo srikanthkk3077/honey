@@ -50,11 +50,18 @@ export const Dashboard: React.FC = () => {
           </p>
         </div>
 
-        <Link to="/admin/products/add">
-          <Button size="md" leftIcon={<Plus size={16} />}>
-            List New Honey
-          </Button>
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Link to="/admin/transactions">
+            <Button size="md" variant="outline">
+              View Transactions
+            </Button>
+          </Link>
+          <Link to="/admin/products/add">
+            <Button size="md" leftIcon={<Plus size={16} />}>
+              List New Honey
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Pending Payment Verification Alert Banner */}
@@ -98,7 +105,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Link to="/admin/orders">
+          <Link to="/admin/transactions">
             <Button size="sm" style={{ backgroundColor: '#D97706', borderColor: '#D97706' }}>
               Review & Verify Now ({pendingPaymentsCount})
             </Button>

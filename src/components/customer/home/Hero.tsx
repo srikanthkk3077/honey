@@ -296,7 +296,7 @@ export const Hero: React.FC = () => {
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
               }}
             >
-              Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and NMR lab certified pure with live natural enzymes.
+              Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and live natural enzymes.
             </p>
 
           </div>
