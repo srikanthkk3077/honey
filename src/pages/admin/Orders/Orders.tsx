@@ -187,7 +187,7 @@ export const Orders: React.FC = () => {
         </div>
       </div>
 
-      <OrderTable orders={filtered} onViewOrder={(o) => setSelectedOrder(o)} />
+      <OrderTable orders={filtered} onViewOrder={(o) => setSelectedOrder(o)} isLoading={isLoading} />
 
       {/* Modal for Order Details */}
       <Modal

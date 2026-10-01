@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 import { Badge } from '../../common/Badge';
+import orderApi from '../../../services/orderApi';
+import { Order } from '../../../types/order.types';
 
 export const RecentOrders: React.FC = () => {
-  const { orders } = useStore();
-  const recent = orders.slice(0, 5);
+  const [recent, setRecent] = useState<Order[]>([]);
+
+  useEffect(() => {
+    orderApi.getAll({ limit: 5 })
+      .then((result) => setRecent(result.orders))
+      .catch(() => {}); // silently fail — dashboard is non-critical
+  }, []);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

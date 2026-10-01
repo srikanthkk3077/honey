@@ -9,17 +9,26 @@ import { formatPrice } from '../../../utils/formatPrice';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/common/Button';
 import { dashboardApi } from '../../../services/customerApi';
+import orderApi from '../../../services/orderApi';
 
 export const Dashboard: React.FC = () => {
-  const { products, orders } = useStore();
+  const { products } = useStore();
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
 
   const loadStats = async () => {
     setIsLoading(true);
     try {
-      const data = await dashboardApi.getStats();
-      setStats(data);
+      // Load both dashboard stats and live order data in parallel
+      const [data, ordersResult] = await Promise.allSettled([
+        dashboardApi.getStats(),
+        orderApi.getAll({ paymentStatus: 'verification_pending', limit: 300 }),
+      ]);
+      if (data.status === 'fulfilled') setStats(data.value);
+      if (ordersResult.status === 'fulfilled') {
+        setPendingPaymentsCount(ordersResult.value.orders.length);
+      }
     } catch {
       // Fallback gracefully
     } finally {
@@ -31,11 +40,10 @@ export const Dashboard: React.FC = () => {
     loadStats();
   }, []);
 
-  const totalRevenue = stats?.totalRevenue ?? (orders.reduce((acc, o) => acc + o.total, 0) + 478000);
-  const totalOrdersCount = stats?.totalOrdersCount ?? (orders.length + 142);
+  const totalRevenue = stats?.totalRevenue ?? 478000;
+  const totalOrdersCount = stats?.totalOrdersCount ?? 142;
   const registeredPatrons = stats?.registeredPatrons ?? 1480;
   const activeSKUs = stats?.activeSKUs ?? products.length;
-  const pendingPaymentsCount = orders.filter((o) => o.paymentStatus === 'verification_pending').length;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PaymentMethodType } from '../../../types/order.types';
-import { QrCode, Banknote, ShieldCheck, Copy, Check, Upload, X, Building2, AlertCircle } from 'lucide-react';
+import { QrCode, Banknote, ShieldCheck, Copy, Check, Upload, X, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../common/Button';
 import { BUSINESS_PAYMENT_DETAILS } from '../../../utils/constants';
 import { useStore } from '../../../store/store';
@@ -64,23 +64,28 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
     setScreenshotPreview(null);
   };
 
+  const [utrTouched, setUtrTouched] = useState(false);
+
+  const validateUtr = (v: string) => {
+    const d = v.replace(/\D/g, '');
+    if (!d) return 'UTR / Transaction reference number is required';
+    if (d.length < 10) return `Too short — need at least 10 digits (${d.length}/12 entered)`;
+    if (d.length > 12) return 'UTR number must be 10–12 digits';
+    return '';
+  };
+
+  const utrError = utrTouched ? validateUtr(utrNumber) : '';
+  const utrOk    = !validateUtr(utrNumber) && utrNumber.length > 0;
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
     if (selectedMethod === 'upi') {
-      if (!utrNumber.trim()) {
-        setFormError('Please enter the 12-digit UTR / UPI Transaction Reference Number');
-        return;
-      }
-      if (utrNumber.trim().length < 6) {
-        setFormError('Please enter a valid Transaction / UTR reference number');
-        return;
-      }
-      onSubmit({
-        utrNumber: utrNumber.trim(),
-        paymentScreenshot: screenshotPreview || undefined,
-      });
+      setUtrTouched(true);
+      const err = validateUtr(utrNumber);
+      if (err) { setFormError(err); return; }
+      onSubmit({ utrNumber: utrNumber.trim(), paymentScreenshot: screenshotPreview || undefined });
     } else {
       onSubmit();
     }
@@ -364,30 +369,46 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
             </span>
 
             <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1C1917', display: 'block', marginBottom: '6px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: utrError ? '#DC2626' : '#1C1917', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                 UPI Reference ID / UTR Number <span style={{ color: '#DC2626' }}>*</span>
+                {utrOk && <CheckCircle2 size={14} color="#059669" style={{ marginLeft: 'auto' }} />}
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 required
                 placeholder="e.g. 408219485721 (12-digit number from UPI app)"
                 value={utrNumber}
+                maxLength={12}
                 onChange={(e) => {
-                  setUtrNumber(e.target.value);
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 12);
+                  setUtrNumber(v);
                   setFormError(null);
+                  if (utrTouched) setUtrTouched(true);
                 }}
+                onBlur={() => setUtrTouched(true)}
                 style={{
-                  width: '100%',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: '1px solid #D6D3D1',
-                  fontSize: '0.92rem',
-                  outline: 'none',
+                  width: '100%', padding: '10px 14px', borderRadius: '10px',
+                  border: `1.5px solid ${utrError ? '#FCA5A5' : utrOk ? '#6EE7B7' : '#D6D3D1'}`,
+                  backgroundColor: utrError ? '#FFF5F5' : utrOk ? '#F0FDF4' : '#FFFFFF',
+                  fontSize: '0.92rem', outline: 'none', fontFamily: 'monospace',
+                  transition: 'border-color 0.2s, background-color 0.2s', boxSizing: 'border-box' as const,
                 }}
               />
-              <span style={{ fontSize: '0.75rem', color: '#78716C', marginTop: '4px', display: 'block' }}>
-                You will find this 12-digit reference number under transaction details in Google Pay, PhonePe, or Paytm.
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                {utrError ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem', color: '#DC2626', animation: 'afd 0.15s ease' }}>
+                    <AlertCircle size={12} />{utrError}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.74rem', color: utrOk ? '#059669' : '#78716C' }}>
+                    {utrOk ? '✓ Valid UTR number' : 'Find this under transaction details in Google Pay, PhonePe, or Paytm'}
+                  </span>
+                )}
+                <span style={{ fontSize: '0.72rem', color: utrNumber.length >= 10 ? '#059669' : '#78716C', fontWeight: 600, flexShrink: 0, marginLeft: '8px' }}>
+                  {utrNumber.length}/12
+                </span>
+              </div>
             </div>
 
             {/* Payment Screenshot (Optional but recommended) */}
@@ -544,6 +565,8 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
       </div>
 
       <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes afd { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
         @media (max-width: 480px) {
           .payment-action-buttons {
             flex-direction: column-reverse !important;

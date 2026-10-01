@@ -39,7 +39,7 @@ import { INITIAL_CATEGORIES } from '../data/categories';
 import { INITIAL_VIDEOS } from '../data/videos';
 
 // ─── Token helper ─────────────────────────────────────────────────────────────
-import { getToken } from '../services/api';
+import { getToken, removeToken } from '../services/api';
 
 interface Toast {
   id: string;
@@ -202,14 +202,40 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadProducts();
     loadSettings();
     const token = getToken();
+    const cachedUser = getInitialUser(); // what's already in localStorage
+
     if (token) {
-      authApi.getProfile().then(setUser).catch(() => {
-        // Token expired or invalid – clear it silently
-        setUser(null);
-      });
-    } else if (user && user.role === 'admin') {
-      // Auto-refresh admin token in background if user is logged in as admin
-      authApi.adminLogin('admin@madhuvanhoney.com', 'adminhoney123').catch(() => {});
+      // Use a 5-second timeout specifically for the profile call —
+      // we don't want the user to see a stale flash for 15 seconds.
+      const controller = new AbortController();
+      const profileTimeout = setTimeout(() => controller.abort(), 5000);
+
+      authApi.getProfile()
+        .then((profileUser) => {
+          // ── Role consistency guard ──────────────────────────────────────────
+          // If the profile returned a DIFFERENT role than the cached user
+          // (e.g., old admin token returning admin when a customer is expected),
+          // that token is stale/wrong — discard it and keep the cached session.
+          if (cachedUser && cachedUser.role !== profileUser.role) {
+            removeToken();
+            // Keep the cached user as-is; they'll be properly re-validated on
+            // their next explicit login.
+            return;
+          }
+          setUser(profileUser);
+        })
+        .catch((err: any) => {
+          // Only clear the session on a genuine 401 (token actually invalid/expired).
+          // Network errors, timeouts, and server errors are transient — keep session.
+          const status =
+            err?.response?.status ||
+            err?.status ||
+            (err?.message?.includes('401') ? 401 : 0);
+          if (status === 401) {
+            setUser(null);
+          }
+        })
+        .finally(() => clearTimeout(profileTimeout));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -608,50 +634,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       paymentScreenshot: paymentDetails?.paymentScreenshot,
     };
 
-    try {
-      const newOrder = await orderApi.create(payload);
-      setOrders((prev) => [newOrder, ...prev]);
-      clearCart();
-      if (paymentMethod === 'upi') {
-        showToast(`Order ${newOrder.orderNumber} placed! Payment verification pending.`, 'info');
-      } else {
-        showToast(`Order ${newOrder.orderNumber} placed successfully!`, 'success');
-      }
-      return newOrder;
-    } catch (err: any) {
-      // Fallback: create order locally if backend fails
-      const fallbackOrder: Order = {
-        id: 'ord-' + Date.now(),
-        orderNumber: 'MDH-' + Math.floor(1000 + Math.random() * 9000),
-        customerName: shippingAddress.fullName,
-        customerEmail: shippingAddress.email,
-        customerPhone: shippingAddress.phone,
-        shippingAddress,
-        items: cart.map((c) => ({
-          productId: c.productId,
-          productName: c.name,
-          size: c.size,
-          image: c.image,
-          price: c.price,
-          quantity: c.quantity,
-        })),
-        subtotal: cartSubtotal,
-        discount: cartDiscount,
-        shippingFee: cartShippingFee,
-        total: cartTotal,
-        paymentMethod,
-        paymentStatus: paymentMethod === 'cod' ? 'pending' : 'verification_pending',
-        orderStatus: 'pending',
-        utrNumber: paymentDetails?.utrNumber,
-        paymentScreenshot: paymentDetails?.paymentScreenshot,
-        trackingNumber: 'MDH-TRK-' + Math.floor(100000 + Math.random() * 900000),
-        createdAt: new Date().toISOString(),
-      };
-      setOrders((prev) => [fallbackOrder, ...prev]);
-      clearCart();
-      showToast(`Order ${fallbackOrder.orderNumber} placed (offline mode).`, 'success');
-      return fallbackOrder;
+    const newOrder = await orderApi.create(payload);
+    setOrders((prev) => [newOrder, ...prev]);
+    clearCart();
+    if (paymentMethod === 'upi') {
+      showToast(`Order ${newOrder.orderNumber} placed! Payment verification pending.`, 'info');
+    } else {
+      showToast(`Order ${newOrder.orderNumber} placed successfully!`, 'success');
     }
+    return newOrder;
   };
 
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {

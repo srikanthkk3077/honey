@@ -49,18 +49,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string; error?: string }>) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    if (status === 401) {
       // Clear stale credentials without a hard redirect so UI can handle it
       removeToken();
       localStorage.removeItem('madhuvan_auth_user');
     }
-    // Bubble up a clean Error with the backend message
+    // Bubble up a clean Error with the backend message, but preserve status
     const message =
       error.response?.data?.message ||
       error.response?.data?.error ||
       error.message ||
       'Something went wrong';
-    return Promise.reject(new Error(message));
+    const enriched = new Error(message) as any;
+    enriched.status = status;          // attach HTTP status so callers can check it
+    enriched.response = error.response; // keep response reference for further inspection
+    return Promise.reject(enriched);
   }
 );
 

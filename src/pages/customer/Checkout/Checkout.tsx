@@ -66,22 +66,25 @@ export const Checkout: React.FC = () => {
       const order = await placeOrder(address, paymentMethod, details);
       setCompletedOrder(order);
       setCurrentStep(3);
-    } catch (err) {
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#D97706', '#F59E0B', '#059669', '#FEF3C7'],
+        });
+      } catch (e) {
+        // safe fallback
+      }
+    } catch (err: any) {
       console.error('Order placement failed:', err);
+      alert(
+        `Order could not be placed. Please check your connection and try again.\n\nError: ${err?.message || 'Unknown error'}`
+      );
     } finally {
       setIsProcessing(false);
     }
 
-    try {
-      confetti({
-        particleCount: 80,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#D97706', '#F59E0B', '#059669', '#FEF3C7'],
-      });
-    } catch (e) {
-      // safe fallback
-    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
