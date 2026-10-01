@@ -8,8 +8,21 @@ export interface UploadResponse {
   data?: {
     urls: string[];
     primaryUrl: string;
+    url?: string;
   };
 }
+
+/**
+ * Normalise image URL returned from backend
+ */
+export const normalizeImageUrl = (url: string): string => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  const backendHost = API_BASE_URL.replace(/\/api\/?$/, '');
+  return `${backendHost}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 /**
  * Convert a File object to base64 Data URL fallback
@@ -30,6 +43,7 @@ export const uploadImage = async (file: File): Promise<string> => {
   try {
     const formData = new FormData();
     formData.append('image', file);
+    formData.append('file', file);
 
     const response = await api.post<UploadResponse>('/upload', formData, {
       headers: {
@@ -38,16 +52,19 @@ export const uploadImage = async (file: File): Promise<string> => {
       timeout: 30000,
     });
 
-    if (response.data?.url) {
-      return response.data.url;
-    }
-    if (response.data?.urls?.[0]) {
-      return response.data.urls[0];
+    const rawUrl =
+      response.data?.url ||
+      response.data?.data?.url ||
+      response.data?.data?.primaryUrl ||
+      response.data?.urls?.[0] ||
+      response.data?.data?.urls?.[0];
+
+    if (rawUrl) {
+      return normalizeImageUrl(rawUrl);
     }
     throw new Error('No URL returned from server');
   } catch (error) {
     console.warn('[uploadImage] Server upload failed, falling back to local base64 preview:', error);
-    // Graceful fallback to base64
     return await fileToBase64(file);
   }
 };
@@ -71,11 +88,14 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
       timeout: 45000,
     });
 
-    if (response.data?.urls && response.data.urls.length > 0) {
-      return response.data.urls;
-    }
-    if (response.data?.url) {
-      return [response.data.url];
+    const rawUrls =
+      response.data?.urls ||
+      response.data?.data?.urls ||
+      (response.data?.url ? [response.data.url] : []) ||
+      (response.data?.data?.primaryUrl ? [response.data.data.primaryUrl] : []);
+
+    if (rawUrls && rawUrls.length > 0) {
+      return rawUrls.map(normalizeImageUrl);
     }
     throw new Error('No URLs returned from server');
   } catch (error) {
@@ -87,5 +107,6 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
 export default {
   uploadImage,
   uploadImages,
+  normalizeImageUrl,
   fileToBase64,
 };

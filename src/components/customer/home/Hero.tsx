@@ -64,9 +64,14 @@ export const Hero: React.FC = () => {
     }
 
     if (thumbnailListRef.current) {
-      const activeThumb = thumbnailListRef.current.children[currentIndex] as HTMLElement;
+      const container = thumbnailListRef.current;
+      const activeThumb = container.children[currentIndex] as HTMLElement;
       if (activeThumb) {
-        activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const containerWidth = container.clientWidth;
+        const thumbLeft = activeThumb.offsetLeft;
+        const thumbWidth = activeThumb.offsetWidth;
+        const targetScrollLeft = thumbLeft - containerWidth / 2 + thumbWidth / 2;
+        container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
       }
     }
   }, [currentIndex]);
