@@ -3,6 +3,7 @@ import { User } from '../types/auth.types';
 import { Product, Category } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
 import { VideoItem } from '../types/video.types';
+import { StoreSettings } from '../types/customer.types';
 
 // ─── Slices (local storage persistence) ──────────────────────────────────────
 import { getInitialUser, saveUser } from './slices/authSlice';
@@ -11,16 +12,26 @@ import { getInitialProducts, saveProducts, getInitialCategories, saveCategories 
 import { getInitialOrders, saveOrders } from './slices/orderSlice';
 import { getInitialWishlist, saveWishlist } from './slices/wishlistSlice';
 import { getInitialVideos, saveVideos } from './slices/videoSlice';
+import { storage } from '../utils/storage';
 
 // ─── API Services ─────────────────────────────────────────────────────────────
 import authApi from '../services/authApi';
 import productApi from '../services/productApi';
 import orderApi, { CreateOrderPayload } from '../services/orderApi';
-import { wishlistApi } from '../services/customerApi';
+import { wishlistApi, settingsApi } from '../services/customerApi';
 import videoApi from '../services/videoApi';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-import { FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE } from '../utils/constants';
+import {
+  APP_NAME,
+  BRAND_TAGLINE,
+  CONTACT_INFO,
+  SOCIAL_LINKS,
+  GST_PERCENTAGE,
+  BUSINESS_PAYMENT_DETAILS,
+  FREE_SHIPPING_THRESHOLD,
+  STANDARD_SHIPPING_FEE,
+} from '../utils/constants';
 
 // ─── Local data (fallback) ────────────────────────────────────────────────────
 import { INITIAL_PRODUCTS } from '../data/products';
@@ -111,7 +122,47 @@ interface StoreContextType {
   setMobileMenuOpen: (open: boolean) => void;
   cartDrawerOpen: boolean;
   setCartDrawerOpen: (open: boolean) => void;
+
+  // Store Settings
+  settings: StoreSettings;
+  isSettingsLoading: boolean;
+  refreshSettings: () => Promise<void>;
+  updateSettings: (settings: Partial<StoreSettings>) => Promise<void>;
 }
+
+const DEFAULT_SETTINGS: StoreSettings = {
+  storeName: APP_NAME,
+  brandTagline: BRAND_TAGLINE,
+  phone: CONTACT_INFO.phone,
+  whatsapp: CONTACT_INFO.whatsapp,
+  email: CONTACT_INFO.email,
+  salesEmail: CONTACT_INFO.salesEmail,
+  address: CONTACT_INFO.address,
+  hours: CONTACT_INFO.hours,
+  freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
+  shippingFee: STANDARD_SHIPPING_FEE,
+  gstPercentage: GST_PERCENTAGE,
+  socialLinks: SOCIAL_LINKS,
+  paymentConfig: {
+    upiId: BUSINESS_PAYMENT_DETAILS.upiId,
+    accountHolderName: BUSINESS_PAYMENT_DETAILS.accountName,
+    accountNumber: BUSINESS_PAYMENT_DETAILS.accountNumber,
+    ifscCode: BUSINESS_PAYMENT_DETAILS.ifscCode,
+    bankName: BUSINESS_PAYMENT_DETAILS.bankName,
+    branchName: BUSINESS_PAYMENT_DETAILS.branch,
+    isUpiActive: true,
+    isBankTransferActive: true,
+    isCodActive: true,
+  },
+};
+
+const SETTINGS_STORAGE_KEY = 'madhuvan_store_settings_v1';
+const getInitialSettings = (): StoreSettings => {
+  return storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+};
+const saveSettings = (s: StoreSettings) => {
+  storage.set(SETTINGS_STORAGE_KEY, s);
+};
 
 const StoreContext = createContext<StoreContextType | null>(null);
 
@@ -124,12 +175,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [orders, setOrders] = useState<Order[]>(getInitialOrders);
   const [wishlist, setWishlist] = useState<string[]>(getInitialWishlist);
   const [videos, setVideos] = useState<VideoItem[]>(getInitialVideos);
+  const [settings, setSettings] = useState<StoreSettings>(getInitialSettings);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [isProductsLoading, setIsProductsLoading] = useState(false);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
 
   // ─── Persist to localStorage ────────────────────────────────────────────────
   useEffect(() => { saveUser(user); }, [user]);
@@ -139,10 +192,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => { saveOrders(orders); }, [orders]);
   useEffect(() => { saveWishlist(wishlist); }, [wishlist]);
   useEffect(() => { saveVideos(videos); }, [videos]);
+  useEffect(() => { saveSettings(settings); }, [settings]);
 
-  // ─── On mount: load products and restore user session ──────────────────────
+  // ─── On mount: load products, settings, and restore user session ──────────
   useEffect(() => {
     loadProducts();
+    loadSettings();
     const token = getToken();
     if (token) {
       authApi.getProfile().then(setUser).catch(() => {
@@ -155,6 +210,60 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ─── Settings ───────────────────────────────────────────────────────────────
+  const loadSettings = useCallback(async () => {
+    setIsSettingsLoading(true);
+    try {
+      const data = await settingsApi.get();
+      if (data) {
+        setSettings((prev) => ({
+          ...prev,
+          ...data,
+          paymentConfig: {
+            ...prev.paymentConfig,
+            ...(data.paymentConfig || {}),
+          },
+        }));
+      }
+    } catch {
+      // Keep existing settings if offline
+    } finally {
+      setIsSettingsLoading(false);
+    }
+  }, []);
+
+  const refreshSettings = loadSettings;
+
+  const updateSettings = async (updates: Partial<StoreSettings>) => {
+    // Optimistic update
+    setSettings((prev) => ({
+      ...prev,
+      ...updates,
+      paymentConfig: {
+        ...prev.paymentConfig,
+        ...(updates.paymentConfig || {}),
+      },
+    }));
+
+    try {
+      const result = await settingsApi.update(updates);
+      if (result) {
+        setSettings((prev) => ({
+          ...prev,
+          ...result,
+          paymentConfig: {
+            ...prev.paymentConfig,
+            ...(result.paymentConfig || {}),
+          },
+        }));
+      }
+      showToast('Store settings updated successfully!', 'success');
+    } catch (err: any) {
+      console.error('Settings update error:', err);
+      showToast('Settings saved locally.', 'info');
+    }
+  };
 
   // ─── Load orders when user changes ──────────────────────────────────────────
   useEffect(() => {
@@ -694,6 +803,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setMobileMenuOpen,
         cartDrawerOpen,
         setCartDrawerOpen,
+
+        // Store Settings
+        settings,
+        isSettingsLoading,
+        refreshSettings,
+        updateSettings,
       }}
     >
       {children}

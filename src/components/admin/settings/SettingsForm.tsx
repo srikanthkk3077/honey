@@ -7,65 +7,55 @@ import { settingsApi } from '../../../services/customerApi';
 import { Loader, QrCode, Building2, Check, RefreshCw } from 'lucide-react';
 
 export const SettingsForm: React.FC = () => {
-  const { showToast } = useStore();
+  const { settings, updateSettings } = useStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // General Store Details
-  const [storeName, setStoreName] = useState(APP_NAME);
-  const [brandTagline, setBrandTagline] = useState('100% Pure, Raw & Forest Harvested Honey');
-  const [phone, setPhone] = useState(CONTACT_INFO.phone);
-  const [email, setEmail] = useState(CONTACT_INFO.email);
-  const [address, setAddress] = useState(CONTACT_INFO.address);
+  const [storeName, setStoreName] = useState(settings?.storeName || APP_NAME);
+  const [brandTagline, setBrandTagline] = useState(settings?.brandTagline || '100% Pure, Raw & Forest Harvested Honey');
+  const [phone, setPhone] = useState(settings?.phone || CONTACT_INFO.phone);
+  const [email, setEmail] = useState(settings?.email || CONTACT_INFO.email);
+  const [address, setAddress] = useState(settings?.address || CONTACT_INFO.address);
 
   // Shipping
-  const [freeShippingThreshold, setFreeShippingThreshold] = useState(String(FREE_SHIPPING_THRESHOLD));
-  const [shippingFee, setShippingFee] = useState(String(STANDARD_SHIPPING_FEE));
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState(String(settings?.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD));
+  const [shippingFee, setShippingFee] = useState(String(settings?.shippingFee ?? STANDARD_SHIPPING_FEE));
 
   // Payment Configuration
-  const [upiId, setUpiId] = useState(BUSINESS_PAYMENT_DETAILS.upiId);
-  const [accountHolderName, setAccountHolderName] = useState(BUSINESS_PAYMENT_DETAILS.accountName);
-  const [accountNumber, setAccountNumber] = useState(BUSINESS_PAYMENT_DETAILS.accountNumber);
-  const [ifscCode, setIfscCode] = useState(BUSINESS_PAYMENT_DETAILS.ifscCode);
-  const [bankName, setBankName] = useState(BUSINESS_PAYMENT_DETAILS.bankName);
-  const [isUpiActive, setIsUpiActive] = useState(true);
-  const [isBankTransferActive, setIsBankTransferActive] = useState(true);
-  const [isCodActive, setIsCodActive] = useState(true);
+  const [upiId, setUpiId] = useState(settings?.paymentConfig?.upiId || BUSINESS_PAYMENT_DETAILS.upiId);
+  const [accountHolderName, setAccountHolderName] = useState(settings?.paymentConfig?.accountHolderName || BUSINESS_PAYMENT_DETAILS.accountName);
+  const [accountNumber, setAccountNumber] = useState(settings?.paymentConfig?.accountNumber || BUSINESS_PAYMENT_DETAILS.accountNumber);
+  const [ifscCode, setIfscCode] = useState(settings?.paymentConfig?.ifscCode || BUSINESS_PAYMENT_DETAILS.ifscCode);
+  const [bankName, setBankName] = useState(settings?.paymentConfig?.bankName || BUSINESS_PAYMENT_DETAILS.bankName);
+  const [isUpiActive, setIsUpiActive] = useState(settings?.paymentConfig?.isUpiActive ?? true);
+  const [isBankTransferActive, setIsBankTransferActive] = useState(settings?.paymentConfig?.isBankTransferActive ?? true);
+  const [isCodActive, setIsCodActive] = useState(settings?.paymentConfig?.isCodActive ?? true);
 
+  // Populate from settings when available
   useEffect(() => {
-    const loadSettings = async () => {
-      setIsLoading(true);
-      try {
-        const data = await settingsApi.get();
-        if (data) {
-          if (data.storeName) setStoreName(data.storeName);
-          if (data.brandTagline) setBrandTagline(data.brandTagline);
-          if (data.phone) setPhone(data.phone);
-          if (data.email) setEmail(data.email);
-          if (data.address) setAddress(data.address);
-          if (data.freeShippingThreshold !== undefined) setFreeShippingThreshold(String(data.freeShippingThreshold));
-          if (data.shippingFee !== undefined) setShippingFee(String(data.shippingFee));
+    if (settings) {
+      if (settings.storeName) setStoreName(settings.storeName);
+      if (settings.brandTagline) setBrandTagline(settings.brandTagline);
+      if (settings.phone) setPhone(settings.phone);
+      if (settings.email) setEmail(settings.email);
+      if (settings.address) setAddress(settings.address);
+      if (settings.freeShippingThreshold !== undefined) setFreeShippingThreshold(String(settings.freeShippingThreshold));
+      if (settings.shippingFee !== undefined) setShippingFee(String(settings.shippingFee));
 
-          if (data.paymentConfig) {
-            const p = data.paymentConfig;
-            if (p.upiId) setUpiId(p.upiId);
-            if (p.accountHolderName) setAccountHolderName(p.accountHolderName);
-            if (p.accountNumber) setAccountNumber(p.accountNumber);
-            if (p.ifscCode) setIfscCode(p.ifscCode);
-            if (p.bankName) setBankName(p.bankName);
-            if (p.isUpiActive !== undefined) setIsUpiActive(p.isUpiActive);
-            if (p.isBankTransferActive !== undefined) setIsBankTransferActive(p.isBankTransferActive);
-            if (p.isCodActive !== undefined) setIsCodActive(p.isCodActive);
-          }
-        }
-      } catch {
-        // Fallback to initial constants if offline
-      } finally {
-        setIsLoading(false);
+      if (settings.paymentConfig) {
+        const p = settings.paymentConfig;
+        if (p.upiId) setUpiId(p.upiId);
+        if (p.accountHolderName) setAccountHolderName(p.accountHolderName);
+        if (p.accountNumber) setAccountNumber(p.accountNumber);
+        if (p.ifscCode) setIfscCode(p.ifscCode);
+        if (p.bankName) setBankName(p.bankName);
+        if (p.isUpiActive !== undefined) setIsUpiActive(p.isUpiActive);
+        if (p.isBankTransferActive !== undefined) setIsBankTransferActive(p.isBankTransferActive);
+        if (p.isCodActive !== undefined) setIsCodActive(p.isCodActive);
       }
-    };
-    loadSettings();
-  }, []);
+    }
+  }, [settings]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,10 +81,7 @@ export const SettingsForm: React.FC = () => {
     };
 
     try {
-      await settingsApi.update(payload);
-      showToast('Store settings updated successfully in backend database!', 'success');
-    } catch {
-      showToast('Settings saved locally.', 'info');
+      await updateSettings(payload);
     } finally {
       setIsSaving(false);
     }

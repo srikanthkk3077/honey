@@ -3,7 +3,19 @@ import { useStore } from '../../../store/store';
 import { VideoItem, VideoCategory } from '../../../types/video.types';
 import { Input } from '../../common/Input';
 import { Button } from '../../common/Button';
-import { Upload, Film, Link as LinkIcon, Image, CheckCircle, Video } from 'lucide-react';
+import {
+  Upload,
+  Film,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  CheckCircle,
+  Video,
+  Loader2,
+  UploadCloud,
+  X,
+  AlertCircle,
+} from 'lucide-react';
+import { uploadImage } from '../../../services/uploadApi';
 
 interface VideoUploadModalProps {
   isOpen: boolean;
@@ -11,16 +23,22 @@ interface VideoUploadModalProps {
   initialData?: VideoItem;
 }
 
-export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onClose, initialData }) => {
+export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
+  isOpen,
+  onClose,
+  initialData,
+}) => {
   const { products, addVideo, updateVideo } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const posterInputRef = useRef<HTMLInputElement>(null);
 
   const [uploadMode, setUploadMode] = useState<'file' | 'url'>('file');
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(
-    initialData?.thumbnailUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
+    initialData?.thumbnailUrl ||
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
   );
   const [category, setCategory] = useState<VideoCategory>(initialData?.category || 'harvest');
   const [duration, setDuration] = useState(initialData?.duration || '0:45');
@@ -28,6 +46,11 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
   const [featuredOnHome, setFeaturedOnHome] = useState(initialData?.featuredOnHome ?? true);
   const [fileName, setFileName] = useState('');
   const [previewError, setPreviewError] = useState('');
+  
+  // Poster upload state
+  const [isUploadingPoster, setIsUploadingPoster] = useState(false);
+  const [showPosterUrlInput, setShowPosterUrlInput] = useState(false);
+  const [posterUploadError, setPosterUploadError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -47,6 +70,30 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
     }
   };
 
+  const handlePosterFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setPosterUploadError('Please select a valid image file (PNG, JPG, WEBP, AVIF).');
+      return;
+    }
+
+    setPosterUploadError(null);
+    setIsUploadingPoster(true);
+    try {
+      const url = await uploadImage(file);
+      setThumbnailUrl(url);
+    } catch (err: any) {
+      setPosterUploadError(err.message || 'Failed to upload cover poster image');
+    } finally {
+      setIsUploadingPoster(false);
+      if (posterInputRef.current) {
+        posterInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !videoUrl.trim()) {
@@ -60,7 +107,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
       title,
       description,
       videoUrl,
-      thumbnailUrl: thumbnailUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+      thumbnailUrl:
+        thumbnailUrl ||
+        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
       category,
       duration: duration || '0:30',
       taggedProductId: selectedProduct ? selectedProduct.id : undefined,
@@ -118,10 +167,24 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Upload Method Switcher */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.5rem' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: '#44403C',
+                marginBottom: '0.5rem',
+              }}
+            >
               Video Source Method:
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '0.75rem' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+                gap: '0.75rem',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setUploadMode('file')}
@@ -214,13 +277,26 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
 
           {/* Video Preview if URL is set */}
           {videoUrl && (
-            <div style={{ borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000', maxHeight: '180px' }}>
+            <div
+              style={{
+                borderRadius: '12px',
+                overflow: 'hidden',
+                backgroundColor: '#000',
+                maxHeight: '180px',
+              }}
+            >
               <video src={videoUrl} controls style={{ width: '100%', height: '180px', objectFit: 'contain' }} />
             </div>
           )}
 
           {/* Title & Duration */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+              gap: '1rem',
+            }}
+          >
             <Input
               label="Video Title"
               required
@@ -238,15 +314,37 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           </div>
 
           {/* Category & Tagged Product */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+              gap: '1rem',
+            }}
+          >
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  color: '#44403C',
+                  marginBottom: '0.35rem',
+                }}
+              >
                 Reel Category
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as VideoCategory)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  padding: '0.65rem 0.95rem',
+                  borderRadius: '10px',
+                  border: '1px solid #D6D3D1',
+                  outline: 'none',
+                  background: '#FFFFFF',
+                }}
               >
                 <option value="harvest">Wild Apiary Harvest</option>
                 <option value="purity">NMR Purity Test</option>
@@ -256,13 +354,29 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  color: '#44403C',
+                  marginBottom: '0.35rem',
+                }}
+              >
                 Tag Honey Product (Optional)
               </label>
               <select
                 value={taggedProductId}
                 onChange={(e) => setTaggedProductId(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', background: '#FFFFFF' }}
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  padding: '0.65rem 0.95rem',
+                  borderRadius: '10px',
+                  border: '1px solid #D6D3D1',
+                  outline: 'none',
+                  background: '#FFFFFF',
+                }}
               >
                 <option value="">-- No Tagged Product --</option>
                 {products.map((p) => (
@@ -274,19 +388,194 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
             </div>
           </div>
 
-          {/* Thumbnail Image URL */}
-          <Input
-            label="Cover Poster Image URL"
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
-            placeholder="https://images.unsplash.com/..."
-            leftIcon={<Image size={16} />}
-            helperText="Thumbnail shown in video cards before playback"
-          />
+          {/* Cover Poster Image Upload Section */}
+          <div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '0.4rem',
+              }}
+            >
+              <label
+                style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  color: '#44403C',
+                }}
+              >
+                Cover Poster Image
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPosterUrlInput(!showPosterUrlInput)}
+                style={{
+                  fontSize: '0.78rem',
+                  color: '#D97706',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontWeight: 600,
+                }}
+              >
+                <LinkIcon size={12} />
+                {showPosterUrlInput ? 'Use file uploader' : 'Paste poster link instead'}
+              </button>
+            </div>
+
+            <input
+              ref={posterInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/avif"
+              onChange={handlePosterFileChange}
+              style={{ display: 'none' }}
+            />
+
+            {!showPosterUrlInput ? (
+              <div
+                onClick={() => !isUploadingPoster && posterInputRef.current?.click()}
+                style={{
+                  border: '2px dashed #CBD5E1',
+                  borderRadius: '12px',
+                  backgroundColor: '#F8FAFC',
+                  padding: '1.25rem',
+                  textAlign: 'center',
+                  cursor: isUploadingPoster ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  transition: 'all 0.2s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.borderColor = '#D97706')}
+                onMouseOut={(e) => (e.currentTarget.style.borderColor = '#CBD5E1')}
+              >
+                {isUploadingPoster ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#92400E', fontWeight: 600 }}>
+                    <Loader2 size={20} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                    <span>Uploading cover image...</span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <UploadCloud size={24} color="#D97706" />
+                    <div style={{ textAlign: 'left' }}>
+                      <div style={{ fontWeight: 600, color: '#1C1917', fontSize: '0.9rem' }}>
+                        Click to upload cover poster from computer
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                        PNG, JPG, WEBP up to 20MB (Shown in video cards before playback)
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Input
+                label=""
+                value={thumbnailUrl}
+                onChange={(e) => setThumbnailUrl(e.target.value)}
+                placeholder="https://images.unsplash.com/..."
+                leftIcon={<ImageIcon size={16} />}
+                helperText="Thumbnail shown in video cards before playback"
+              />
+            )}
+
+            {posterUploadError && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: '#DC2626',
+                  fontSize: '0.8rem',
+                  marginTop: '0.35rem',
+                }}
+              >
+                <AlertCircle size={14} />
+                <span>{posterUploadError}</span>
+              </div>
+            )}
+
+            {/* Poster Preview Card */}
+            {thumbnailUrl && (
+              <div
+                style={{
+                  marginTop: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '8px',
+                  borderRadius: '12px',
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                }}
+              >
+                <img
+                  src={thumbnailUrl}
+                  alt="Poster preview"
+                  style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '8px',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                  }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80';
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#1C1917' }}>
+                    Current Cover Poster
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#64748B',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {thumbnailUrl}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => posterInputRef.current?.click()}
+                  style={{
+                    fontSize: '0.78rem',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    backgroundColor: '#FEF3C7',
+                    color: '#92400E',
+                    border: '1px solid #FDE68A',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Change
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Description */}
           <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
+            <label
+              style={{
+                display: 'block',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: '#44403C',
+                marginBottom: '0.35rem',
+              }}
+            >
               Video Description / Caption
             </label>
             <textarea
@@ -294,7 +583,15 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What happens in this video? E.g., Watch Mowals harvest wild honeycomb..."
-              style={{ width: '100%', boxSizing: 'border-box', padding: '0.65rem 0.95rem', borderRadius: '10px', border: '1px solid #D6D3D1', outline: 'none', fontFamily: 'inherit' }}
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '0.65rem 0.95rem',
+                borderRadius: '10px',
+                border: '1px solid #D6D3D1',
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
             />
           </div>
 
@@ -314,7 +611,10 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({ isOpen, onCl
           )}
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 flex-wrap" style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}>
+          <div
+            className="flex items-center justify-end gap-3 flex-wrap"
+            style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}
+          >
             <Button variant="ghost" type="button" onClick={onClose}>
               Cancel
             </Button>

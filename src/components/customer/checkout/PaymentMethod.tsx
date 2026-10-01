@@ -21,12 +21,21 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
   onBack,
   isProcessing,
 }) => {
-  const { cartTotal, showToast } = useStore();
+  const { cartTotal, showToast, settings } = useStore();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [utrNumber, setUtrNumber] = useState('');
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Dynamic settlement details configured by Admin in Store Settings
+  const upiId = settings?.paymentConfig?.upiId || BUSINESS_PAYMENT_DETAILS.upiId;
+  const upiName = settings?.paymentConfig?.accountHolderName || BUSINESS_PAYMENT_DETAILS.upiName;
+  const bankName = settings?.paymentConfig?.bankName || BUSINESS_PAYMENT_DETAILS.bankName;
+  const accountName = settings?.paymentConfig?.accountHolderName || BUSINESS_PAYMENT_DETAILS.accountName;
+  const accountNumber = settings?.paymentConfig?.accountNumber || BUSINESS_PAYMENT_DETAILS.accountNumber;
+  const ifscCode = settings?.paymentConfig?.ifscCode || BUSINESS_PAYMENT_DETAILS.ifscCode;
+  const branch = settings?.paymentConfig?.branchName || BUSINESS_PAYMENT_DETAILS.branch;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -77,7 +86,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
     }
   };
 
-  const upiDeepLink = `upi://pay?pa=${BUSINESS_PAYMENT_DETAILS.upiId}&pn=${encodeURIComponent(BUSINESS_PAYMENT_DETAILS.upiName)}&am=${cartTotal}&cu=INR&tn=MadhuvanHoney`;
+  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${cartTotal}&cu=INR&tn=MadhuvanHoney`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(upiDeepLink)}`;
 
   return (
@@ -250,11 +259,11 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
                   }}
                 >
                   <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
-                    {BUSINESS_PAYMENT_DETAILS.upiId}
+                    {upiId}
                   </span>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(BUSINESS_PAYMENT_DETAILS.upiId, 'UPI ID')}
+                    onClick={() => copyToClipboard(upiId, 'UPI ID')}
                     style={{
                       background: copiedField === 'UPI ID' ? '#059669' : '#D97706',
                       color: '#FFFFFF',
@@ -280,7 +289,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
                   Beneficiary Name:
                 </label>
                 <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#1C1917' }}>
-                  {BUSINESS_PAYMENT_DETAILS.upiName}
+                  {upiName}
                 </div>
               </div>
 
@@ -319,29 +328,29 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
                       color: '#44403C',
                     }}
                   >
-                    <div><strong>Bank:</strong> {BUSINESS_PAYMENT_DETAILS.bankName}</div>
-                    <div><strong>Account Name:</strong> {BUSINESS_PAYMENT_DETAILS.accountName}</div>
+                    <div><strong>Bank:</strong> {bankName}</div>
+                    <div><strong>Account Name:</strong> {accountName}</div>
                     <div className="flex items-center justify-between">
-                      <span><strong>Account No:</strong> {BUSINESS_PAYMENT_DETAILS.accountNumber}</span>
+                      <span><strong>Account No:</strong> {accountNumber}</span>
                       <button
                         type="button"
-                        onClick={() => copyToClipboard(BUSINESS_PAYMENT_DETAILS.accountNumber, 'Account Number')}
+                        onClick={() => copyToClipboard(accountNumber, 'Account Number')}
                         style={{ background: 'none', border: 'none', color: '#D97706', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
                       >
                         Copy
                       </button>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span><strong>IFSC:</strong> {BUSINESS_PAYMENT_DETAILS.ifscCode}</span>
+                      <span><strong>IFSC:</strong> {ifscCode}</span>
                       <button
                         type="button"
-                        onClick={() => copyToClipboard(BUSINESS_PAYMENT_DETAILS.ifscCode, 'IFSC Code')}
+                        onClick={() => copyToClipboard(ifscCode, 'IFSC Code')}
                         style={{ background: 'none', border: 'none', color: '#D97706', cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem' }}
                       >
                         Copy
                       </button>
                     </div>
-                    <div><strong>Branch:</strong> {BUSINESS_PAYMENT_DETAILS.branch}</div>
+                    {branch && <div><strong>Branch:</strong> {branch}</div>}
                   </div>
                 )}
               </div>
