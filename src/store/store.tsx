@@ -633,14 +633,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const payload: CreateOrderPayload = {
       shippingAddress,
       paymentMethod,
-      items: cart.map((c) => ({
-        productId: c.productId,
-        productName: c.name,
-        size: c.size,
-        image: c.image,
-        price: c.price,
-        quantity: c.quantity,
-      })),
+      items: cart.map((c) => {
+        const matched = products.find(
+          (p) =>
+            p.id === c.productId ||
+            p.slug === c.slug ||
+            p.name.toLowerCase() === c.name.toLowerCase()
+        );
+        const isObjectId = typeof c.productId === 'string' && /^[0-9a-fA-F]{24}$/.test(c.productId);
+        const resolvedProductId = isObjectId ? c.productId : (matched?.id || c.productId);
+
+        return {
+          productId: resolvedProductId,
+          productName: c.name,
+          size: c.size,
+          image: c.image,
+          price: c.price,
+          quantity: c.quantity,
+        };
+      }),
       subtotal: cartSubtotal,
       discount: cartDiscount,
       shippingFee: cartShippingFee,
