@@ -13,6 +13,7 @@ import { Sliders } from '../pages/admin/Sliders/Sliders';
 import { Customers } from '../pages/admin/Customers/Customers';
 import { Categories } from '../pages/admin/Categories/Categories';
 import { Settings } from '../pages/admin/Settings/Settings';
+import { Reviews } from '../pages/admin/Reviews/Reviews';
 
 export const AdminRoutes = (
   <>
@@ -102,6 +103,14 @@ export const AdminRoutes = (
       element={
         <ProtectedRoute>
           <Categories />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="reviews"
+      element={
+        <ProtectedRoute>
+          <Reviews />
         </ProtectedRoute>
       }
     />

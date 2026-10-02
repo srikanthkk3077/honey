@@ -5,13 +5,19 @@ import { VideoModal } from '../video/VideoModal';
 import { VideoItem } from '../../../types/video.types';
 import { Play, Eye, Clock, Film } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { VideoCardShimmer } from '../../common/Shimmer';
 
 export const VideoShowcase: React.FC = () => {
-  const { videos } = useStore();
+  const { videos, isVideosLoading } = useStore();
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const featuredVideos = videos.filter((v) => v.featuredOnHome !== false);
   const homeVideos = (featuredVideos.length > 0 ? featuredVideos : videos).slice(0, 4);
+
+  // If not loading and no videos are present, gracefully hide section
+  if (!isVideosLoading && homeVideos.length === 0) {
+    return null;
+  }
 
   return (
     <section style={{ padding: '5.5rem 0', backgroundColor: '#181511', color: '#FFFFFF', position: 'relative' }}>
@@ -20,12 +26,7 @@ export const VideoShowcase: React.FC = () => {
           <div>
             <SectionTitle
               align="left"
-
-
-
               light={true}
-
-              
               subtitle="Apiary In Motion"
               title="Live Harvest Stories & Purity Reels"
               description="Step inside our high-altitude Himalayan hives and mangrove forests. Watch unheated raw extraction in action."
@@ -45,13 +46,16 @@ export const VideoShowcase: React.FC = () => {
             }}
           >
             <Film size={18} />
-            <span>Watch All Videos ({videos.length})</span>
+            <span>Watch All Videos {videos.length > 0 ? `(${videos.length})` : ''}</span>
           </Link>
         </div>
 
         {/* Video Reel Cards */}
         <div className="grid grid-4 gap-6">
-          {homeVideos.map((video) => (
+          {isVideosLoading || homeVideos.length === 0 ? (
+            <VideoCardShimmer count={4} />
+          ) : (
+            homeVideos.map((video) => (
             <div
               key={video.id}
               onClick={() => setSelectedVideo(video)}
@@ -195,7 +199,8 @@ export const VideoShowcase: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+        )}
         </div>
       </div>
 

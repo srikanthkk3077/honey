@@ -6,7 +6,7 @@ import { SectionTitle } from '../../../components/common/SectionTitle';
 import { Filter, Search, X } from 'lucide-react';
 
 export const Shop: React.FC = () => {
-  const { products, categories, wishlist } = useStore();
+  const { products, categories, wishlist, isProductsLoading } = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedCategory = searchParams.get('category') || 'all';
@@ -212,7 +212,7 @@ export const Shop: React.FC = () => {
         </div>
 
         {/* Product Grid */}
-        <ProductGrid products={filteredProducts} />
+        <ProductGrid products={filteredProducts} isLoading={isProductsLoading} />
       </div>
 
       <style>{`

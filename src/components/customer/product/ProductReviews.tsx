@@ -12,11 +12,12 @@ interface ProductReviewsProps {
 }
 
 export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, reviews, rating }) => {
-  const { showToast } = useStore();
+  const { showToast, submitReview } = useStore();
   const [localReviews, setLocalReviews] = useState<ProductReview[]>(reviews);
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
+  const [location, setLocation] = useState('');
   const [formRating, setFormRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,32 +25,25 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
     e.preventDefault();
     if (!name.trim() || !comment.trim()) return;
 
-    const newRev: ProductReview = {
-      id: 'rev-' + Date.now(),
-      userName: name.trim(),
-      rating: formRating,
-      comment: comment.trim(),
-      date: new Date().toISOString().split('T')[0],
-      verified: true,
-    };
-
-    setLocalReviews([newRev, ...localReviews]);
     setIsSubmitting(true);
-
     try {
-      await productApi.addReview(productId, {
+      const created = await submitReview(productId, {
         userName: name.trim(),
         rating: formRating,
         comment: comment.trim(),
+        location: location.trim() || 'Verified Buyer',
+        userRole: 'Verified Patron',
       });
-      showToast('Thank you for sharing your experience with Madhuvan Honey!', 'success');
-    } catch {
-      showToast('Review submitted locally.', 'info');
-    } finally {
-      setIsSubmitting(false);
+
+      setLocalReviews((prev) => [created, ...prev]);
       setName('');
       setComment('');
+      setLocation('');
       setShowAddForm(false);
+    } catch {
+      showToast('Could not submit review at this moment', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

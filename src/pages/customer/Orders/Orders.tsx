@@ -6,6 +6,7 @@ import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from '../../../components/admin/orders/OrderStatus';
 import { Package, ArrowRight, Truck, Loader } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
+import { OrderCardShimmer } from '../../../components/common/Shimmer';
 
 export const Orders: React.FC = () => {
   const { orders, isOrdersLoading, refreshOrders, isAuthenticated } = useStore();
@@ -37,10 +38,7 @@ export const Orders: React.FC = () => {
         </div>
 
         {isOrdersLoading ? (
-          <div style={{ textAlign: 'center', padding: '4rem 0' }}>
-            <Loader size={36} color="#D97706" style={{ animation: 'spin 1s linear infinite', margin: '0 auto' }} />
-            <p style={{ color: '#78716C', marginTop: '1rem' }}>Loading your orders…</p>
-          </div>
+          <OrderCardShimmer count={3} />
         ) : orders.length === 0 ? (
           <div
             style={{

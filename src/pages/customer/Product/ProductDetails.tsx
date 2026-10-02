@@ -6,12 +6,17 @@ import { ProductInfo } from '../../../components/customer/product/ProductInfo';
 import { ProductReviews } from '../../../components/customer/product/ProductReviews';
 import { RelatedProducts } from '../../../components/customer/product/RelatedProducts';
 import { ChevronRight, ShieldCheck, Check, Sparkles } from 'lucide-react';
+import { ProductDetailShimmer } from '../../../components/common/Shimmer';
 
 export const ProductDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { getProductBySlug, products } = useStore();
+  const { getProductBySlug, products, isProductsLoading } = useStore();
 
   const product = slug ? getProductBySlug(slug) : undefined;
+
+  if (isProductsLoading && !product) {
+    return <ProductDetailShimmer />;
+  }
 
   if (!product) {
     return (

@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   LogOut,
   ShieldCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
 
@@ -25,6 +26,7 @@ export const AdminSidebar: React.FC = () => {
     { name: 'Honey Products', path: '/admin/products', icon: <Package size={20} /> },
     { name: 'Home Sliders', path: '/admin/sliders', icon: <SlidersHorizontal size={20} /> },
     { name: 'Videos & Reels', path: '/admin/videos', icon: <Film size={20} /> },
+    { name: 'Customer Reviews', path: '/admin/reviews', icon: <MessageSquare size={20} /> },
     { name: 'Customer Orders', path: '/admin/orders', icon: <ShoppingBag size={20} /> },
     { name: 'Transactions', path: '/admin/transactions', icon: <Receipt size={20} /> },
     { name: 'Registered Customers', path: '/admin/customers', icon: <Users size={20} /> },

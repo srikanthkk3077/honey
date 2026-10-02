@@ -13,6 +13,14 @@ export interface ProductReview {
   comment: string;
   date: string;
   verified: boolean;
+  showOnHome?: boolean;
+  userRole?: string;
+  location?: string;
+  avatar?: string;
+  productId?: string;
+  productName?: string;
+  productSlug?: string;
+  productImage?: string;
 }
 
 export interface Product {

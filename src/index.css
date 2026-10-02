@@ -343,3 +343,45 @@ button, input, select, textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: #B45309;
 }
+
+/* ===================================================================
+   ARTISANAL HONEY SHIMMER ANIMATION ("Swimmer" / Skeleton Effect)
+   =================================================================== */
+
+@keyframes shimmerWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-box {
+  background: linear-gradient(
+    90deg,
+    #F0ECE4 0%,
+    #FAF7F0 25%,
+    #FDE68A 50%,
+    #FAF7F0 75%,
+    #F0ECE4 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerWave 2s infinite ease-in-out;
+  display: block;
+}
+
+.shimmer-dark {
+  background: linear-gradient(
+    90deg,
+    #231E18 0%,
+    #382F22 25%,
+    #5A4526 50%,
+    #382F22 75%,
+    #231E18 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmerWave 2s infinite ease-in-out;
+  display: block;
+}
+

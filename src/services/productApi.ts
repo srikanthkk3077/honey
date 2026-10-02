@@ -1,5 +1,6 @@
 import api from './api';
 import { Product, Category, ProductReview } from '../types/product.types';
+import { Testimonial } from '../data/testimonials';
 
 // ─── Backend shapes ───────────────────────────────────────────────────────────
 interface ApiResponse<T> {
@@ -151,13 +152,43 @@ export const productApi = {
   /** POST /api/products/:id/reviews */
   addReview: async (
     productId: string,
-    review: { userName: string; rating: number; comment: string }
+    review: { userName: string; rating: number; comment: string; userRole?: string; location?: string; avatar?: string }
   ): Promise<ProductReview> => {
     const { data } = await api.post<ApiResponse<any>>(
       `/products/${productId}/reviews`,
       review
     );
     return data.data;
+  },
+
+  /** GET /api/products/reviews/all (admin/public) */
+  getAllReviews: async (): Promise<ProductReview[]> => {
+    const { data } = await api.get<ApiResponse<ProductReview[]>>('/products/reviews/all');
+    return data.data || [];
+  },
+
+  /** GET /api/products/reviews/home (customer home page) */
+  getHomeReviews: async (): Promise<Testimonial[]> => {
+    const { data } = await api.get<ApiResponse<Testimonial[]>>('/products/reviews/home');
+    return data.data || [];
+  },
+
+  /** PATCH /api/products/:productId/reviews/:reviewId/toggle-home (admin) */
+  toggleReviewHome: async (
+    productId: string,
+    reviewId: string,
+    showOnHome?: boolean
+  ): Promise<{ success: boolean; showOnHome: boolean; reviewId: string; productId: string }> => {
+    const { data } = await api.patch<ApiResponse<any>>(
+      `/products/${productId}/reviews/${reviewId}/toggle-home`,
+      { showOnHome }
+    );
+    return data.data;
+  },
+
+  /** DELETE /api/products/:productId/reviews/:reviewId (admin) */
+  deleteReview: async (productId: string, reviewId: string): Promise<void> => {
+    await api.delete(`/products/${productId}/reviews/${reviewId}`);
   },
 
   // ── Admin category mutations ────────────────────────────────────────────────

@@ -4,9 +4,10 @@ import { ArrowRight } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { ProductCard } from '../product/ProductCard';
 import { SectionTitle } from '../../common/SectionTitle';
+import { ProductCardShimmer } from '../../common/Shimmer';
 
 export const FeaturedProducts: React.FC = () => {
-  const { products } = useStore();
+  const { products, isProductsLoading } = useStore();
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
@@ -33,15 +34,19 @@ export const FeaturedProducts: React.FC = () => {
               marginBottom: '2rem',
             }}
           >
-            <span>View All ({products.length}) Varieties</span>
+            <span>View All {products.length > 0 ? `(${products.length})` : ''} Varieties</span>
             <ArrowRight size={18} />
           </Link>
         </div>
 
         <div className="grid grid-4 gap-6">
-          {featured.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+          {isProductsLoading || products.length === 0 ? (
+            <ProductCardShimmer count={4} />
+          ) : (
+            featured.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </div>
     </section>

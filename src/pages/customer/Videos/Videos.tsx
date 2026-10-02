@@ -5,9 +5,10 @@ import { VideoModal } from '../../../components/customer/video/VideoModal';
 import { VideoItem, VideoCategory } from '../../../types/video.types';
 import { Play, Eye, Clock, Search, Sparkles } from 'lucide-react';
 import { Input } from '../../../components/common/Input';
+import { VideoCardShimmer } from '../../../components/common/Shimmer';
 
 export const Videos: React.FC = () => {
-  const { videos } = useStore();
+  const { videos, isVideosLoading } = useStore();
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
@@ -90,7 +91,11 @@ export const Videos: React.FC = () => {
         </div>
 
         {/* Video Grid */}
-        {filtered.length === 0 ? (
+        {isVideosLoading ? (
+          <div className="grid grid-3 gap-6">
+            <VideoCardShimmer count={6} />
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem 1rem', backgroundColor: '#FFFFFF', borderRadius: '24px', border: '1px solid #E7E5E4' }}>
             <p style={{ color: '#78716C' }}>No videos match your filter criteria.</p>
           </div>

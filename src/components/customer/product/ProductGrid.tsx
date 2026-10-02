@@ -1,6 +1,7 @@
 import React from 'react';
 import { Product } from '../../../types/product.types';
 import { ProductCard } from './ProductCard';
+import { ProductCardShimmer } from '../../common/Shimmer';
 
 interface ProductGridProps {
   products: Product[];
@@ -11,17 +12,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading = 
   if (isLoading) {
     return (
       <div className="grid grid-3 gap-6">
-        {[1, 2, 3, 4, 5, 6].map((n) => (
-          <div
-            key={n}
-            style={{
-              height: '420px',
-              backgroundColor: '#E7E5E4',
-              borderRadius: '16px',
-              animation: 'pulse 1.5s infinite',
-            }}
-          />
-        ))}
+        <ProductCardShimmer count={6} />
       </div>
     );
   }

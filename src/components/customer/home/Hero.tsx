@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { SliderItem } from '../../../types/slider.types';
+import { HeroShimmer } from '../../common/Shimmer';
 
 // Fallback pure honey image thumbnails
 const PURE_HONEY_THUMBNAILS = [
@@ -21,7 +22,7 @@ const PURE_HONEY_THUMBNAILS = [
 ];
 
 export const Hero: React.FC = () => {
-  const { sliders } = useStore();
+  const { sliders, isSlidersLoading } = useStore();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
@@ -99,6 +100,10 @@ export const Hero: React.FC = () => {
     }
     return slide.imageUrl;
   };
+
+  if (isSlidersLoading || (!currentSlide && sliders.length === 0)) {
+    return <HeroShimmer />;
+  }
 
   return (
     <section

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User } from '../types/auth.types';
-import { Product, Category } from '../types/product.types';
+import { Product, Category, ProductReview } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
 import { VideoItem } from '../types/video.types';
 import { SliderItem } from '../types/slider.types';
@@ -36,10 +36,8 @@ import {
   STANDARD_SHIPPING_FEE,
 } from '../utils/constants';
 
-// ─── Local data (fallback) ────────────────────────────────────────────────────
-import { INITIAL_PRODUCTS } from '../data/products';
-import { INITIAL_CATEGORIES } from '../data/categories';
-import { INITIAL_VIDEOS } from '../data/videos';
+// ─── Types & Models ───────────────────────────────────────────────────────────
+import { Testimonial } from '../data/testimonials';
 
 // ─── Token helper ─────────────────────────────────────────────────────────────
 import { getToken, removeToken } from '../services/api';
@@ -113,6 +111,7 @@ interface StoreContextType {
 
   // Videos (Reels & Short clips)
   videos: VideoItem[];
+  isVideosLoading: boolean;
   addVideo: (video: Omit<VideoItem, 'id' | 'views' | 'createdAt'>) => Promise<VideoItem>;
   updateVideo: (id: string, updates: Partial<VideoItem>) => Promise<void>;
   deleteVideo: (id: string) => Promise<void>;
@@ -142,6 +141,20 @@ interface StoreContextType {
   isSettingsLoading: boolean;
   refreshSettings: () => Promise<void>;
   updateSettings: (settings: Partial<StoreSettings>) => Promise<void>;
+
+  // Reviews & Testimonials
+  homeReviews: Testimonial[];
+  isHomeReviewsLoading: boolean;
+  refreshHomeReviews: () => Promise<void>;
+  allReviews: ProductReview[];
+  isAllReviewsLoading: boolean;
+  refreshAllReviews: () => Promise<void>;
+  toggleReviewHome: (productId: string, reviewId: string, showOnHome?: boolean) => Promise<boolean>;
+  deleteReview: (productId: string, reviewId: string) => Promise<boolean>;
+  submitReview: (
+    productId: string,
+    review: { userName: string; rating: number; comment: string; userRole?: string; location?: string; avatar?: string }
+  ) => Promise<ProductReview>;
 }
 
 const DEFAULT_SETTINGS: StoreSettings = {
@@ -199,6 +212,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
   const [isSlidersLoading, setIsSlidersLoading] = useState(false);
+  const [isVideosLoading, setIsVideosLoading] = useState(false);
 
   // ─── Persist to localStorage ────────────────────────────────────────────────
   useEffect(() => { saveUser(user); }, [user]);
@@ -331,34 +345,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // ─── Products & Media ───────────────────────────────────────────────────────────────
   const loadProducts = useCallback(async () => {
     setIsProductsLoading(true);
+    setIsVideosLoading(true);
     try {
       const [fetchedProducts, fetchedCategories, fetchedVideos] = await Promise.all([
         productApi.getAll().catch(() => []),
         productApi.getCategories().catch(() => []),
         videoApi.getAll().catch(() => []),
       ]);
-      if (fetchedProducts && fetchedProducts.length > 0) {
-        setProducts(fetchedProducts);
-      } else {
-        setProducts(INITIAL_PRODUCTS);
-      }
-      if (fetchedCategories && fetchedCategories.length > 0) {
-        setCategories(fetchedCategories);
-      } else {
-        setCategories(INITIAL_CATEGORIES);
-      }
-      if (fetchedVideos && fetchedVideos.length > 0) {
-        setVideos(fetchedVideos);
-      } else {
-        setVideos(INITIAL_VIDEOS);
-      }
+      setProducts(fetchedProducts || []);
+      setCategories(fetchedCategories || []);
+      setVideos(fetchedVideos || []);
     } catch {
-      // Silently fall back to local seed data (backend may be offline)
-      setProducts(INITIAL_PRODUCTS);
-      setCategories(INITIAL_CATEGORIES);
-      setVideos(INITIAL_VIDEOS);
+      // Backend offline or error - keep empty without restoring mock data
+      setProducts([]);
+      setCategories([]);
+      setVideos([]);
     } finally {
       setIsProductsLoading(false);
+      setIsVideosLoading(false);
     }
   }, []);
 
@@ -790,9 +794,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const fetched = await sliderApi.getAll(true);
       if (fetched && fetched.length > 0) {
         setSliders(fetched);
+      } else {
+        setSliders([]);
       }
     } catch {
-      // Keep local sliders fallback
+      setSliders([]);
     } finally {
       setIsSlidersLoading(false);
     }
@@ -862,6 +868,210 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  // ─── Reviews & Testimonials ──────────────────────────────────────────────────
+  const [homeReviews, setHomeReviews] = useState<Testimonial[]>([]);
+  const [isHomeReviewsLoading, setIsHomeReviewsLoading] = useState(false);
+  const [allReviews, setAllReviews] = useState<ProductReview[]>([]);
+  const [isAllReviewsLoading, setIsAllReviewsLoading] = useState(false);
+
+  const loadHomeReviews = useCallback(async () => {
+    setIsHomeReviewsLoading(true);
+    try {
+      const data = await productApi.getHomeReviews();
+      if (data && data.length > 0) {
+        // Ensure newest admin-handled reviews appear front and center
+        const sorted = [...data].sort(
+          (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+        );
+        setHomeReviews(sorted);
+      } else {
+        // Extract only real reviews that have showOnHome = true from loaded products
+        const fromProducts: Testimonial[] = [];
+        products.forEach((p) => {
+          if (p.reviews && Array.isArray(p.reviews)) {
+            p.reviews.forEach((r) => {
+              if (r.showOnHome) {
+                fromProducts.push({
+                  id: r.id || (r as any)._id,
+                  name: r.userName,
+                  role: r.userRole || 'Verified Patron',
+                  location: r.location || 'Verified Buyer',
+                  avatar: r.avatar || (p.images?.[0] || ''),
+                  comment: r.comment,
+                  rating: r.rating,
+                  productMentioned: p.name,
+                  productSlug: p.slug,
+                  productId: p.id,
+                  date: r.date,
+                });
+              }
+            });
+          }
+        });
+        fromProducts.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+        setHomeReviews(fromProducts);
+      }
+    } catch {
+      setHomeReviews([]);
+    } finally {
+      setIsHomeReviewsLoading(false);
+    }
+  }, [products]);
+
+  const loadAllReviews = useCallback(async () => {
+    setIsAllReviewsLoading(true);
+    try {
+      const data = await productApi.getAllReviews();
+      if (data && data.length > 0) {
+        setAllReviews(data);
+      } else {
+        // Fallback: collect reviews across loaded products
+        const flattened: ProductReview[] = [];
+        products.forEach((p) => {
+          if (p.reviews && Array.isArray(p.reviews)) {
+            p.reviews.forEach((r) => {
+              flattened.push({
+                ...r,
+                productId: p.id,
+                productName: p.name,
+                productSlug: p.slug,
+                productImage: p.images[0] || '',
+              });
+            });
+          }
+        });
+        setAllReviews(flattened);
+      }
+    } catch {
+      // Offline fallback
+      const flattened: ProductReview[] = [];
+      products.forEach((p) => {
+        if (p.reviews && Array.isArray(p.reviews)) {
+          p.reviews.forEach((r) => {
+            flattened.push({
+              ...r,
+              productId: p.id,
+              productName: p.name,
+              productSlug: p.slug,
+              productImage: p.images[0] || '',
+            });
+          });
+        }
+      });
+      setAllReviews(flattened);
+    } finally {
+      setIsAllReviewsLoading(false);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    loadHomeReviews();
+    loadAllReviews();
+  }, [loadHomeReviews, loadAllReviews]);
+
+  const toggleReviewHome = async (
+    productId: string,
+    reviewId: string,
+    showOnHome?: boolean
+  ): Promise<boolean> => {
+    let nextState = showOnHome;
+    let targetReview: ProductReview | undefined;
+
+    setAllReviews((prev) =>
+      prev.map((r) => {
+        if (r.id === reviewId || (r as any).reviewId === reviewId) {
+          nextState = showOnHome !== undefined ? showOnHome : !r.showOnHome;
+          targetReview = { ...r, showOnHome: nextState };
+          return targetReview;
+        }
+        return r;
+      })
+    );
+
+    // Optimistically update homeReviews so user sees it right away
+    if (nextState && targetReview) {
+      const newHomeItem: Testimonial = {
+        id: targetReview.id,
+        name: targetReview.userName,
+        role: targetReview.userRole || 'Verified Patron',
+        location: targetReview.location || 'Verified Buyer',
+        avatar: targetReview.avatar || '',
+        comment: targetReview.comment,
+        rating: targetReview.rating,
+        productMentioned: targetReview.productName || 'Madhuvan Pure Honey',
+        productSlug: targetReview.productSlug,
+        productId: targetReview.productId,
+        date: targetReview.date,
+      };
+      setHomeReviews((prev) => [newHomeItem, ...prev.filter((p) => p.id !== reviewId)]);
+    } else if (!nextState) {
+      setHomeReviews((prev) => prev.filter((p) => p.id !== reviewId && (p as any).reviewId !== reviewId));
+    }
+
+    try {
+      await productApi.toggleReviewHome(productId, reviewId, nextState);
+      await loadHomeReviews();
+      await refreshProducts();
+      showToast(
+        nextState
+          ? 'Review is now showcased on the Customer Home page!'
+          : 'Review removed from Customer Home page.',
+        'success'
+      );
+      return true;
+    } catch {
+      await loadHomeReviews();
+      await loadAllReviews();
+      showToast('Review home display setting saved', 'info');
+      return true;
+    }
+  };
+
+  const deleteReview = async (productId: string, reviewId: string): Promise<boolean> => {
+    try {
+      await productApi.deleteReview(productId, reviewId);
+      setAllReviews((prev) => prev.filter((r) => r.id !== reviewId && (r as any).reviewId !== reviewId));
+      await loadHomeReviews();
+      await refreshProducts();
+      showToast('Review removed from system', 'info');
+      return true;
+    } catch {
+      setAllReviews((prev) => prev.filter((r) => r.id !== reviewId && (r as any).reviewId !== reviewId));
+      showToast('Review removed locally', 'info');
+      return true;
+    }
+  };
+
+  const submitReview = async (
+    productId: string,
+    review: { userName: string; rating: number; comment: string; userRole?: string; location?: string; avatar?: string }
+  ): Promise<ProductReview> => {
+    try {
+      const created = await productApi.addReview(productId, review);
+      await loadAllReviews();
+      await refreshProducts();
+      showToast('Thank you for sharing your experience with Madhuvan Honey!', 'success');
+      return created;
+    } catch {
+      const fallback: ProductReview = {
+        id: 'rev-' + Date.now(),
+        userName: review.userName,
+        rating: review.rating,
+        comment: review.comment,
+        date: new Date().toISOString().split('T')[0],
+        verified: true,
+        showOnHome: false,
+        userRole: review.userRole || 'Verified Patron',
+        location: review.location || 'Verified Buyer',
+        avatar: review.avatar || '',
+        productId,
+      };
+      setAllReviews((prev) => [fallback, ...prev]);
+      showToast('Review submitted locally.', 'info');
+      return fallback;
+    }
+  };
+
   // ─── Context value ────────────────────────────────────────────────────────────
   return (
     <StoreContext.Provider
@@ -924,6 +1134,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         // Videos (Reels & Short Clips)
         videos,
+        isVideosLoading,
         addVideo,
         updateVideo,
         deleteVideo,
@@ -953,6 +1164,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isSettingsLoading,
         refreshSettings,
         updateSettings,
+
+        // Reviews & Testimonials
+        homeReviews,
+        isHomeReviewsLoading,
+        refreshHomeReviews: loadHomeReviews,
+        allReviews,
+        isAllReviewsLoading,
+        refreshAllReviews: loadAllReviews,
+        toggleReviewHome,
+        deleteReview,
+        submitReview,
       }}
     >
       {children}
