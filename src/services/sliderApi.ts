@@ -1,21 +1,6 @@
 import api from './api';
-
-export interface SliderItem {
-  id: string;
-  title: string;
-  subtitle?: string;
-  badge?: string;
-  imageUrl: string;
-  videoUrl?: string;
-  mediaType: 'image' | 'video';
-  linkUrl: string;
-  ctaText?: string;
-  secondaryCtaText?: string;
-  secondaryCtaLink?: string;
-  order: number;
-  isActive: boolean;
-  createdAt?: string;
-}
+import { SliderItem } from '../types/slider.types';
+export type { SliderItem };
 
 interface ApiResponse<T> {
   success: boolean;

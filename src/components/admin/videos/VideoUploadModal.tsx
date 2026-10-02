@@ -38,7 +38,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(
     initialData?.thumbnailUrl ||
-      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
+    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
   );
   const [category, setCategory] = useState<VideoCategory>(initialData?.category || 'harvest');
   const [duration, setDuration] = useState(initialData?.duration || '0:45');
@@ -46,7 +46,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [featuredOnHome, setFeaturedOnHome] = useState(initialData?.featuredOnHome ?? true);
   const [fileName, setFileName] = useState('');
   const [previewError, setPreviewError] = useState('');
-  
+
   // Poster upload state
   const [isUploadingPoster, setIsUploadingPoster] = useState(false);
   const [showPosterUrlInput, setShowPosterUrlInput] = useState(false);
@@ -603,7 +603,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               onChange={(e) => setFeaturedOnHome(e.target.checked)}
               style={{ accentColor: '#D97706', width: '16px', height: '16px' }}
             />
-            <span>Feature prominently on Storefront Home Page</span>
+            <span>Feature in &ldquo;Live Harvest Stories &amp; Purity Reels&rdquo; on Home Page</span>
           </label>
 
           {previewError && (

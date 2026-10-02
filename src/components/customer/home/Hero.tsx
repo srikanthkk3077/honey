@@ -2,58 +2,51 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Play,
-  Plus,
   Volume2,
   VolumeX,
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  ShoppingBag,
   ArrowRight,
-  Check
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
-import { VideoModal } from '../video/VideoModal';
-import { VideoItem } from '../../../types/video.types';
-import confetti from 'canvas-confetti';
+import { SliderItem } from '../../../types/slider.types';
 
-// 100% Guaranteed Pure Honey & Beekeeping Photography (Zero Watermelon / Food)
+// Fallback pure honey image thumbnails
 const PURE_HONEY_THUMBNAILS = [
-  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80', // Golden raw honey jar with dipper
-  'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&q=80', // Honeycomb dripping in sunlight
-  'https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=600&q=80', // Bees on honeycomb
-  'https://images.unsplash.com/photo-1579294800821-694d95e86143?auto=format&fit=crop&w=600&q=80', // Raw amber honey pouring into jar
-  'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&q=80', // Artisanal honey harvest in apiary
+  'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1579294800821-694d95e86143?auto=format&fit=crop&w=600&q=80',
+  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
 ];
 
 export const Hero: React.FC = () => {
-  const { videos, products, addToCart } = useStore();
+  const { sliders } = useStore();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [selectedModalVideo, setSelectedModalVideo] = useState<VideoItem | null>(null);
   const [isVideoLoading, setIsVideoLoading] = useState(true);
-  const [addedAnimation, setAddedAnimation] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const thumbnailListRef = useRef<HTMLDivElement>(null);
 
-  const heroVideos = videos && videos.length > 0 ? videos : [];
-  const currentVideo = heroVideos[currentIndex] || heroVideos[0];
+  const activeSliders = sliders.filter((s) => s.isActive !== false);
+  const heroSliders: SliderItem[] = activeSliders.length > 0 ? activeSliders : sliders;
+  const currentSlide: SliderItem | undefined = heroSliders[currentIndex] || heroSliders[0];
 
-  // Auto-advance video stories every 9 seconds when not hovered
+  // Auto-advance hero slides every 9 seconds when not hovered
   useEffect(() => {
-    if (isHovered || heroVideos.length <= 1) return;
+    if (isHovered || heroSliders.length <= 1) return;
 
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % heroVideos.length);
+      setCurrentIndex((prev) => (prev + 1) % heroSliders.length);
     }, 9000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentIndex, isHovered, heroVideos.length]);
+  }, [currentIndex, isHovered, heroSliders.length]);
 
   // Restart video playback when index changes
   useEffect(() => {
@@ -77,14 +70,14 @@ export const Hero: React.FC = () => {
   }, [currentIndex]);
 
   const handleNext = () => {
-    if (heroVideos.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % heroVideos.length);
+    if (heroSliders.length > 0) {
+      setCurrentIndex((prev) => (prev + 1) % heroSliders.length);
     }
   };
 
   const handlePrev = () => {
-    if (heroVideos.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + heroVideos.length) % heroVideos.length);
+    if (heroSliders.length > 0) {
+      setCurrentIndex((prev) => (prev - 1 + heroSliders.length) % heroSliders.length);
     }
   };
 
@@ -100,39 +93,11 @@ export const Hero: React.FC = () => {
     }
   };
 
-  const taggedProduct = currentVideo?.taggedProductId
-    ? products.find((p) => p.id === currentVideo.taggedProductId)
-    : products[0];
-
-  const handleQuickAdd = () => {
-    if (taggedProduct) {
-      const sizeToAdd = taggedProduct.selectedSize || (taggedProduct.sizes?.[0]?.size ?? '500g');
-      addToCart(taggedProduct, sizeToAdd, 1);
-      setAddedAnimation(true);
-      setTimeout(() => setAddedAnimation(false), 1800);
-
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.8 },
-          colors: ['#F59E0B', '#D97706', '#FEF3C7', '#10B981']
-        });
-      } catch {}
-    }
-  };
-
-  // Helper to ensure 100% pure honey thumbnail
-  const getHoneyThumbnail = (video: VideoItem, idx: number) => {
-    if (
-      !video.thumbnailUrl ||
-      video.thumbnailUrl.includes('photo-1546554137') ||
-      video.thumbnailUrl.includes('photo-1582794543') ||
-      video.thumbnailUrl.includes('photo-1587049352846')
-    ) {
+  const getSlideImage = (slide?: SliderItem, idx: number = 0) => {
+    if (!slide?.imageUrl) {
       return PURE_HONEY_THUMBNAILS[idx % PURE_HONEY_THUMBNAILS.length];
     }
-    return video.thumbnailUrl;
+    return slide.imageUrl;
   };
 
   return (
@@ -152,13 +117,13 @@ export const Hero: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
       id="ott-hero-section"
     >
-      {/* 1. Full-Length Video */}
-      {currentVideo && (
+      {/* 1. Full-Length Video or Hero Image */}
+      {currentSlide?.mediaType === 'video' && currentSlide?.videoUrl ? (
         <video
-          key={currentVideo.videoUrl}
+          key={currentSlide.videoUrl}
           ref={videoRef}
-          src={currentVideo.videoUrl}
-          poster={getHoneyThumbnail(currentVideo, currentIndex)}
+          src={currentSlide.videoUrl}
+          poster={getSlideImage(currentSlide, currentIndex)}
           autoPlay
           loop
           muted={isMuted}
@@ -176,21 +141,33 @@ export const Hero: React.FC = () => {
             opacity: isVideoLoading ? 0.9 : 1,
           }}
         />
-      )}
-
-      {/* Video Poster Fallback */}
-      {currentVideo && (
+      ) : (
         <div
+          key={currentSlide?.imageUrl || currentIndex}
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url(${getHoneyThumbnail(currentVideo, currentIndex)})`,
+            backgroundImage: `url(${getSlideImage(currentSlide, currentIndex)})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            zIndex: 0,
+            zIndex: 1,
+            filter: 'brightness(0.92) contrast(1.05)',
+            transition: 'opacity 0.6s ease-in-out',
           }}
         />
       )}
+
+      {/* Background Poster Fallback */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url(${getSlideImage(currentSlide, currentIndex)})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          zIndex: 0,
+        }}
+      />
 
       {/* 2. Soft, Seamless Gradient Overlays */}
       <div
@@ -263,7 +240,7 @@ export const Hero: React.FC = () => {
               }}
             >
               <Sparkles size={14} color="#F59E0B" />
-              <span>100% Pure Raw Honey • Single-Origin Harvest</span>
+              <span>{currentSlide?.badge || '100% Pure Raw Honey • Single-Origin Harvest'}</span>
             </div>
 
             {/* Main Headline */}
@@ -283,10 +260,7 @@ export const Hero: React.FC = () => {
                 overflowWrap: 'break-word',
               }}
             >
-              Taste the Liquid Gold of{' '}
-              <span style={{ color: '#F59E0B', fontStyle: 'italic' }}>
-                Virgin Forests.
-              </span>
+              {currentSlide?.title || 'Taste the Liquid Gold of Virgin Forests.'}
             </h1>
 
             {/* Description Text */}
@@ -301,13 +275,78 @@ export const Hero: React.FC = () => {
                 textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
               }}
             >
-              Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and live natural enzymes.
+              {currentSlide?.subtitle ||
+                'Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and live natural enzymes.'}
             </p>
 
+            {/* CTA Action Buttons */}
+            <div
+              className="hero-cta-group"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                flexWrap: 'wrap',
+              }}
+            >
+              <Link
+                to={currentSlide?.linkUrl || '/shop'}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#D97706',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.98rem',
+                  padding: '0.85rem 1.75rem',
+                  borderRadius: '9999px',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 20px rgba(217, 119, 6, 0.45)',
+                  transition: 'all 0.2s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#B45309')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#D97706')}
+              >
+                <span>{currentSlide?.ctaText || 'Explore Pure Honey'}</span>
+                <ArrowRight size={18} />
+              </Link>
+
+              {currentSlide?.secondaryCtaText && (
+                <Link
+                  to={currentSlide?.secondaryCtaLink || '/videos'}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    padding: '0.85rem 1.5rem',
+                    borderRadius: '9999px',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.45)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                >
+                  <span>{currentSlide.secondaryCtaText}</span>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* ==============================================================
-              RIGHT COLUMN: Video Stories / Reels Carousel & Audio Toggle
+              RIGHT COLUMN: Sliders Carousel Navigation & Audio Toggle
               ============================================================== */}
           <div
             id="hero-right-col"
@@ -322,40 +361,42 @@ export const Hero: React.FC = () => {
             {/* Audio Toggle & Stories Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                {/* Live Apiary Stories ({currentIndex + 1}/{heroVideos.length}) */}
+                {/* Featured Story {currentIndex + 1} of {heroSliders.length} */}
               </div>
 
-              {/* Audio Toggle Button */}
-              <button
-                onClick={toggleSound}
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '50%',
-                  background: 'rgba(0, 0, 0, 0.55)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  backdropFilter: 'blur(8px)',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0,
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
-                  e.currentTarget.style.borderColor = '#F59E0B';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                }}
-                title={isMuted ? 'Unmute Ambient Sound' : 'Mute Sound'}
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} color="#F59E0B" />}
-              </button>
+              {/* Audio Toggle Button (Active when current slide has video) */}
+              {currentSlide?.mediaType === 'video' && currentSlide?.videoUrl && (
+                <button
+                  onClick={toggleSound}
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 0, 0, 0.55)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
+                    e.currentTarget.style.borderColor = '#F59E0B';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                  title={isMuted ? 'Unmute Ambient Sound' : 'Mute Sound'}
+                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                >
+                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} color="#F59E0B" />}
+                </button>
+              )}
             </div>
 
             {/* Horizontal Video Progress Bars / Pure Honey Thumbnails */}
@@ -372,7 +413,7 @@ export const Hero: React.FC = () => {
               }}
             >
               {/* Prev Arrow */}
-              {heroVideos.length > 3 && (
+              {heroSliders.length > 3 && (
                 <button
                   onClick={handlePrev}
                   className="hero-nav-arrow"
@@ -397,7 +438,7 @@ export const Hero: React.FC = () => {
                 </button>
               )}
 
-              {/* Thumbnails Row (Only Pure Honey & Bees) */}
+              {/* Thumbnails Row */}
               <div
                 ref={thumbnailListRef}
                 style={{
@@ -412,12 +453,12 @@ export const Hero: React.FC = () => {
                 }}
                 id="hero-thumbnail-strip"
               >
-                {heroVideos.map((video, idx) => {
+                {heroSliders.map((slide, idx) => {
                   const isActive = idx === currentIndex;
-                  const thumbImg = getHoneyThumbnail(video, idx);
+                  const thumbImg = getSlideImage(slide, idx);
                   return (
                     <div
-                      key={video.id}
+                      key={slide.id || idx}
                       onClick={() => setCurrentIndex(idx)}
                       style={{
                         position: 'relative',
@@ -438,11 +479,11 @@ export const Hero: React.FC = () => {
                       onMouseOut={(e) => {
                         if (!isActive) e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
                       }}
-                      title={video.title}
+                      title={slide.title}
                     >
                       <img
                         src={thumbImg}
-                        alt="Pure Honey Harvest"
+                        alt={slide.title || 'Pure Honey Harvest'}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -466,8 +507,8 @@ export const Hero: React.FC = () => {
                         />
                       )}
 
-                      {/* Small Play icon on active */}
-                      {isActive && (
+                      {/* Small Play icon on video slides */}
+                      {slide.mediaType === 'video' && (
                         <div
                           style={{
                             position: 'absolute',
@@ -476,7 +517,7 @@ export const Hero: React.FC = () => {
                             width: '14px',
                             height: '14px',
                             borderRadius: '50%',
-                            background: '#D97706',
+                            background: isActive ? '#D97706' : 'rgba(0,0,0,0.6)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -491,7 +532,7 @@ export const Hero: React.FC = () => {
               </div>
 
               {/* Next Arrow */}
-              {heroVideos.length > 3 && (
+              {heroSliders.length > 3 && (
                 <button
                   onClick={handleNext}
                   className="hero-nav-arrow"
@@ -519,12 +560,6 @@ export const Hero: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* 4. Fullscreen Video Modal */}
-      <VideoModal
-        video={selectedModalVideo}
-        onClose={() => setSelectedModalVideo(null)}
-      />
 
       {/* Keyframe Animations & Responsive Styles */}
       <style>{`

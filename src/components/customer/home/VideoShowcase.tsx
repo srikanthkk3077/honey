@@ -10,7 +10,8 @@ export const VideoShowcase: React.FC = () => {
   const { videos } = useStore();
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
-  const homeVideos = videos.slice(0, 4);
+  const featuredVideos = videos.filter((v) => v.featuredOnHome !== false);
+  const homeVideos = (featuredVideos.length > 0 ? featuredVideos : videos).slice(0, 4);
 
   return (
     <section style={{ padding: '5.5rem 0', backgroundColor: '#181511', color: '#FFFFFF', position: 'relative' }}>
@@ -19,7 +20,12 @@ export const VideoShowcase: React.FC = () => {
           <div>
             <SectionTitle
               align="left"
+
+
+
               light={true}
+
+              
               subtitle="Apiary In Motion"
               title="Live Harvest Stories & Purity Reels"
               description="Step inside our high-altitude Himalayan hives and mangrove forests. Watch unheated raw extraction in action."

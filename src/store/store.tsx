@@ -3,6 +3,7 @@ import { User } from '../types/auth.types';
 import { Product, Category } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
 import { VideoItem } from '../types/video.types';
+import { SliderItem } from '../types/slider.types';
 import { StoreSettings } from '../types/customer.types';
 
 // ─── Slices (local storage persistence) ──────────────────────────────────────
@@ -12,6 +13,7 @@ import { getInitialProducts, saveProducts, getInitialCategories, saveCategories 
 import { getInitialOrders, saveOrders } from './slices/orderSlice';
 import { getInitialWishlist, saveWishlist } from './slices/wishlistSlice';
 import { getInitialVideos, saveVideos } from './slices/videoSlice';
+import { getInitialSliders, saveSliders } from './slices/sliderSlice';
 import { storage } from '../utils/storage';
 
 // ─── API Services ─────────────────────────────────────────────────────────────
@@ -20,6 +22,7 @@ import productApi from '../services/productApi';
 import orderApi, { CreateOrderPayload } from '../services/orderApi';
 import { wishlistApi, settingsApi } from '../services/customerApi';
 import videoApi from '../services/videoApi';
+import sliderApi from '../services/sliderApi';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 import {
@@ -108,12 +111,20 @@ interface StoreContextType {
   toggleWishlist: (productId: string) => void;
   isWishlisted: (productId: string) => boolean;
 
-  // Videos
+  // Videos (Reels & Short clips)
   videos: VideoItem[];
   addVideo: (video: Omit<VideoItem, 'id' | 'views' | 'createdAt'>) => Promise<VideoItem>;
   updateVideo: (id: string, updates: Partial<VideoItem>) => Promise<void>;
   deleteVideo: (id: string) => Promise<void>;
   incrementVideoViews: (id: string) => void;
+
+  // Sliders (Home Page Hero Banners)
+  sliders: SliderItem[];
+  isSlidersLoading: boolean;
+  refreshSliders: () => Promise<void>;
+  addSlider: (sliderData: Partial<SliderItem>) => Promise<SliderItem>;
+  updateSlider: (id: string, updates: Partial<SliderItem>) => Promise<SliderItem>;
+  deleteSlider: (id: string) => Promise<void>;
 
   // Toast
   toasts: Toast[];
@@ -178,6 +189,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [orders, setOrders] = useState<Order[]>(getInitialOrders);
   const [wishlist, setWishlist] = useState<string[]>(getInitialWishlist);
   const [videos, setVideos] = useState<VideoItem[]>(getInitialVideos);
+  const [sliders, setSliders] = useState<SliderItem[]>(getInitialSliders);
   const [settings, setSettings] = useState<StoreSettings>(getInitialSettings);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -186,6 +198,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isProductsLoading, setIsProductsLoading] = useState(false);
   const [isOrdersLoading, setIsOrdersLoading] = useState(false);
   const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const [isSlidersLoading, setIsSlidersLoading] = useState(false);
 
   // ─── Persist to localStorage ────────────────────────────────────────────────
   useEffect(() => { saveUser(user); }, [user]);
@@ -195,12 +208,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => { saveOrders(orders); }, [orders]);
   useEffect(() => { saveWishlist(wishlist); }, [wishlist]);
   useEffect(() => { saveVideos(videos); }, [videos]);
+  useEffect(() => { saveSliders(sliders); }, [sliders]);
   useEffect(() => { saveSettings(settings); }, [settings]);
 
-  // ─── On mount: load products, settings, and restore user session ──────────
+  // ─── On mount: load products, settings, sliders and restore user session ──────────
   useEffect(() => {
     loadProducts();
     loadSettings();
+    loadSliders();
     const token = getToken();
     const cachedUser = getInitialUser(); // what's already in localStorage
 
@@ -428,7 +443,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     showToast('Category removed', 'info');
     try {
       await productApi.deleteCategory(id);
-    } catch {}
+    } catch { }
   };
 
   // ─── Auth ───────────────────────────────────────────────────────────────────
@@ -768,6 +783,85 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     videoApi.incrementViews(id);
   };
 
+  // ─── Sliders (Home Page Hero Carousel) ──────────────────────────────────────
+  const loadSliders = useCallback(async () => {
+    setIsSlidersLoading(true);
+    try {
+      const fetched = await sliderApi.getAll(true);
+      if (fetched && fetched.length > 0) {
+        setSliders(fetched);
+      }
+    } catch {
+      // Keep local sliders fallback
+    } finally {
+      setIsSlidersLoading(false);
+    }
+  }, []);
+
+  const refreshSliders = loadSliders;
+
+  const addSlider = async (sliderData: Partial<SliderItem>): Promise<SliderItem> => {
+    try {
+      const created = await sliderApi.create(sliderData);
+      setSliders((prev) => [...prev, created]);
+      showToast('Hero slider published successfully!', 'success');
+      return created;
+    } catch {
+      const fallbackSlider: SliderItem = {
+        id: 'slide-' + Date.now(),
+        title: sliderData.title || '',
+        subtitle: sliderData.subtitle || '',
+        badge: sliderData.badge || '',
+        imageUrl: sliderData.imageUrl || '',
+        videoUrl: sliderData.videoUrl || '',
+        mediaType: sliderData.mediaType || 'image',
+        linkUrl: sliderData.linkUrl || '/shop',
+        ctaText: sliderData.ctaText || 'Shop Collection',
+        secondaryCtaText: sliderData.secondaryCtaText || '',
+        secondaryCtaLink: sliderData.secondaryCtaLink || '',
+        order: sliderData.order || sliders.length + 1,
+        isActive: sliderData.isActive !== undefined ? sliderData.isActive : true,
+        createdAt: new Date().toISOString(),
+      };
+      setSliders((prev) => [...prev, fallbackSlider]);
+      showToast('Hero slider saved locally', 'info');
+      return fallbackSlider;
+    }
+  };
+
+  const updateSlider = async (id: string, updates: Partial<SliderItem>): Promise<SliderItem> => {
+    try {
+      const updated = await sliderApi.update(id, updates);
+      setSliders((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      showToast('Hero slider updated successfully!', 'success');
+      return updated;
+    } catch {
+      let updatedFallback!: SliderItem;
+      setSliders((prev) =>
+        prev.map((s) => {
+          if (s.id === id) {
+            updatedFallback = { ...s, ...updates };
+            return updatedFallback;
+          }
+          return s;
+        })
+      );
+      showToast('Hero slider updated locally', 'info');
+      return updatedFallback;
+    }
+  };
+
+  const deleteSlider = async (id: string) => {
+    try {
+      await sliderApi.delete(id);
+      setSliders((prev) => prev.filter((s) => s.id !== id));
+      showToast('Slider removed from library', 'info');
+    } catch {
+      setSliders((prev) => prev.filter((s) => s.id !== id));
+      showToast('Slider removed from library', 'info');
+    }
+  };
+
   // ─── Context value ────────────────────────────────────────────────────────────
   return (
     <StoreContext.Provider
@@ -828,12 +922,20 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleWishlist,
         isWishlisted,
 
-        // Videos
+        // Videos (Reels & Short Clips)
         videos,
         addVideo,
         updateVideo,
         deleteVideo,
         incrementVideoViews,
+
+        // Sliders (Home Page Hero Carousel)
+        sliders,
+        isSlidersLoading,
+        refreshSliders,
+        addSlider,
+        updateSlider,
+        deleteSlider,
 
         // Toast
         toasts,

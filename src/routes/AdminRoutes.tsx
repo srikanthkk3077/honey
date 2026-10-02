@@ -9,6 +9,7 @@ import { Orders } from '../pages/admin/Orders/Orders';
 import { AdminOrderDetails } from '../pages/admin/Orders/OrderDetails';
 import { Transactions } from '../pages/admin/Transactions/Transactions';
 import { AdminVideos } from '../pages/admin/Videos/Videos';
+import { Sliders } from '../pages/admin/Sliders/Sliders';
 import { Customers } from '../pages/admin/Customers/Customers';
 import { Categories } from '../pages/admin/Categories/Categories';
 import { Settings } from '../pages/admin/Settings/Settings';
@@ -69,6 +70,14 @@ export const AdminRoutes = (
       element={
         <ProtectedRoute>
           <Transactions />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="sliders"
+      element={
+        <ProtectedRoute>
+          <Sliders />
         </ProtectedRoute>
       }
     />
