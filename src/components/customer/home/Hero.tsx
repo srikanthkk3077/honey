@@ -53,7 +53,7 @@ export const Hero: React.FC = () => {
     setIsVideoLoading(true);
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => { });
     }
 
     if (thumbnailListRef.current) {
@@ -88,7 +88,7 @@ export const Hero: React.FC = () => {
       videoRef.current.muted = nextMute;
       if (!nextMute) {
         videoRef.current.volume = 0.5;
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       }
     }
   };
@@ -289,59 +289,6 @@ export const Hero: React.FC = () => {
                 flexWrap: 'wrap',
               }}
             >
-              <Link
-                to={currentSlide?.linkUrl || '/shop'}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#D97706',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '0.98rem',
-                  padding: '0.85rem 1.75rem',
-                  borderRadius: '9999px',
-                  textDecoration: 'none',
-                  boxShadow: '0 4px 20px rgba(217, 119, 6, 0.45)',
-                  transition: 'all 0.2s',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#B45309')}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#D97706')}
-              >
-                <span>{currentSlide?.ctaText || 'Explore Pure Honey'}</span>
-                <ArrowRight size={18} />
-              </Link>
-
-              {currentSlide?.secondaryCtaText && (
-                <Link
-                  to={currentSlide?.secondaryCtaLink || '/videos'}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    color: '#FFFFFF',
-                    fontWeight: 600,
-                    fontSize: '0.95rem',
-                    padding: '0.85rem 1.5rem',
-                    borderRadius: '9999px',
-                    textDecoration: 'none',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.45)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                  }}
-                >
-                  <span>{currentSlide.secondaryCtaText}</span>
-                </Link>
-              )}
             </div>
           </div>
 

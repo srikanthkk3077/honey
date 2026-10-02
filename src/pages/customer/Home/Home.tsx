@@ -18,7 +18,7 @@ export const Home: React.FC = () => {
       <WhyChooseUs />
       <OurStory />
       <Testimonials />
-      <Newsletter />
+      {/* <Newsletter /> */}
     </div>
   );
 };

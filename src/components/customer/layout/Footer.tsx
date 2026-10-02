@@ -178,36 +178,7 @@ export const Footer: React.FC = () => {
             <p style={{ fontSize: '0.85rem', color: '#A8A29E', marginBottom: '1rem', lineHeight: 1.5 }}>
               Batch test certificates available on request. Unpasteurized, never micro-filtered.
             </p>
-            <div
-              style={{
-                padding: '1rem',
-                borderRadius: '10px',
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                marginBottom: '1rem',
-              }}
-            >
-              <div style={{ fontSize: '0.78rem', color: '#F59E0B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
-                Portal Access
-              </div>
-              <div style={{ fontSize: '0.82rem', color: '#D6D3D1', marginBottom: '0.5rem' }}>
-                Apiary managers & store administrators:
-              </div>
-              <Link
-                to="/admin/login"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  color: '#FBBF24',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  textDecoration: 'underline',
-                }}
-              >
-                <ShieldCheck size={14} /> Open Admin Console
-              </Link>
-            </div>
+         
           </div>
         </div>
 
