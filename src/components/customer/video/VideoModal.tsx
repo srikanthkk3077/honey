@@ -947,7 +947,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   padding: '4px',
                 }}
               >
-                <span>View Full Honey Origin & NMR Certificate</span>
+                <span>View Full Honey Origin</span>
                 <ArrowRight size={13} color="#D97706" />
               </Link>
             </div>

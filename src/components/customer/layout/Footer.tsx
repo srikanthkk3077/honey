@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Heart, Mail, Phone, MapPin, Award, CheckCircle } from 'lucide-react';
 import { APP_NAME, BRAND_TAGLINE, CONTACT_INFO } from '../../../utils/constants';
+import { WhatsAppIcon } from '../../common/WhatsAppIcon';
+import { getWhatsAppUrl } from '../../../utils/whatsapp';
 
 export const Footer: React.FC = () => {
   return (
@@ -100,18 +102,33 @@ export const Footer: React.FC = () => {
             <p style={{ fontSize: '0.88rem', color: '#A8A29E', lineHeight: 1.6, marginBottom: '1.25rem' }}>
               {BRAND_TAGLINE}. We bring pristine wild nectar directly from native Indian forests and high-altitude Himalayan ranges into your home.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem', color: '#D6D3D1' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem', color: '#D6D3D1' }}>
               <div className="flex items-center gap-2">
                 <MapPin size={16} color="#F59E0B" />
                 <span>Jim Corbett & Sunderbans Reserves, India</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone size={16} color="#F59E0B" />
-                <span>{CONTACT_INFO.phone}</span>
+                <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g, '')}`} style={{ color: '#D6D3D1', textDecoration: 'none' }}>
+                  {CONTACT_INFO.phone}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <WhatsAppIcon size={16} color="#25D366" />
+                <a
+                  href={getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey! I would like to inquire about your raw honey.')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#25D366', textDecoration: 'none', fontWeight: 600 }}
+                >
+                  WhatsApp: {CONTACT_INFO.whatsapp}
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail size={16} color="#F59E0B" />
-                <span>{CONTACT_INFO.email}</span>
+                <a href={`mailto:${CONTACT_INFO.email}`} style={{ color: '#D6D3D1', textDecoration: 'none' }}>
+                  {CONTACT_INFO.email}
+                </a>
               </div>
             </div>
           </div>

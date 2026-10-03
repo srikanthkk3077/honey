@@ -28,6 +28,7 @@ import { Order, OrderStatus } from '../../../types/order.types';
 import orderApi from '../../../services/orderApi';
 import { CONTACT_INFO } from '../../../utils/constants';
 import { generateGoogleMapsLink } from '../../../utils/delivery';
+import { WhatsAppIcon } from '../../../components/common/WhatsAppIcon';
 
 export const TrackOrder: React.FC = () => {
   const { orders } = useStore();
@@ -1201,7 +1202,7 @@ export const TrackOrder: React.FC = () => {
                       boxShadow: '0 4px 12px rgba(37, 211, 102, 0.25)',
                     }}
                   >
-                    <MessageCircle size={16} />
+                    <WhatsAppIcon size={16} color="#FFFFFF" />
                     <span>WhatsApp Support</span>
                   </a>
                 </div>
@@ -1253,8 +1254,8 @@ export const TrackOrder: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <Button size="sm" style={{ backgroundColor: '#25D366', borderColor: '#25D366' }}>
-                      Contact Support
+                    <Button size="sm" leftIcon={<WhatsAppIcon size={16} color="#FFFFFF" />} style={{ backgroundColor: '#25D366', borderColor: '#25D366' }}>
+                      WhatsApp Support
                     </Button>
                   </a>
                 </div>

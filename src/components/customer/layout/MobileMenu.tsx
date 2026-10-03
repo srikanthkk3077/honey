@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { X, ShieldCheck, Heart, ShoppingBag, Phone, MapPin } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { CONTACT_INFO } from '../../../utils/constants';
+import { WhatsAppIcon } from '../../common/WhatsAppIcon';
+import { getWhatsAppUrl } from '../../../utils/whatsapp';
 
 export const MobileMenu: React.FC = () => {
   const { mobileMenuOpen, setMobileMenuOpen, cartCount, wishlist, isAuthenticated, user, logout } = useStore();
@@ -110,11 +112,37 @@ export const MobileMenu: React.FC = () => {
 
         {/* Bottom profile / admin */}
         <div style={{ marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div style={{ fontSize: '0.82rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Phone size={14} /> {CONTACT_INFO.phone}
-          </div>
-          <div style={{ fontSize: '0.82rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <MapPin size={14} /> Uttarakhand Apiaries
+          <a
+            href={getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey! I would like to chat with customer support.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              padding: '0.65rem 1rem',
+              borderRadius: '10px',
+              backgroundColor: '#25D366',
+              color: '#FFFFFF',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              textDecoration: 'none',
+              boxShadow: '0 3px 10px rgba(37, 211, 102, 0.3)',
+            }}
+          >
+            <WhatsAppIcon size={18} color="#FFFFFF" />
+            <span>Chat on WhatsApp</span>
+          </a>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', color: '#78716C' }}>
+            <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g, '')}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#78716C', textDecoration: 'none' }}>
+              <Phone size={14} /> {CONTACT_INFO.phone}
+            </a>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin size={14} /> Uttarakhand
+            </span>
           </div>
 
           <Link

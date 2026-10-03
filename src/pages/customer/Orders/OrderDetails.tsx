@@ -9,6 +9,8 @@ import { CONTACT_INFO } from '../../../utils/constants';
 import orderApi from '../../../services/orderApi';
 import { Order } from '../../../types/order.types';
 import { generateGoogleMapsLink } from '../../../utils/delivery';
+import { WhatsAppIcon } from '../../../components/common/WhatsAppIcon';
+import { getWhatsAppUrl } from '../../../utils/whatsapp';
 
 export const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();

@@ -374,10 +374,10 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
           <Truck size={18} color="#D97706" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>Express 2-4 Day Safe Delivery</span>
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <ShieldCheck size={18} color="#059669" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>100% Raw Certified Guarantee</span>
-        </div>
+        </div> */}
         <div className="flex items-center gap-2">
           <RotateCcw size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
           <span style={{ fontSize: '0.82rem', color: '#57534E' }}>Damage Free Glass Jar Transit</span>
