@@ -144,7 +144,7 @@ export const Contact: React.FC = () => {
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 7780514383"
                   />
                 </div>
 
@@ -168,7 +168,7 @@ export const Contact: React.FC = () => {
                   >
                     <option value="General Question">General Product Question</option>
                     <option value="Bulk Order">Bulk / Corporate Gifting (20+ Jars)</option>
-                    <option value="Batch Lab Report">Request Batch NMR Report</option>
+                    {/* <option value="Batch Lab Report">Request Batch NMR Report</option> */}
                     <option value="Apiary Visit">Apiary Educational Tour</option>
                   </select>
                 </div>

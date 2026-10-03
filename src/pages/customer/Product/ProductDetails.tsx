@@ -120,12 +120,12 @@ export const ProductDetails: React.FC = () => {
 
             {/* Nutrition & Certification Facts */}
             <div>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              {/* <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Lab Analysis
               </span>
               <h3 style={{ fontSize: '1.6rem', color: '#1C1917', margin: '6px 0 1.25rem 0' }}>
                 Nutritional Composition
-              </h3>
+              </h3> */}
 
               <div
                 style={{

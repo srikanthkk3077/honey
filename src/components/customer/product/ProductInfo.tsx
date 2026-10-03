@@ -10,13 +10,35 @@ import { Star, ShieldCheck, Truck, RotateCcw, Droplet, Sparkles, Heart } from 'l
 import { checkPincodeServiceability, PincodeCheckResult, fetchPincodeDetails } from '../../../utils/delivery';
 
 export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
-  const { addToCart, toggleWishlist, isWishlisted, setCartDrawerOpen, settings } = useStore();
+  const { addToCart, toggleWishlist, isWishlisted, setCartDrawerOpen, settings, user } = useStore();
   const navigate = useNavigate();
 
-  const [selectedSize, setSelectedSize] = useState(
-    product.selectedSize || product.sizes[0]?.size || '500g'
-  );
+  const availableSizes = (product.sizes && product.sizes.length > 0)
+    ? product.sizes
+    : [
+        {
+          size: product.selectedSize || '500g',
+          price: product.price,
+          originalPrice: product.originalPrice,
+          stock: product.stock,
+          sku: '',
+        },
+      ];
+
+  const defaultInitialSize = availableSizes.some((s) => s.size === product.selectedSize)
+    ? product.selectedSize!
+    : availableSizes[0].size;
+
+  const [selectedSize, setSelectedSize] = useState(defaultInitialSize);
   const [quantity, setQuantity] = useState(1);
+
+  const activeSize = availableSizes.some((s) => s.size === selectedSize)
+    ? selectedSize
+    : availableSizes[0].size;
+
+  const currentSizeOption = availableSizes.find((s) => s.size === activeSize) || availableSizes[0];
+  const price = currentSizeOption ? currentSizeOption.price : product.price;
+  const originalPrice = currentSizeOption ? currentSizeOption.originalPrice : product.originalPrice;
 
   // Delivery Pincode Checker State
   const [checkPin, setCheckPin] = useState(() => {
@@ -53,18 +75,19 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
     }
   };
 
-  const currentSizeOption = product.sizes.find((s) => s.size === selectedSize) || product.sizes[0];
-  const price = currentSizeOption ? currentSizeOption.price : product.price;
-  const originalPrice = currentSizeOption ? currentSizeOption.originalPrice : product.originalPrice;
   const wishlisted = isWishlisted(product.id);
 
   const handleAddToCart = () => {
-    addToCart(product, selectedSize, quantity);
+    addToCart(product, activeSize, quantity);
   };
 
   const handleBuyNow = () => {
-    addToCart(product, selectedSize, quantity);
-    navigate('/checkout');
+    addToCart(product, activeSize, quantity);
+    if (!user) {
+      navigate('/login?redirect=/checkout');
+    } else {
+      navigate('/checkout');
+    }
   };
 
   return (
@@ -137,7 +160,7 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
           Select Jar Size:
         </label>
         <div className="flex items-center gap-3 flex-wrap">
-          {product.sizes.map((s) => (
+          {availableSizes.map((s) => (
             <button
               key={s.size}
               type="button"
@@ -145,10 +168,10 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
               style={{
                 padding: '0.75rem 1.4rem',
                 borderRadius: '12px',
-                border: selectedSize === s.size ? '2px solid #D97706' : '1px solid #D6D3D1',
-                backgroundColor: selectedSize === s.size ? '#FFFBEB' : '#FFFFFF',
-                color: selectedSize === s.size ? '#92400E' : '#1C1917',
-                fontWeight: selectedSize === s.size ? 700 : 500,
+                border: activeSize === s.size ? '2px solid #D97706' : '1px solid #D6D3D1',
+                backgroundColor: activeSize === s.size ? '#FFFBEB' : '#FFFFFF',
+                color: activeSize === s.size ? '#92400E' : '#1C1917',
+                fontWeight: activeSize === s.size ? 700 : 500,
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
@@ -158,7 +181,7 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
               }}
             >
               <span>{s.size}</span>
-              <span style={{ fontSize: '0.78rem', color: selectedSize === s.size ? '#D97706' : '#78716C' }}>
+              <span style={{ fontSize: '0.78rem', color: activeSize === s.size ? '#D97706' : '#78716C' }}>
                 {formatPrice(s.price)}
               </span>
             </button>
@@ -377,10 +400,10 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
             <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Harvest Season:</span>
             <div style={{ fontWeight: 600, color: '#1C1917' }}>{product.harvestSeason}</div>
           </div>
-          <div>
+          {/* <div>
             <span style={{ color: '#78716C', fontSize: '0.8rem' }}>Lab NMR Purity:</span>
             <div style={{ fontWeight: 600, color: '#059669' }}>{product.purityScore}% (Unheated)</div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

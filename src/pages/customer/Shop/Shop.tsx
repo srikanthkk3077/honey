@@ -69,7 +69,7 @@ export const Shop: React.FC = () => {
         <SectionTitle
           subtitle="Spring & Autumn Harvests"
           title={filterParam === 'wishlist' ? 'Your Saved Honeys' : 'Pure Raw Honey Collection'}
-          description="Browse lab-certified unprocessed forest honeys, wildflower mono-florals, and edible honeycomb frames."
+          description="Browse Raw honeys, wildflower mono-florals, and edible honeycomb frames."
         />
 
         {/* Filter Navigation Bar */}

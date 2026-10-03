@@ -8,11 +8,30 @@ import { Badge } from '../../common/Badge';
 
 export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
-  const [selectedSize, setSelectedSize] = useState(
-    product.selectedSize || product.sizes[0]?.size || '500g'
-  );
 
-  const currentSizeOption = product.sizes.find((s) => s.size === selectedSize) || product.sizes[0];
+  const availableSizes = (product.sizes && product.sizes.length > 0)
+    ? product.sizes
+    : [
+        {
+          size: product.selectedSize || '500g',
+          price: product.price,
+          originalPrice: product.originalPrice,
+          stock: product.stock,
+          sku: '',
+        },
+      ];
+
+  const defaultInitialSize = availableSizes.some((s) => s.size === product.selectedSize)
+    ? product.selectedSize!
+    : availableSizes[0].size;
+
+  const [selectedSize, setSelectedSize] = useState(defaultInitialSize);
+
+  const activeSize = availableSizes.some((s) => s.size === selectedSize)
+    ? selectedSize
+    : availableSizes[0].size;
+
+  const currentSizeOption = availableSizes.find((s) => s.size === activeSize) || availableSizes[0];
   const price = currentSizeOption ? currentSizeOption.price : product.price;
   const originalPrice = currentSizeOption ? currentSizeOption.originalPrice : product.originalPrice;
   const wishlisted = isWishlisted(product.id);
@@ -20,7 +39,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, selectedSize, 1);
+    addToCart(product, activeSize, 1);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -179,7 +198,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
               Select Size:
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              {product.sizes.map((s) => (
+              {availableSizes.map((s) => (
                 <button
                   key={s.size}
                   type="button"
@@ -191,10 +210,10 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
                     padding: '3px 10px',
                     borderRadius: '6px',
                     fontSize: '0.78rem',
-                    fontWeight: selectedSize === s.size ? 700 : 500,
-                    border: selectedSize === s.size ? '1.5px solid #D97706' : '1px solid #E7E5E4',
-                    background: selectedSize === s.size ? '#FEF3C7' : '#FFFFFF',
-                    color: selectedSize === s.size ? '#92400E' : '#57534E',
+                    fontWeight: activeSize === s.size ? 700 : 500,
+                    border: activeSize === s.size ? '1.5px solid #D97706' : '1px solid #E7E5E4',
+                    background: activeSize === s.size ? '#FEF3C7' : '#FFFFFF',
+                    color: activeSize === s.size ? '#92400E' : '#57534E',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
@@ -255,7 +274,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
               }}
             >
               <ShoppingBag size={16} />
-              <span>Add to Basket ({selectedSize})</span>
+              <span>Add to Basket ({activeSize})</span>
             </button>
         </div>
       </div>

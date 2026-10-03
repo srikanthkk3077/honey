@@ -104,7 +104,7 @@ export const About: React.FC = () => {
             gap: '2rem',
           }}
         >
-          <div>
+          {/* <div>
             <div className="flex items-center gap-2" style={{ color: '#FBBF24', fontWeight: 700, marginBottom: '0.5rem' }}>
               <FileText size={20} />
               <span>Independent Lab Reports</span>
@@ -115,7 +115,7 @@ export const About: React.FC = () => {
             <p style={{ color: '#A8A29E', maxWidth: '520px', lineHeight: 1.6 }}>
               Every jar has a batch barcode on the bottom. Contact our laboratory verification desk anytime to inspect the spectrometry report for your jar.
             </p>
-          </div>
+          </div> */}
 
           <a
             href="mailto:quality@madhuvanhoney.com?subject=Batch NMR Certificate Request"

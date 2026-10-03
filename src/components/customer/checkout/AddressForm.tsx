@@ -243,7 +243,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
           <input
             type="tel"
             value={address.phone}
-            placeholder="+91 98765 43210"
+            placeholder="+91 7780514383"
             maxLength={13}
             style={inpStyle(err('phone'), ok('phone'))}
             onChange={(e) => change('phone', e.target.value)}

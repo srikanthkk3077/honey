@@ -7,7 +7,7 @@ import { AddressForm } from '../../../components/customer/checkout/AddressForm';
 import { PaymentMethod } from '../../../components/customer/checkout/PaymentMethod';
 import { OrderSummary } from '../../../components/customer/checkout/OrderSummary';
 import { EmptyCart } from '../../../components/customer/cart/EmptyCart';
-import { CheckCircle2, PackageCheck, ArrowRight, Truck, MapPin, ExternalLink } from 'lucide-react';
+import { CheckCircle2, PackageCheck, ArrowRight, Truck, MapPin, ExternalLink, Lock } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 import confetti from 'canvas-confetti';
 import { formatPrice } from '../../../utils/formatPrice';
@@ -120,12 +120,12 @@ export const Checkout: React.FC = () => {
       <div className="container">
         <CheckoutSteps currentStep={currentStep} />
 
-        {/* Guest notice banner */}
+        {/* Account Required Notice */}
         {!user && currentStep !== 3 && (
           <div
             style={{
-              backgroundColor: '#FFFBEB',
-              border: '1.5px solid #FDE68A',
+              backgroundColor: '#EFF6FF',
+              border: '1.5px solid #BFDBFE',
               borderRadius: '14px',
               padding: '0.85rem 1.25rem',
               marginBottom: '1.5rem',
@@ -135,21 +135,36 @@ export const Checkout: React.FC = () => {
               flexWrap: 'wrap',
               gap: '0.5rem',
               fontSize: '0.9rem',
-              color: '#92400E',
+              color: '#1E40AF',
             }}
           >
-            <span>🛒 You're checking out as a guest. Your details won't be saved.</span>
-            <Link
-              to="/login?redirect=/checkout"
-              style={{
-                color: '#B45309',
-                fontWeight: 700,
-                textDecoration: 'underline',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Sign in to auto-fill your details →
-            </Link>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Lock size={16} /> <strong>Account Required:</strong> Please sign in or register to complete your order.
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Link
+                to="/login?redirect=/checkout"
+                style={{
+                  color: '#1D4ED8',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Sign In →
+              </Link>
+              <Link
+                to="/register?redirect=/checkout"
+                style={{
+                  color: '#1D4ED8',
+                  fontWeight: 700,
+                  textDecoration: 'underline',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Create Account →
+              </Link>
+            </div>
           </div>
         )}
 
@@ -345,15 +360,80 @@ export const Checkout: React.FC = () => {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
               }}
             >
-              {currentStep === 1 && (
+              {!user ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'center', padding: '0.5rem 0' }}>
+                  <div
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '50%',
+                      backgroundColor: '#FEF3C7',
+                      color: '#D97706',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      margin: '0 auto',
+                    }}
+                  >
+                    <Lock size={30} />
+                  </div>
+
+                  <div>
+                    <h3 style={{ fontSize: '1.45rem', color: '#1C1917', marginBottom: '0.4rem' }}>
+                      Sign In to Complete Your Order
+                    </h3>
+                    <p style={{ color: '#78716C', fontSize: '0.92rem', lineHeight: 1.5, margin: '0 auto', maxWidth: '380px' }}>
+                      Please sign in or create an account to enter your delivery address, verify serviceable PIN codes, and place your order.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                    <Link to="/login?redirect=/checkout" style={{ textDecoration: 'none' }}>
+                      <Button size="lg" fullWidth rightIcon={<ArrowRight size={18} />}>
+                        Sign In to Continue Checkout
+                      </Button>
+                    </Link>
+
+                    <Link to="/register?redirect=/checkout" style={{ textDecoration: 'none' }}>
+                      <Button variant="outline" size="lg" fullWidth>
+                        Create New Account
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <div
+                    style={{
+                      borderTop: '1px solid #E7E5E4',
+                      paddingTop: '1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      textAlign: 'left',
+                      fontSize: '0.85rem',
+                      color: '#57534E',
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} color="#059669" />
+                      <span>Live WhatsApp & SMS delivery tracking updates</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} color="#059669" />
+                      <span>Auto-saved delivery addresses for fast 1-click orders</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={16} color="#059669" />
+                      <span>Direct access to GST tax invoices under My Orders</span>
+                    </div>
+                  </div>
+                </div>
+              ) : currentStep === 1 ? (
                 <AddressForm
                   address={address}
                   onChange={(updates) => setAddress((prev) => ({ ...prev, ...updates }))}
                   onSubmit={handleAddressSubmit}
                 />
-              )}
-
-              {currentStep === 2 && (
+              ) : currentStep === 2 ? (
                 <PaymentMethod
                   selectedMethod={paymentMethod}
                   onSelect={setPaymentMethod}
@@ -361,7 +441,7 @@ export const Checkout: React.FC = () => {
                   onBack={() => setCurrentStep(1)}
                   isProcessing={isProcessing}
                 />
-              )}
+              ) : null}
             </div>
 
             {/* Right Column: Order Summary Preview */}

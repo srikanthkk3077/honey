@@ -19,7 +19,7 @@ export const AddProduct: React.FC = () => {
           List New Raw Honey Harvest
         </h1>
         <p style={{ color: '#78716C', margin: 0, fontSize: '0.9rem' }}>
-          Add details about origin, floral source, lab purity, pricing, and packaging.
+          Add details about origin, floral source, pricing, and packaging.
         </p>
       </div>
 

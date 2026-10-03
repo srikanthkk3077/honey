@@ -90,7 +90,7 @@ export const Register: React.FC = () => {
               required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 98765 43210"
+              placeholder="+91 7780514383"
               leftIcon={<Phone size={16} />}
             />
 
