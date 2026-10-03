@@ -15,7 +15,7 @@ import {
   X,
   AlertCircle,
 } from 'lucide-react';
-import { uploadImage } from '../../../services/uploadApi';
+import { uploadImage, uploadVideo } from '../../../services/uploadApi';
 
 interface VideoUploadModalProps {
   isOpen: boolean;
@@ -46,6 +46,8 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [featuredOnHome, setFeaturedOnHome] = useState(initialData?.featuredOnHome ?? true);
   const [fileName, setFileName] = useState('');
   const [previewError, setPreviewError] = useState('');
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [videoUploadStatus, setVideoUploadStatus] = useState<string | null>(null);
 
   // Poster upload state
   const [isUploadingPoster, setIsUploadingPoster] = useState(false);
@@ -54,18 +56,39 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      // Create local object URL for preview and playback
-      const objectUrl = URL.createObjectURL(file);
-      setVideoUrl(objectUrl);
-      setPreviewError('');
+    if (!file) return;
 
-      // Auto set a reasonable title if title is empty
-      if (!title) {
-        setTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+    setFileName(file.name);
+    setPreviewError('');
+
+    // Instant local preview while uploading
+    const objectUrl = URL.createObjectURL(file);
+    setVideoUrl(objectUrl);
+
+    if (!title) {
+      setTitle(file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+    }
+
+    setIsUploadingVideo(true);
+    setVideoUploadStatus('Uploading & optimizing video via Cloudinary...');
+
+    try {
+      const { videoUrl: cdnUrl, posterUrl: autoPoster } = await uploadVideo(file);
+      setVideoUrl(cdnUrl);
+      if (autoPoster && (!thumbnailUrl || thumbnailUrl.includes('unsplash.com'))) {
+        setThumbnailUrl(autoPoster);
+      }
+      setVideoUploadStatus(null);
+    } catch (err: any) {
+      console.error('Video upload failed:', err);
+      setPreviewError(err.message || 'Failed to upload video to Cloudinary. Local preview active.');
+      setVideoUploadStatus(null);
+    } finally {
+      setIsUploadingVideo(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
     }
   };
@@ -254,12 +277,26 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                 }}
               >
                 <Video size={36} color="#D97706" style={{ margin: '0 auto 0.75rem auto' }} />
-                <div style={{ fontWeight: 700, color: '#92400E', fontSize: '1rem', marginBottom: '0.25rem' }}>
-                  {fileName ? `Selected: ${fileName}` : 'Click to Browse Video from Computer'}
-                </div>
-                <p style={{ color: '#78716C', fontSize: '0.8rem', margin: 0 }}>
-                  Supports MP4, WebM, MOV video files. Immediate live preview available.
-                </p>
+                {isUploadingVideo ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                    <Loader2 size={32} color="#D97706" style={{ animation: 'spin 1s linear infinite' }} />
+                    <div style={{ fontWeight: 700, color: '#92400E', fontSize: '0.95rem' }}>
+                      {videoUploadStatus || 'Uploading to Cloudinary...'}
+                    </div>
+                    <p style={{ color: '#78716C', fontSize: '0.78rem', margin: 0 }}>
+                      Processing video streaming and auto-generating cover thumbnail
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontWeight: 700, color: '#92400E', fontSize: '1rem', marginBottom: '0.25rem' }}>
+                      {fileName ? `Selected: ${fileName} (Cloudinary Ready)` : 'Click to Browse Video from Computer'}
+                    </div>
+                    <p style={{ color: '#78716C', fontSize: '0.8rem', margin: 0 }}>
+                      Supports MP4, WebM, MOV. Auto-compressed and delivered via Cloudinary CDN.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ) : (

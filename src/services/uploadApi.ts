@@ -1,4 +1,5 @@
 import api, { API_BASE_URL } from './api';
+import { getOptimizedMediaUrl, getThumbnailUrl, getVideoPosterUrl, isCloudinaryUrl } from '../utils/cloudinary';
 
 export interface UploadResponse {
   success: boolean;
@@ -9,6 +10,18 @@ export interface UploadResponse {
     urls: string[];
     primaryUrl: string;
     url?: string;
+    files?: Array<{
+      filename: string;
+      originalName: string;
+      size: number;
+      mimetype: string;
+      url: string;
+      secureUrl?: string;
+      optimizedUrl?: string;
+      thumbnailUrl?: string;
+      posterUrl?: string;
+      resourceType?: string;
+    }>;
   };
 }
 
@@ -37,7 +50,7 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
- * Upload single image file
+ * Upload single image file to Cloudinary via Backend
  */
 export const uploadImage = async (file: File): Promise<string> => {
   try {
@@ -49,15 +62,14 @@ export const uploadImage = async (file: File): Promise<string> => {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000,
+      timeout: 60000,
     });
 
     const rawUrl =
       response.data?.url ||
-      response.data?.data?.url ||
       response.data?.data?.primaryUrl ||
-      response.data?.urls?.[0] ||
-      response.data?.data?.urls?.[0];
+      response.data?.data?.url ||
+      response.data?.urls?.[0];
 
     if (rawUrl) {
       return normalizeImageUrl(rawUrl);
@@ -70,7 +82,7 @@ export const uploadImage = async (file: File): Promise<string> => {
 };
 
 /**
- * Upload multiple image files
+ * Upload multiple image files to Cloudinary via Backend
  */
 export const uploadImages = async (files: File[]): Promise<string[]> => {
   if (!files || files.length === 0) return [];
@@ -85,7 +97,7 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 45000,
+      timeout: 90000,
     });
 
     const rawUrls =
@@ -104,9 +116,55 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
   }
 };
 
+/**
+ * Upload video file to Cloudinary via Backend (returns CDN videoUrl + auto-extracted posterUrl)
+ */
+export const uploadVideo = async (
+  file: File
+): Promise<{ videoUrl: string; posterUrl: string; thumbnailUrl: string }> => {
+  const formData = new FormData();
+  formData.append('video', file);
+
+  const response = await api.post<UploadResponse>('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+    timeout: 180000, // 3 minutes timeout for video processing
+  });
+
+  const rawUrl =
+    response.data?.url ||
+    response.data?.data?.primaryUrl ||
+    response.data?.urls?.[0];
+
+  const fileData = response.data?.data?.files?.[0];
+  const posterUrl = fileData?.posterUrl || (rawUrl ? getVideoPosterUrl(rawUrl) : '');
+  const thumbnailUrl = fileData?.thumbnailUrl || posterUrl || '';
+
+  if (rawUrl) {
+    return {
+      videoUrl: normalizeImageUrl(rawUrl),
+      posterUrl: posterUrl ? normalizeImageUrl(posterUrl) : '',
+      thumbnailUrl: thumbnailUrl ? normalizeImageUrl(thumbnailUrl) : '',
+    };
+  }
+  throw new Error('No video URL returned from server');
+};
+
+export {
+  getOptimizedMediaUrl,
+  getThumbnailUrl,
+  getVideoPosterUrl,
+  isCloudinaryUrl,
+};
+
 export default {
   uploadImage,
   uploadImages,
+  uploadVideo,
   normalizeImageUrl,
   fileToBase64,
+  getOptimizedMediaUrl,
+  getThumbnailUrl,
+  getVideoPosterUrl,
 };
