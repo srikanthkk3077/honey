@@ -35,6 +35,7 @@ import {
   FREE_SHIPPING_THRESHOLD,
   STANDARD_SHIPPING_FEE,
 } from '../utils/constants';
+import { DEFAULT_DELIVERY_CONFIG } from '../utils/delivery';
 
 // ─── Types & Models ───────────────────────────────────────────────────────────
 import { Testimonial } from '../data/testimonials';
