@@ -37,7 +37,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(5, 150, 105, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981', flexShrink: 0 }}>
               <Award size={26} />
             </div>
@@ -45,7 +45,7 @@ export const Footer: React.FC = () => {
               <div style={{ fontWeight: 700, color: '#FFFFFF', fontSize: '0.95rem' }}>NMR Lab Tested</div>
               <div style={{ fontSize: '0.8rem', color: '#A8A29E' }}>Zero added sugar or C3/C4 corn syrup</div>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex items-center gap-3">
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B', flexShrink: 0 }}>

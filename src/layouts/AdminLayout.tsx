@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { AdminLayout as BaseAdminLayout } from '../components/admin/layout/AdminLayout';
 import { useStore } from '../store/store';
+import { PageLoader } from '../components/common/PageLoader';
 import { X } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
@@ -9,7 +10,9 @@ export const AdminLayout: React.FC = () => {
 
   return (
     <BaseAdminLayout>
-      <Outlet />
+      <Suspense fallback={<PageLoader message="Loading admin console..." />}>
+        <Outlet />
+      </Suspense>
 
       {/* Floating Global Toasts */}
       <div className="toast-container">

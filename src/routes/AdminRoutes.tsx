@@ -1,19 +1,21 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
-import { Dashboard } from '../pages/admin/Dashboard/Dashboard';
-import { Products } from '../pages/admin/Products/Products';
-import { AddProduct } from '../pages/admin/Products/AddProduct';
-import { EditProduct } from '../pages/admin/Products/EditProduct';
-import { Orders } from '../pages/admin/Orders/Orders';
-import { AdminOrderDetails } from '../pages/admin/Orders/OrderDetails';
-import { Transactions } from '../pages/admin/Transactions/Transactions';
-import { AdminVideos } from '../pages/admin/Videos/Videos';
-import { Sliders } from '../pages/admin/Sliders/Sliders';
-import { Customers } from '../pages/admin/Customers/Customers';
-import { Categories } from '../pages/admin/Categories/Categories';
-import { Settings } from '../pages/admin/Settings/Settings';
-import { Reviews } from '../pages/admin/Reviews/Reviews';
+
+// Lazy load admin pages for modular administration code splitting
+const Dashboard = lazy(() => import('../pages/admin/Dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+const Products = lazy(() => import('../pages/admin/Products/Products').then(m => ({ default: m.Products })));
+const AddProduct = lazy(() => import('../pages/admin/Products/AddProduct').then(m => ({ default: m.AddProduct })));
+const EditProduct = lazy(() => import('../pages/admin/Products/EditProduct').then(m => ({ default: m.EditProduct })));
+const Orders = lazy(() => import('../pages/admin/Orders/Orders').then(m => ({ default: m.Orders })));
+const AdminOrderDetails = lazy(() => import('../pages/admin/Orders/OrderDetails').then(m => ({ default: m.AdminOrderDetails })));
+const Transactions = lazy(() => import('../pages/admin/Transactions/Transactions').then(m => ({ default: m.Transactions })));
+const Sliders = lazy(() => import('../pages/admin/Sliders/Sliders').then(m => ({ default: m.Sliders })));
+const AdminVideos = lazy(() => import('../pages/admin/Videos/Videos').then(m => ({ default: m.AdminVideos })));
+const Customers = lazy(() => import('../pages/admin/Customers/Customers').then(m => ({ default: m.Customers })));
+const Categories = lazy(() => import('../pages/admin/Categories/Categories').then(m => ({ default: m.Categories })));
+const Reviews = lazy(() => import('../pages/admin/Reviews/Reviews').then(m => ({ default: m.Reviews })));
+const Settings = lazy(() => import('../pages/admin/Settings/Settings').then(m => ({ default: m.Settings })));
 
 export const AdminRoutes = (
   <>

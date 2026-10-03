@@ -10,6 +10,7 @@ import { EmptyCart } from '../components/customer/cart/EmptyCart';
 import { X, ShoppingBag, ArrowRight, Truck } from 'lucide-react';
 import { formatPrice } from '../utils/formatPrice';
 import { FREE_SHIPPING_THRESHOLD } from '../utils/constants';
+import { PageLoader } from '../components/common/PageLoader';
 
 export const CustomerLayout: React.FC = () => {
   const {
@@ -35,7 +36,9 @@ export const CustomerLayout: React.FC = () => {
       <MobileMenu />
 
       <main style={{ flex: 1 }}>
-        <Outlet />
+        <React.Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </React.Suspense>
       </main>
 
       <Footer />
