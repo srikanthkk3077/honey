@@ -357,7 +357,7 @@ export const ProductImageUpload: React.FC<ProductImageUploadProps> = ({
                       onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80';
+                          'https://res.cloudinary.com/kisnodzz/image/upload/v1791042826/madhuvan_honey/products/k2uixjenvf4dcvj69j3p.jpg';
                       }}
                     />
 

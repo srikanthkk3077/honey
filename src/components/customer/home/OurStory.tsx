@@ -26,7 +26,7 @@ export const OurStory: React.FC = () => {
               }}
             >
               <img
-                src="https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80"
+                src="https://res.cloudinary.com/kisnodzz/image/upload/v1791042836/madhuvan_honey/story/tguzgnb7fv6qxw0wl9qw.jpg"
                 alt="Beekeeper holding wooden honeycomb frame"
                 style={{ width: '100%', height: '340px', objectFit: 'cover' }}
               />

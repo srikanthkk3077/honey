@@ -38,7 +38,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '');
   const [thumbnailUrl, setThumbnailUrl] = useState(
     initialData?.thumbnailUrl ||
-    'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80'
+    'https://res.cloudinary.com/kisnodzz/image/upload/f_auto,q_auto/v1/madhuvan_honey/media/WhatsApp-Image-2026-10-02-at-1-1790995043548?_a=BAMAROhM0'
   );
   const [category, setCategory] = useState<VideoCategory>(initialData?.category || 'harvest');
   const [duration, setDuration] = useState(initialData?.duration || '0:45');
@@ -59,6 +59,11 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      setPreviewError('Please select a valid video file (MP4, WebM, MOV).');
+      return;
+    }
 
     setFileName(file.name);
     setPreviewError('');
@@ -83,8 +88,9 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       setVideoUploadStatus(null);
     } catch (err: any) {
       console.error('Video upload failed:', err);
-      setPreviewError(err.message || 'Failed to upload video to Cloudinary. Local preview active.');
+      setPreviewError(err.message || 'Failed to upload video to Cloudinary. Please try again.');
       setVideoUploadStatus(null);
+      setVideoUrl(''); // Never retain local blob on failure
     } finally {
       setIsUploadingVideo(false);
       if (fileInputRef.current) {
@@ -108,7 +114,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       const url = await uploadImage(file);
       setThumbnailUrl(url);
     } catch (err: any) {
-      setPosterUploadError(err.message || 'Failed to upload cover poster image');
+      setPosterUploadError(err.message || 'Failed to upload cover poster image to Cloudinary');
     } finally {
       setIsUploadingPoster(false);
       if (posterInputRef.current) {
@@ -119,8 +125,21 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isUploadingVideo) {
+      setPreviewError('Please wait for video upload to Cloudinary to complete before saving.');
+      return;
+    }
+    if (isUploadingPoster) {
+      setPreviewError('Please wait for cover poster upload to Cloudinary to complete.');
+      return;
+    }
     if (!title.trim() || !videoUrl.trim()) {
       setPreviewError('Please provide both a video title and a video source.');
+      return;
+    }
+    if (videoUrl.startsWith('blob:')) {
+      setPreviewError('Video is still uploading or failed to reach Cloudinary. Please wait or re-select.');
       return;
     }
 
@@ -132,7 +151,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       videoUrl,
       thumbnailUrl:
         thumbnailUrl ||
-        'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80',
+        'https://res.cloudinary.com/kisnodzz/image/upload/f_auto,q_auto/v1/madhuvan_honey/media/WhatsApp-Image-2026-10-02-at-1-1790995043548?_a=BAMAROhM0',
       category,
       duration: duration || '0:30',
       taggedProductId: selectedProduct ? selectedProduct.id : undefined,
@@ -563,7 +582,7 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
                   }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=400&q=80';
+                      'https://res.cloudinary.com/kisnodzz/image/upload/f_auto,q_auto/v1/madhuvan_honey/media/WhatsApp-Image-2026-10-02-at-1-1790995043548?_a=BAMAROhM0';
                   }}
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -652,11 +671,15 @@ export const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
             className="flex items-center justify-end gap-3 flex-wrap"
             style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}
           >
-            <Button variant="ghost" type="button" onClick={onClose}>
+            <Button variant="ghost" type="button" onClick={onClose} disabled={isUploadingVideo || isUploadingPoster}>
               Cancel
             </Button>
-            <Button type="submit" size="md">
-              {initialData ? 'Save Video Changes' : 'Publish Video to Store'}
+            <Button type="submit" size="md" disabled={isUploadingVideo || isUploadingPoster}>
+              {isUploadingVideo || isUploadingPoster
+                ? 'Uploading to Cloudinary...'
+                : initialData
+                ? 'Save Video Changes'
+                : 'Publish Video to Store'}
             </Button>
           </div>
         </form>

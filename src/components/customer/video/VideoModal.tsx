@@ -148,7 +148,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     images: [
       video.taggedProductImage ||
         video.thumbnailUrl ||
-        'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&q=80',
+        'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg',
     ],
     sizes: [
       { size: '250g', price: Math.round((video.taggedProductPrice || 498) * 0.58), originalPrice: Math.round((video.taggedProductOriginalPrice || 650) * 0.58), stock: 20, sku: 'SKU-250' },
@@ -159,14 +159,18 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     nectarSource: 'Wild Himalayan Flora',
     purityScore: video.purityScore || 99.8,
     harvestSeason: 'Spring Blossom',
-    texture: 'Smooth, viscous liquid amber',
-    color: 'Rich Golden Amber',
-    isOrganic: true,
-    isRaw: true,
-    isUnfiltered: true,
+    benefits: ['100% Raw & Unheated', 'Naturally High Pollen', 'Lab NMR Tested'],
+    nutritionFacts: {
+      energy: '304 kcal per 100g',
+      carbohydrates: '82.4g',
+      naturalSugars: '80.1g',
+      proteins: '0.3g',
+      antioxidants: 'Rich in Pinocembrin & Chrysin',
+    },
+    reviews: [],
     isFeatured: true,
     isBestSeller: true,
-    badge: 'NMR Tested Pure',
+    isOrganicCertified: true,
     createdAt: new Date().toISOString(),
   };
 

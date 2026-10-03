@@ -32,7 +32,7 @@ export const OurStory: React.FC = () => {
           }}
         >
           <img
-            src="https://images.unsplash.com/photo-1471943311424-646960669fbc?auto=format&fit=crop&w=1400&q=80"
+            src="https://res.cloudinary.com/kisnodzz/image/upload/v1791042835/madhuvan_honey/story/rltg7m2mjkzew63tm3y9.jpg"
             alt="Apiary hives surrounded by mountains and wildflowers"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

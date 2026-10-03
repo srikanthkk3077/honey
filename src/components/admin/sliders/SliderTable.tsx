@@ -65,7 +65,7 @@ export const SliderTable: React.FC<SliderTableProps> = ({
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=400&q=80';
+                          'https://res.cloudinary.com/kisnodzz/image/upload/v1791042834/madhuvan_honey/sliders/cbv03eqxofw3ja6dxast.jpg';
                       }}
                     />
                     <div

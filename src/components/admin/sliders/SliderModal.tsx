@@ -12,7 +12,7 @@ import {
   AlertCircle,
   Play,
 } from 'lucide-react';
-import { uploadImage } from '../../../services/uploadApi';
+import { uploadImage, uploadVideo } from '../../../services/uploadApi';
 
 interface SliderModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ export const SliderModal: React.FC<SliderModalProps> = ({
   const [badge, setBadge] = useState(initialData?.badge || '100% RAW & UNHEATED • SINGLE-ORIGIN');
   const [imageUrl, setImageUrl] = useState(
     initialData?.imageUrl ||
-      'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=1600&q=80'
+      'https://res.cloudinary.com/kisnodzz/image/upload/v1791042834/madhuvan_honey/sliders/cbv03eqxofw3ja6dxast.jpg'
   );
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl || '');
   const [linkUrl, setLinkUrl] = useState(initialData?.linkUrl || '/shop');
@@ -48,18 +48,48 @@ export const SliderModal: React.FC<SliderModalProps> = ({
   const [isActive, setIsActive] = useState<boolean>(initialData?.isActive !== false);
 
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+  const [videoUploadStatus, setVideoUploadStatus] = useState<string | null>(null);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const localUrl = URL.createObjectURL(file);
-      setVideoUrl(localUrl);
-      setFormError(null);
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      setFormError('Please select a valid video file (MP4, WebM, MOV).');
+      return;
+    }
+
+    setFormError(null);
+    setIsUploadingVideo(true);
+    setVideoUploadStatus('Uploading & optimizing video via Cloudinary CDN...');
+
+    // Temporary preview
+    const localUrl = URL.createObjectURL(file);
+    setVideoUrl(localUrl);
+
+    try {
+      const { videoUrl: cdnUrl, posterUrl } = await uploadVideo(file);
+      setVideoUrl(cdnUrl);
+      if (posterUrl && (!imageUrl || imageUrl.includes('unsplash.com'))) {
+        setImageUrl(posterUrl);
+      }
+      setVideoUploadStatus(null);
+    } catch (err: any) {
+      console.error('Slider video upload failed:', err);
+      setFormError(err.message || 'Failed to upload video to Cloudinary. Please try again.');
+      setVideoUploadStatus(null);
+      setVideoUrl(''); // Never retain local blob on failure
+    } finally {
+      setIsUploadingVideo(false);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
     }
   };
 
@@ -89,6 +119,15 @@ export const SliderModal: React.FC<SliderModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isUploadingVideo) {
+      setFormError('Please wait for video upload to Cloudinary to complete before saving.');
+      return;
+    }
+    if (isUploadingImage) {
+      setFormError('Please wait for image upload to Cloudinary to complete before saving.');
+      return;
+    }
     if (!title.trim()) {
       setFormError('Slide Headline / Title is required.');
       return;
@@ -99,6 +138,10 @@ export const SliderModal: React.FC<SliderModalProps> = ({
     }
     if (mediaType === 'video' && !videoUrl.trim()) {
       setFormError('Please provide a video file or video URL, or switch Media Type to Image.');
+      return;
+    }
+    if (mediaType === 'video' && videoUrl.startsWith('blob:')) {
+      setFormError('Video is still uploading or failed to reach Cloudinary. Please wait or re-select.');
       return;
     }
 
@@ -275,31 +318,45 @@ export const SliderModal: React.FC<SliderModalProps> = ({
                   <input
                     ref={videoInputRef}
                     type="file"
-                    accept="video/mp4,video/webm,video/ogg"
+                    accept="video/mp4,video/webm,video/ogg,video/mov"
                     onChange={handleVideoFileChange}
                     style={{ display: 'none' }}
                   />
                   <div
-                    onClick={() => videoInputRef.current?.click()}
+                    onClick={() => !isUploadingVideo && videoInputRef.current?.click()}
                     style={{
-                      border: '2px dashed #D97706',
+                      border: isUploadingVideo ? '2px dashed #059669' : '2px dashed #D97706',
                       borderRadius: '12px',
-                      backgroundColor: '#FFFFFF',
+                      backgroundColor: isUploadingVideo ? '#ECFDF5' : '#FFFFFF',
                       padding: '1.25rem',
                       textAlign: 'center',
-                      cursor: 'pointer',
+                      cursor: isUploadingVideo ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    <Upload size={24} color="#D97706" style={{ margin: '0 auto 0.5rem auto' }} />
-                    <div style={{ fontWeight: 600, color: '#92400E', fontSize: '0.9rem' }}>
-                      Click to choose video from computer (MP4, WebM)
-                    </div>
+                    {isUploadingVideo ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                        <Loader2 size={24} className="animate-spin" color="#059669" />
+                        <div style={{ fontWeight: 600, color: '#065F46', fontSize: '0.9rem' }}>
+                          {videoUploadStatus || 'Uploading & optimizing video via Cloudinary CDN...'}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={24} color="#D97706" style={{ margin: '0 auto 0.5rem auto' }} />
+                        <div style={{ fontWeight: 600, color: '#92400E', fontSize: '0.9rem' }}>
+                          Click to choose video from computer (MP4, WebM)
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#78716C', marginTop: '2px' }}>
+                          Auto-uploaded and compressed on Cloudinary CDN
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
                 <Input
                   label="Direct MP4 / WebM URL"
-                  placeholder="https://assets.mixkit.co/...mp4 or cdn link"
+                  placeholder="https://res.cloudinary.com/...mp4 or cdn link"
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   leftIcon={<LinkIcon size={16} />}
@@ -333,7 +390,7 @@ export const SliderModal: React.FC<SliderModalProps> = ({
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
               <div style={{ flex: 1 }}>
                 <Input
-                  placeholder="https://images.unsplash.com/... or paste image URL"
+                  placeholder="Paste Cloudinary or web image URL"
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   leftIcon={<ImageIcon size={16} />}
@@ -365,7 +422,7 @@ export const SliderModal: React.FC<SliderModalProps> = ({
                   style={{ width: '100px', height: '56px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E2E8F0' }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).src =
-                      'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=400&q=80';
+                      'https://res.cloudinary.com/kisnodzz/image/upload/v1791042834/madhuvan_honey/sliders/cbv03eqxofw3ja6dxast.jpg';
                   }}
                 />
                 <span style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -492,11 +549,15 @@ export const SliderModal: React.FC<SliderModalProps> = ({
             className="flex items-center justify-end gap-3 flex-wrap"
             style={{ borderTop: '1px solid #E7E5E4', paddingTop: '1.25rem' }}
           >
-            <Button variant="ghost" type="button" onClick={onClose} disabled={isSubmitting}>
+            <Button variant="ghost" type="button" onClick={onClose} disabled={isSubmitting || isUploadingVideo || isUploadingImage}>
               Cancel
             </Button>
-            <Button type="submit" size="md" disabled={isSubmitting}>
-              {isSubmitting
+            <Button type="submit" size="md" disabled={isSubmitting || isUploadingVideo || isUploadingImage}>
+              {isUploadingVideo
+                ? 'Uploading Video to Cloudinary...'
+                : isUploadingImage
+                ? 'Uploading Image to Cloudinary...'
+                : isSubmitting
                 ? 'Saving...'
                 : initialData
                 ? 'Save Slider Changes'
