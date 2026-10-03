@@ -354,12 +354,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ]);
       setProducts(fetchedProducts || []);
       setCategories(fetchedCategories || []);
-      setVideos(fetchedVideos || []);
+      setVideos(fetchedVideos && fetchedVideos.length > 0 ? fetchedVideos : getInitialVideos());
     } catch {
       // Backend offline or error - keep empty without restoring mock data
       setProducts([]);
       setCategories([]);
-      setVideos([]);
+      setVideos(getInitialVideos());
     } finally {
       setIsProductsLoading(false);
       setIsVideosLoading(false);

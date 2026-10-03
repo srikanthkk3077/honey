@@ -195,7 +195,9 @@ export const Videos: React.FC = () => {
 
       <VideoModal
         video={selectedVideo}
+        videoList={filtered}
         onClose={() => setSelectedVideo(null)}
+        onSelectVideo={(v) => setSelectedVideo(v)}
       />
     </div>
   );

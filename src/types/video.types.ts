@@ -11,6 +11,12 @@ export interface VideoItem {
   taggedProductId?: string;
   taggedProductName?: string;
   taggedProductSlug?: string;
+  taggedProductPrice?: number;
+  taggedProductOriginalPrice?: number;
+  taggedProductImage?: string;
+  taggedProductDescription?: string;
+  taggedProductSize?: string;
+  purityScore?: number;
   views: number;
   featuredOnHome: boolean;
   createdAt: string;
