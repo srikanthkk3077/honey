@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { ProductGrid } from '../../../components/customer/product/ProductGrid';
-import { SectionTitle } from '../../../components/common/SectionTitle';
-import { Filter, Search, X } from 'lucide-react';
+import { SlidersHorizontal, X, Heart, Leaf, ChevronDown } from 'lucide-react';
 
 export const Shop: React.FC = () => {
   const { products, categories, wishlist, isProductsLoading } = useStore();
@@ -15,29 +14,19 @@ export const Shop: React.FC = () => {
 
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'rating'>('featured');
   const [showOnlyOrganic, setShowOnlyOrganic] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const filteredProducts = useMemo(() => {
     return products.filter((prod) => {
-      // Category filter
-      if (selectedCategory !== 'all' && prod.categorySlug !== selectedCategory) {
-        return false;
-      }
-      // Search query
+      if (selectedCategory !== 'all' && prod.categorySlug !== selectedCategory) return false;
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const matchesName = prod.name.toLowerCase().includes(query);
-        const matchesDesc = prod.description.toLowerCase().includes(query);
-        const matchesCat = prod.category.toLowerCase().includes(query);
-        if (!matchesName && !matchesDesc && !matchesCat) return false;
+        if (!prod.name.toLowerCase().includes(query) &&
+            !prod.description.toLowerCase().includes(query) &&
+            !prod.category.toLowerCase().includes(query)) return false;
       }
-      // Wishlist filter
-      if (filterParam === 'wishlist' && !wishlist.includes(prod.id)) {
-        return false;
-      }
-      // Organic flag
-      if (showOnlyOrganic && !prod.isOrganicCertified) {
-        return false;
-      }
+      if (filterParam === 'wishlist' && !wishlist.includes(prod.id)) return false;
+      if (showOnlyOrganic && !prod.isOrganicCertified) return false;
       return true;
     }).sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
@@ -49,11 +38,7 @@ export const Shop: React.FC = () => {
 
   const handleCategorySelect = (slug: string) => {
     const params = new URLSearchParams(searchParams);
-    if (slug === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', slug);
-    }
+    if (slug === 'all') { params.delete('category'); } else { params.set('category', slug); }
     setSearchParams(params);
   };
 
@@ -62,167 +47,334 @@ export const Shop: React.FC = () => {
     setShowOnlyOrganic(false);
   };
 
+  const isFiltered = selectedCategory !== 'all' || searchQuery || filterParam || showOnlyOrganic;
+
   return (
-    <div style={{ padding: '3.5rem 0 6rem 0', backgroundColor: '#FAF7F2' }}>
-      <div className="container">
-        {/* Page Title */}
-        <SectionTitle
-          subtitle="Spring & Autumn Harvests"
-          title={filterParam === 'wishlist' ? 'Your Saved Honeys' : 'Pure Raw Honey Collection'}
-          description="Browse Raw honeys, wildflower mono-florals, and edible honeycomb frames."
-        />
+    <div style={{ backgroundColor: '#F7F3ED', minHeight: '100vh' }}>
 
-        {/* Filter Navigation Bar */}
-        <div
-          className="shop-filter-bar"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '20px',
-            padding: '1.25rem 1.5rem',
-            border: '1px solid #E7E5E4',
-            marginBottom: '2.5rem',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-          }}
-        >
-          {/* Categories Horizontal Tabs */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => handleCategorySelect('all')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: '10px',
-                fontSize: '0.88rem',
-                fontWeight: selectedCategory === 'all' && filterParam !== 'wishlist' ? 700 : 500,
-                border: selectedCategory === 'all' && filterParam !== 'wishlist' ? '1.5px solid #D97706' : '1px solid #E7E5E4',
-                background: selectedCategory === 'all' && filterParam !== 'wishlist' ? '#FEF3C7' : '#FFFFFF',
-                color: selectedCategory === 'all' && filterParam !== 'wishlist' ? '#92400E' : '#57534E',
-                cursor: 'pointer',
-              }}
-            >
-              All Honeys ({products.length})
-            </button>
-
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategorySelect(cat.slug)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  fontWeight: selectedCategory === cat.slug ? 700 : 500,
-                  border: selectedCategory === cat.slug ? '1.5px solid #D97706' : '1px solid #E7E5E4',
-                  background: selectedCategory === cat.slug ? '#FEF3C7' : '#FFFFFF',
-                  color: selectedCategory === cat.slug ? '#92400E' : '#57534E',
-                  cursor: 'pointer',
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
-
-            {wishlist.length > 0 && (
-              <button
-                onClick={() => {
-                  const params = new URLSearchParams(searchParams);
-                  params.set('filter', 'wishlist');
-                  setSearchParams(params);
-                }}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  fontWeight: filterParam === 'wishlist' ? 700 : 500,
-                  border: filterParam === 'wishlist' ? '1.5px solid #EF4444' : '1px solid #E7E5E4',
-                  background: filterParam === 'wishlist' ? '#FEF2F2' : '#FFFFFF',
-                  color: filterParam === 'wishlist' ? '#991B1B' : '#57534E',
-                  cursor: 'pointer',
-                }}
-              >
-                ❤️ Saved Items ({wishlist.length})
-              </button>
-            )}
+      {/* â”€â”€ Hero Banner â”€â”€ */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1C1209 0%, #3B1F00 40%, #92400E 100%)',
+        padding: '3.5rem 0 3rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Honeycomb dots pattern */}
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.07,
+          backgroundImage: 'radial-gradient(circle, #F59E0B 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }} />
+        {/* Amber glow orb */}
+        <div style={{
+          position: 'absolute', top: '-60px', right: '10%',
+          width: '320px', height: '320px', borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(245,158,11,0.25) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <p style={{
+                fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.18em',
+                color: '#FCD34D', textTransform: 'uppercase', marginBottom: '0.5rem',
+              }}>
+                ðŸ¯ Spring & Autumn Harvests
+              </p>
+              <h1 style={{
+                fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900,
+                color: '#FFFFFF', lineHeight: 1.15, marginBottom: '0.6rem',
+              }}>
+                Pure Raw Honey<br />
+                <span style={{ color: '#FCD34D' }}>Collection</span>
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.95rem', maxWidth: '480px' }}>
+                Cold-extracted wildflower mono-florals, edible honeycomb frames â€” direct from indigenous apiaries.
+              </p>
+            </div>
+            {/* Stats pills */}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              {[
+                { label: 'Varieties', value: products.length },
+                { label: 'NMR Certified', value: products.filter(p => p.isOrganicCertified).length },
+                { label: 'Bestsellers', value: products.filter(p => p.isBestSeller).length },
+              ].map(stat => (
+                <div key={stat.label} style={{
+                  background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: '14px', padding: '10px 20px', textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FCD34D', lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', marginTop: '2px', letterSpacing: '0.05em' }}>
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Secondary Controls: Search, Sort, Organic toggle */}
-          <div className="flex items-center justify-between flex-wrap gap-4" style={{ borderTop: '1px solid #F5F1E9', paddingTop: '1rem' }}>
-            <div className="flex items-center gap-4 flex-wrap">
-              {/* Organic toggle */}
-              <label className="flex items-center gap-2" style={{ cursor: 'pointer', fontSize: '0.88rem', color: '#44403C' }}>
-                <input
-                  type="checkbox"
-                  checked={showOnlyOrganic}
-                  onChange={(e) => setShowOnlyOrganic(e.target.checked)}
-                  style={{ accentColor: '#059669', width: '16px', height: '16px' }}
-                />
-                <span>NMR Certified Raw Only</span>
-              </label>
+      {/* â”€â”€ Main Layout: Sidebar + Grid â”€â”€ */}
+      <div className="container" style={{ padding: '2.5rem 1rem 5rem', display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
 
-              {(selectedCategory !== 'all' || searchQuery || filterParam || showOnlyOrganic) && (
-                <button
-                  onClick={handleClearFilters}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#DC2626',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <X size={14} /> Clear Active Filters
+        {/* â”€â”€ Sidebar â”€â”€ */}
+        <aside style={{
+          width: sidebarOpen ? '240px' : '0',
+          flexShrink: 0,
+          transition: 'width 0.3s ease',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '20px',
+            border: '1px solid rgba(217,119,6,0.12)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+            padding: '1.5rem',
+            position: 'sticky',
+            top: '90px',
+            width: '240px',
+          }}>
+            {/* Sidebar header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <SlidersHorizontal size={16} color="#fff" />
+              </div>
+              <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#1C1917' }}>Filters</span>
+              {isFiltered && (
+                <button onClick={handleClearFilters} style={{
+                  marginLeft: 'auto', background: 'none', border: 'none',
+                  color: '#DC2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: '2px',
+                }}>
+                  <X size={12} /> Clear
                 </button>
               )}
             </div>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <span style={{ fontSize: '0.85rem', color: '#78716C' }}>Sort By:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+            {/* Categories */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{
+                fontSize: '0.68rem', fontWeight: 700, color: '#A8A29E',
+                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.65rem',
+              }}>
+                Category
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {[{ name: `All Honeys`, slug: 'all', count: products.length }, ...categories.map(c => ({
+                  name: c.name, slug: c.slug,
+                  count: products.filter(p => p.categorySlug === c.slug).length,
+                }))].map(cat => {
+                  const isActive = cat.slug === 'all'
+                    ? selectedCategory === 'all' && filterParam !== 'wishlist'
+                    : selectedCategory === cat.slug;
+                  return (
+                    <button
+                      key={cat.slug}
+                      onClick={() => handleCategorySelect(cat.slug)}
+                      style={{
+                        width: '100%', textAlign: 'left',
+                        padding: '8px 12px', borderRadius: '10px',
+                        border: isActive ? '1.5px solid rgba(217,119,6,0.4)' : '1.5px solid transparent',
+                        background: isActive
+                          ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)'
+                          : 'transparent',
+                        color: isActive ? '#92400E' : '#57534E',
+                        fontWeight: isActive ? 700 : 500,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        transition: 'all 0.18s ease',
+                      }}
+                      onMouseOver={e => { if (!isActive) e.currentTarget.style.background = '#FAF7F2'; }}
+                      onMouseOut={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span>{cat.name}</span>
+                      <span style={{
+                        fontSize: '0.7rem', fontWeight: 700,
+                        background: isActive ? 'rgba(217,119,6,0.15)' : 'rgba(0,0,0,0.06)',
+                        color: isActive ? '#92400E' : '#78716C',
+                        padding: '1px 7px', borderRadius: '20px',
+                      }}>{cat.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px solid #F0EBE3', marginBottom: '1.25rem' }} />
+
+            {/* Organic Toggle */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <p style={{
+                fontSize: '0.68rem', fontWeight: 700, color: '#A8A29E',
+                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.65rem',
+              }}>
+                Quality
+              </p>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                cursor: 'pointer', padding: '8px 12px', borderRadius: '10px',
+                border: showOnlyOrganic ? '1.5px solid rgba(5,150,105,0.4)' : '1.5px solid transparent',
+                background: showOnlyOrganic ? '#ECFDF5' : 'transparent',
+                transition: 'all 0.18s ease',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={showOnlyOrganic}
+                  onChange={e => setShowOnlyOrganic(e.target.checked)}
+                  style={{ accentColor: '#059669', width: '15px', height: '15px' }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Leaf size={13} color="#059669" />
+                  <span style={{ fontSize: '0.84rem', fontWeight: showOnlyOrganic ? 700 : 500, color: showOnlyOrganic ? '#065F46' : '#44403C' }}>
+                    NMR Certified Raw
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Wishlist filter */}
+            {wishlist.length > 0 && (
+              <>
+                <div style={{ borderTop: '1px solid #F0EBE3', marginBottom: '1.25rem' }} />
+                <div>
+                  <p style={{
+                    fontSize: '0.68rem', fontWeight: 700, color: '#A8A29E',
+                    textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.65rem',
+                  }}>
+                    My List
+                  </p>
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(searchParams);
+                      if (filterParam === 'wishlist') { params.delete('filter'); } else { params.set('filter', 'wishlist'); }
+                      setSearchParams(params);
+                    }}
+                    style={{
+                      width: '100%', textAlign: 'left',
+                      padding: '8px 12px', borderRadius: '10px',
+                      border: filterParam === 'wishlist' ? '1.5px solid rgba(239,68,68,0.4)' : '1.5px solid transparent',
+                      background: filterParam === 'wishlist' ? '#FEF2F2' : 'transparent',
+                      color: filterParam === 'wishlist' ? '#991B1B' : '#57534E',
+                      fontWeight: filterParam === 'wishlist' ? 700 : 500,
+                      fontSize: '0.85rem', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      transition: 'all 0.18s ease',
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Heart size={13} fill={filterParam === 'wishlist' ? '#EF4444' : 'none'} color={filterParam === 'wishlist' ? '#EF4444' : '#78716C'} />
+                      Saved Items
+                    </span>
+                    <span style={{
+                      fontSize: '0.7rem', fontWeight: 700,
+                      background: filterParam === 'wishlist' ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.06)',
+                      color: filterParam === 'wishlist' ? '#991B1B' : '#78716C',
+                      padding: '1px 7px', borderRadius: '20px',
+                    }}>{wishlist.length}</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </aside>
+
+        {/* â”€â”€ Main Content â”€â”€ */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Top Control Bar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: '12px',
+            background: '#FFFFFF', borderRadius: '16px',
+            padding: '0.85rem 1.25rem',
+            border: '1px solid rgba(217,119,6,0.1)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+            marginBottom: '1.5rem',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* Toggle sidebar button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #D6D3D1',
-                  background: '#FFFFFF',
-                  fontSize: '0.85rem',
-                  outline: 'none',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px', borderRadius: '9px',
+                  border: '1.5px solid #E7E5E4', background: sidebarOpen ? '#FEF3C7' : '#fff',
+                  color: sidebarOpen ? '#92400E' : '#57534E', cursor: 'pointer',
+                  fontSize: '0.82rem', fontWeight: 600, transition: 'all 0.2s',
                 }}
               >
-                <option value="featured">Featured First</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="rating">Top Rated (4.8+)</option>
-              </select>
+                <SlidersHorizontal size={14} />
+                {sidebarOpen ? 'Hide Filters' : 'Show Filters'}
+              </button>
+
+              <span style={{ color: '#78716C', fontSize: '0.88rem' }}>
+                Showing <strong style={{ color: '#1C1917' }}>{filteredProducts.length}</strong> varieties
+                {searchQuery && <span> for "<strong>{searchQuery}</strong>"</span>}
+              </span>
+
+              {isFiltered && (
+                <button
+                  onClick={handleClearFilters}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    background: '#FEF2F2', border: '1px solid rgba(239,68,68,0.25)',
+                    borderRadius: '8px', padding: '4px 10px',
+                    color: '#DC2626', fontSize: '0.78rem', fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={12} /> Clear Filters
+                </button>
+              )}
+            </div>
+
+            {/* Sort */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.82rem', color: '#78716C', fontWeight: 500 }}>Sort by</span>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as any)}
+                  style={{
+                    padding: '7px 32px 7px 12px',
+                    borderRadius: '10px',
+                    border: '1.5px solid #E7E5E4',
+                    background: '#FAFAF9',
+                    fontSize: '0.84rem', fontWeight: 600,
+                    color: '#1C1917', outline: 'none', cursor: 'pointer',
+                    appearance: 'none', WebkitAppearance: 'none',
+                  }}
+                >
+                  <option value="featured">Featured</option>
+                  <option value="price-asc">Price: Low â†’ High</option>
+                  <option value="price-desc">Price: High â†’ Low</option>
+                  <option value="rating">Top Rated</option>
+                </select>
+                <ChevronDown size={13} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#78716C' }} />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Results Info */}
-        <div style={{ marginBottom: '1.5rem', color: '#78716C', fontSize: '0.9rem' }}>
-          Showing <strong>{filteredProducts.length}</strong> raw honey varieties
-          {searchQuery && <span> matching "<strong>{searchQuery}</strong>"</span>}
+          {/* Product Grid */}
+          <ProductGrid products={filteredProducts} isLoading={isProductsLoading} />
         </div>
-
-        {/* Product Grid */}
-        <ProductGrid products={filteredProducts} isLoading={isProductsLoading} />
       </div>
 
       <style>{`
-        @media (max-width: 640px) {
-          .shop-filter-bar {
-            padding: 1rem !important;
-            border-radius: 16px !important;
-          }
+        @media (max-width: 768px) {
+          aside { display: none !important; }
         }
       `}</style>
     </div>
   );
 };
+

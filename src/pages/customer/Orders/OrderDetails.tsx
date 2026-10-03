@@ -238,7 +238,14 @@ export const OrderDetails: React.FC = () => {
               {order.items.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between flex-wrap gap-2" style={{ paddingBottom: '1rem', borderBottom: '1px solid #F5F1E9' }}>
                   <div className="flex items-center gap-3">
-                    <img src={item.image} alt={item.productName} style={{ width: '52px', height: '52px', borderRadius: '12px', objectFit: 'cover' }} />
+                    <img
+                      src={item.image || 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg'}
+                      alt={item.productName}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg';
+                      }}
+                      style={{ width: '52px', height: '52px', borderRadius: '12px', objectFit: 'cover' }}
+                    />
                     <div>
                       <div style={{ fontWeight: 700, color: '#1C1917' }}>{item.productName}</div>
                       <div style={{ fontSize: '0.85rem', color: '#78716C' }}>Size: {item.size} • Qty: {item.quantity}</div>

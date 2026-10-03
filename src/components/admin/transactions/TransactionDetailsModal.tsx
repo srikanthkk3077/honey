@@ -338,9 +338,14 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {item.image && (
-                    <img src={item.image} alt={item.productName} style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }} />
-                  )}
+                    <img
+                      src={item.image || 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg'}
+                      alt={item.productName}
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg';
+                      }}
+                      style={{ width: '36px', height: '36px', borderRadius: '6px', objectFit: 'cover' }}
+                    />
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1C1917' }}>{item.productName}</div>
                     <div style={{ fontSize: '0.76rem', color: '#78716C' }}>Size: {item.size} × {item.quantity}</div>

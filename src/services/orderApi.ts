@@ -8,17 +8,25 @@ import {
   PaymentStatus,
 } from '../types/order.types';
 
+const DEFAULT_HONEY_IMAGE = 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg';
+
 // ─── Backend → frontend normaliser ───────────────────────────────────────────
 function normaliseOrder(raw: any): Order {
   const items: OrderItem[] = (raw.items || raw.orderItems || []).map(
-    (i: any) => ({
-      productId: i.productId || i.product || i._id || '',
-      productName: i.productName || i.name || '',
-      size: i.size || '500g',
-      image: i.image || '',
-      price: i.price || 0,
-      quantity: i.quantity || 1,
-    })
+    (i: any) => {
+      let img = i.image || '';
+      if (!img || img.includes('honey-backend-s8qf.onrender.com') || img.includes('/uploads/')) {
+        img = DEFAULT_HONEY_IMAGE;
+      }
+      return {
+        productId: i.productId || i.product || i._id || '',
+        productName: i.productName || i.name || '',
+        size: i.size || '500g',
+        image: img,
+        price: i.price || 0,
+        quantity: i.quantity || 1,
+      };
+    }
   );
 
   // Map backend paymentStatus to frontend PaymentStatus

@@ -1055,6 +1055,9 @@ export const TrackOrder: React.FC = () => {
                               <img
                                 src={item.image}
                                 alt={item.productName}
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).src = 'https://res.cloudinary.com/kisnodzz/image/upload/v1791042814/madhuvan_honey/products/t6l1edtfc4xg0wmxb8we.jpg';
+                                }}
                                 style={{
                                   width: '46px',
                                   height: '46px',
