@@ -3,11 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from '../../../components/admin/orders/OrderStatus';
-import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck, Clock, XCircle, Loader } from 'lucide-react';
+import { ArrowLeft, MapPin, Truck, CheckCircle2, ShieldCheck, Clock, XCircle, Loader, ExternalLink } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 import { CONTACT_INFO } from '../../../utils/constants';
 import orderApi from '../../../services/orderApi';
 import { Order } from '../../../types/order.types';
+import { generateGoogleMapsLink } from '../../../utils/delivery';
 
 export const OrderDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -273,13 +274,35 @@ export const OrderDetails: React.FC = () => {
 
           {/* Shipping Address Box */}
           <div style={{ backgroundColor: '#FAF7F2', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E7E5E4' }}>
-            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917', marginBottom: '0.4rem' }}>
-              Delivering To:
+            <div className="flex items-center justify-between flex-wrap gap-2" style={{ marginBottom: '0.4rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1C1917' }}>
+                Delivering To:
+              </div>
+              <a
+                href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                }}
+              >
+                <MapPin size={12} /> Open in Google Maps <ExternalLink size={11} />
+              </a>
             </div>
             <div style={{ fontSize: '0.9rem', color: '#57534E', lineHeight: 1.6 }}>
               {order.shippingAddress.fullName} • {order.shippingAddress.phone}<br />
               {order.shippingAddress.addressLine1} {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}<br />
-              {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+              {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
             </div>
           </div>
         </div>

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Order, OrderStatus } from '../../../types/order.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from './OrderStatus';
-import { MapPin, Phone, Mail, Calendar, CheckCircle2, XCircle, Copy, Check, ExternalLink, Image as ImageIcon, ShieldAlert } from 'lucide-react';
+import { MapPin, Phone, Mail, Calendar, CheckCircle2, XCircle, Copy, Check, ExternalLink, Image as ImageIcon, ShieldAlert, Compass } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { Button } from '../../common/Button';
+import { generateGoogleMapsLink } from '../../../utils/delivery';
 
 interface OrderDetailsProps {
   order: Order;
@@ -15,6 +16,7 @@ interface OrderDetailsProps {
 export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, onUpdateStatus, onOrderUpdated }) => {
   const { verifyPayment, rejectPayment, showToast } = useStore();
   const [copiedUtr, setCopiedUtr] = useState(false);
+  const [copiedMaps, setCopiedMaps] = useState(false);
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState('Payment not found in bank statement');
   const [showScreenshotModal, setShowScreenshotModal] = useState(false);
@@ -24,6 +26,13 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
     setCopiedUtr(true);
     showToast('UTR copied to clipboard', 'info');
     setTimeout(() => setCopiedUtr(false), 2000);
+  };
+
+  const handleCopyMapsLink = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedMaps(true);
+    showToast('Google Maps navigation link copied!', 'info');
+    setTimeout(() => setCopiedMaps(false), 2000);
   };
 
   const handleVerify = async () => {
@@ -338,8 +347,53 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
                 {order.shippingAddress.addressLine1}
                 {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
                 <br />
-                {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
               </div>
+            </div>
+
+            {/* Google Maps Actions for Admin & Drivers */}
+            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <a
+                href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  backgroundColor: '#EFF6FF',
+                  color: '#1D4ED8',
+                  border: '1px solid #BFDBFE',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                🗺️ Open in Google Maps <ExternalLink size={12} />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => handleCopyMapsLink(order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress))}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: copiedMaps ? '#ECFDF5' : '#F5F5F4',
+                  color: copiedMaps ? '#065F46' : '#57534E',
+                  border: '1px solid #D6D3D1',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {copiedMaps ? <Check size={12} /> : <Copy size={12} />}
+                {copiedMaps ? 'Link Copied' : 'Copy Maps Link'}
+              </button>
             </div>
           </div>
         </div>

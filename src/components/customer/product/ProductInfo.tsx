@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Product } from '../../../types/product.types';
 import { useStore } from '../../../store/store';
@@ -7,15 +7,51 @@ import { QuantitySelector } from './QuantitySelector';
 import { Button } from '../../common/Button';
 import { Badge } from '../../common/Badge';
 import { Star, ShieldCheck, Truck, RotateCcw, Droplet, Sparkles, Heart } from 'lucide-react';
+import { checkPincodeServiceability, PincodeCheckResult, fetchPincodeDetails } from '../../../utils/delivery';
 
 export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
-  const { addToCart, toggleWishlist, isWishlisted, setCartDrawerOpen } = useStore();
+  const { addToCart, toggleWishlist, isWishlisted, setCartDrawerOpen, settings } = useStore();
   const navigate = useNavigate();
 
   const [selectedSize, setSelectedSize] = useState(
     product.selectedSize || product.sizes[0]?.size || '500g'
   );
   const [quantity, setQuantity] = useState(1);
+
+  // Delivery Pincode Checker State
+  const [checkPin, setCheckPin] = useState(() => {
+    return localStorage.getItem('madhuvan_customer_pincode') || '';
+  });
+  const [pinResult, setPinResult] = useState<PincodeCheckResult | null>(null);
+  const [isCheckingPin, setIsCheckingPin] = useState(false);
+
+  // Check saved pincode on mount
+  useEffect(() => {
+    if (checkPin && checkPin.length === 6) {
+      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig);
+      setPinResult(res);
+    }
+  }, [settings?.deliveryConfig]);
+
+  const handleCheckPincode = async () => {
+    if (checkPin.length !== 6) return;
+    setIsCheckingPin(true);
+    try {
+      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig);
+      if (res.isServiceable && !res.city) {
+        // Fetch postal details for better display if not in zone
+        const details = await fetchPincodeDetails(checkPin);
+        if (details) {
+          res.city = details.city;
+          res.state = details.state;
+        }
+      }
+      setPinResult(res);
+      localStorage.setItem('madhuvan_customer_pincode', checkPin);
+    } finally {
+      setIsCheckingPin(false);
+    }
+  };
 
   const currentSizeOption = product.sizes.find((s) => s.size === selectedSize) || product.sizes[0];
   const price = currentSizeOption ? currentSizeOption.price : product.price;
@@ -185,6 +221,119 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
             <Heart size={22} fill={wishlisted ? '#DC2626' : 'none'} />
           </button>
         </div>
+      </div>
+
+      {/* Delivery Details Pincode Checker (matching Flipkart/Amazon/Nykaa standard) */}
+      <div
+        style={{
+          padding: '1.25rem',
+          borderRadius: '16px',
+          backgroundColor: '#FFFFFF',
+          border: '1.5px solid #E7E5E4',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <label style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1C1917', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Truck size={17} color="#D97706" /> Delivery Details
+          </label>
+          {settings?.deliveryConfig?.serviceabilityMode === 'restricted_pincodes' && (
+            <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 600, background: '#FEF3C7', padding: '2px 8px', borderRadius: '6px' }}>
+              Select Hubs Only
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="Enter your pincode"
+            value={checkPin}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+              setCheckPin(val);
+              if (pinResult) setPinResult(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCheckPincode();
+              }
+            }}
+            style={{
+              flex: 1,
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: pinResult ? (pinResult.isServiceable ? '1.5px solid #10B981' : '1.5px solid #EF4444') : '1.5px solid #D6D3D1',
+              backgroundColor: pinResult ? (pinResult.isServiceable ? '#F0FDF4' : '#FEF2F2') : '#FFFFFF',
+              fontSize: '0.92rem',
+              outline: 'none',
+              fontFamily: 'inherit',
+              color: '#1C1917',
+              letterSpacing: '0.05em',
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleCheckPincode}
+            disabled={isCheckingPin || checkPin.length !== 6}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: checkPin.length === 6 ? '#1C1917' : '#9CA3AF',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              cursor: checkPin.length === 6 ? 'pointer' : 'not-allowed',
+              transition: 'background-color 0.2s',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {isCheckingPin ? 'Checking…' : 'Check'}
+          </button>
+        </div>
+
+        {/* Pincode Feedback */}
+        {pinResult && (
+          <div
+            style={{
+              marginTop: '4px',
+              fontSize: '0.85rem',
+              lineHeight: 1.5,
+              animation: 'fadeIn 0.2s ease',
+            }}
+          >
+            {pinResult.isServiceable ? (
+              <div style={{ color: '#065F46', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
+                  <ShieldCheck size={16} color="#059669" />
+                  <span>Delivery available to {pinResult.city ? `${pinResult.city}, ${pinResult.state}` : `pincode ${checkPin}`}</span>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#047857', paddingLeft: '22px' }}>
+                  🚚 Expected arrival in <strong>{pinResult.deliveryDays}</strong>
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#047857', paddingLeft: '22px' }}>
+                  💵 Cash on Delivery: <strong>{pinResult.isCodAvailable ? 'Available' : 'Online payment only'}</strong>
+                </div>
+              </div>
+            ) : (
+              <div style={{ color: '#DC2626', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
+                  <span style={{ fontSize: '1rem' }}>✕</span>
+                  <span>Currently not deliverable to pincode {checkPin}</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#B91C1C', paddingLeft: '18px' }}>
+                  We currently ship pure apiary harvests to select serviceable pin codes.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Trust bullets */}

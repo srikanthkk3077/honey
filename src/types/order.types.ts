@@ -22,6 +22,7 @@ export interface ShippingAddress {
   pincode: string;
   country: string;
   notes?: string;
+  googleMapsLink?: string;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';

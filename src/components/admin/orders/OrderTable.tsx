@@ -2,7 +2,8 @@ import React from 'react';
 import { Order } from '../../../types/order.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from './OrderStatus';
-import { Eye, PackageSearch } from 'lucide-react';
+import { Eye, PackageSearch, MapPin } from 'lucide-react';
+import { generateGoogleMapsLink } from '../../../utils/delivery';
 
 interface OrderTableProps {
   orders: Order[];
@@ -68,7 +69,30 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <div style={{ fontWeight: 600, color: '#1C1917' }}>{order.customerName}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#78716C' }}>{order.shippingAddress.city}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                      <span>{order.shippingAddress.city}</span>
+                      <a
+                        href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={`Open destination in Google Maps`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          color: '#2563EB',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '2px',
+                          textDecoration: 'none',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          backgroundColor: '#EFF6FF',
+                          padding: '1px 5px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        <MapPin size={10} /> Maps ↗
+                      </a>
+                    </div>
                   </td>
                   <td style={{ padding: '1rem', color: '#57534E' }}>
                     {order.items.reduce((acc, i) => acc + i.quantity, 0)} jars

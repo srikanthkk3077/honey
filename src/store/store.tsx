@@ -181,11 +181,16 @@ const DEFAULT_SETTINGS: StoreSettings = {
     isBankTransferActive: true,
     isCodActive: true,
   },
+  deliveryConfig: DEFAULT_DELIVERY_CONFIG,
 };
 
 const SETTINGS_STORAGE_KEY = 'madhuvan_store_settings_v1';
 const getInitialSettings = (): StoreSettings => {
-  return storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+  const loaded = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+  if (!loaded.deliveryConfig) {
+    loaded.deliveryConfig = DEFAULT_DELIVERY_CONFIG;
+  }
+  return loaded;
 };
 const saveSettings = (s: StoreSettings) => {
   storage.set(SETTINGS_STORAGE_KEY, s);

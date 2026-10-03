@@ -27,6 +27,7 @@ import { formatPrice } from '../../../utils/formatPrice';
 import { Order, OrderStatus } from '../../../types/order.types';
 import orderApi from '../../../services/orderApi';
 import { CONTACT_INFO } from '../../../utils/constants';
+import { generateGoogleMapsLink } from '../../../utils/delivery';
 
 export const TrackOrder: React.FC = () => {
   const { orders } = useStore();
@@ -974,6 +975,31 @@ export const TrackOrder: React.FC = () => {
                         {matchedOrder.shippingAddress?.city}, {matchedOrder.shippingAddress?.state} -{' '}
                         <strong>{matchedOrder.shippingAddress?.pincode}</strong>
                       </div>
+
+                      {matchedOrder.shippingAddress && (
+                        <div style={{ marginTop: '8px' }}>
+                          <a
+                            href={matchedOrder.shippingAddress.googleMapsLink || generateGoogleMapsLink(matchedOrder.shippingAddress)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              color: '#2563EB',
+                              textDecoration: 'none',
+                              backgroundColor: '#EFF6FF',
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              border: '1px solid #BFDBFE',
+                            }}
+                          >
+                            🗺️ View Destination on Google Maps <ExternalLink size={12} />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

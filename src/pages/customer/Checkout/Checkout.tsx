@@ -7,13 +7,14 @@ import { AddressForm } from '../../../components/customer/checkout/AddressForm';
 import { PaymentMethod } from '../../../components/customer/checkout/PaymentMethod';
 import { OrderSummary } from '../../../components/customer/checkout/OrderSummary';
 import { EmptyCart } from '../../../components/customer/cart/EmptyCart';
-import { CheckCircle2, PackageCheck, ArrowRight, Truck, MapPin } from 'lucide-react';
+import { CheckCircle2, PackageCheck, ArrowRight, Truck, MapPin, ExternalLink } from 'lucide-react';
 import { Button } from '../../../components/common/Button';
 import confetti from 'canvas-confetti';
 import { formatPrice } from '../../../utils/formatPrice';
+import { checkPincodeServiceability, generateGoogleMapsLink } from '../../../utils/delivery';
 
 export const Checkout: React.FC = () => {
-  const { cart, placeOrder, user } = useStore();
+  const { cart, placeOrder, user, settings } = useStore();
   const navigate = useNavigate();
 
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -55,6 +56,22 @@ export const Checkout: React.FC = () => {
       alert('Please fill out all required shipping address fields.');
       return;
     }
+
+    // Verify PIN code against store delivery settings
+    const check = checkPincodeServiceability(address.pincode, settings?.deliveryConfig);
+    if (!check.isServiceable) {
+      alert(check.message || `Delivery is not serviceable to PIN code ${address.pincode}.`);
+      return;
+    }
+
+    // Ensure googleMapsLink is populated
+    if (!address.googleMapsLink) {
+      setAddress((prev) => ({
+        ...prev,
+        googleMapsLink: generateGoogleMapsLink(prev),
+      }));
+    }
+
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -265,10 +282,29 @@ export const Checkout: React.FC = () => {
                 <span style={{ color: '#78716C' }}>Order Total:</span>
                 <span style={{ fontWeight: 800, color: '#D97706', fontSize: '1.15rem' }}>{formatPrice(completedOrder.total)}</span>
               </div>
-              <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.75rem', fontSize: '0.85rem', color: '#57534E' }}>
+              <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.75rem', fontSize: '0.85rem', color: '#57534E', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div className="flex items-start gap-2">
                   <MapPin size={16} color="#D97706" style={{ marginTop: '2px', flexShrink: 0 }} />
                   <div>Shipping to: {completedOrder.shippingAddress.addressLine1}, {completedOrder.shippingAddress.city}, {completedOrder.shippingAddress.state} - {completedOrder.shippingAddress.pincode}</div>
+                </div>
+                <div>
+                  <a
+                    href={completedOrder.shippingAddress.googleMapsLink || generateGoogleMapsLink(completedOrder.shippingAddress)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: '#2563EB',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      paddingLeft: '22px',
+                    }}
+                  >
+                    🗺️ View Delivery Destination on Google Maps <ExternalLink size={12} />
+                  </a>
                 </div>
               </div>
             </div>

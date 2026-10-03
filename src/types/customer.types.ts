@@ -26,6 +26,24 @@ export interface PaymentConfig {
   isCodActive?: boolean;
 }
 
+export interface DeliveryZone {
+  id?: string;
+  pincode: string;
+  city: string;
+  state: string;
+  deliveryDays: string; // e.g. "1-2 business days", "2-3 business days"
+  isCodAvailable: boolean;
+  isActive: boolean;
+  notes?: string;
+}
+
+export interface DeliveryConfig {
+  serviceabilityMode: 'all_india' | 'restricted_pincodes';
+  serviceablePincodes: DeliveryZone[];
+  defaultDeliveryDays: string;
+  codAvailableDefault: boolean;
+}
+
 export interface StoreSettings {
   storeName?: string;
   brandTagline?: string;
@@ -45,5 +63,5 @@ export interface StoreSettings {
     twitter?: string;
   };
   paymentConfig?: PaymentConfig;
+  deliveryConfig?: DeliveryConfig;
 }
-
