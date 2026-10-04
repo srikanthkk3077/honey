@@ -178,10 +178,10 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           <span style={{
             fontSize: '0.68rem', fontWeight: 700, color: '#D97706',
             textTransform: 'uppercase', letterSpacing: '0.08em',
-            background: 'rgba(251,191,36,0.12)', padding: '2px 7px',
-            borderRadius: '20px', border: '1px solid rgba(217,119,6,0.18)',
+             padding: '2px 7px',
+            // borderRadius: '20px', border: '1px solid rgba(217,119,6,0.18)',
           }}>
-            {product.category}
+            {/* {product.category} */}
           </span>
           <div style={{
             display: 'flex', alignItems: 'center', gap: '3px',
