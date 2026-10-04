@@ -96,8 +96,7 @@ export const Shop: React.FC = () => {
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               {[
                 { label: 'Varieties', value: products.length },
-                { label: 'NMR Certified', value: products.filter(p => p.isOrganicCertified).length },
-                { label: 'Bestsellers', value: products.filter(p => p.isBestSeller).length },
+                // { label: 'Bestsellers', value: products.filter(p => p.isBestSeller).length },
               ].map(stat => (
                 <div key={stat.label} style={{
                   background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
@@ -212,34 +211,6 @@ export const Shop: React.FC = () => {
             <div style={{ borderTop: '1px solid #F0EBE3', marginBottom: '1.25rem' }} />
 
             {/* Organic Toggle */}
-            <div style={{ marginBottom: '1.25rem' }}>
-              <p style={{
-                fontSize: '0.68rem', fontWeight: 700, color: '#A8A29E',
-                textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.65rem',
-              }}>
-                Quality
-              </p>
-              <label style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                cursor: 'pointer', padding: '8px 12px', borderRadius: '10px',
-                border: showOnlyOrganic ? '1.5px solid rgba(5,150,105,0.4)' : '1.5px solid transparent',
-                background: showOnlyOrganic ? '#ECFDF5' : 'transparent',
-                transition: 'all 0.18s ease',
-              }}>
-                <input
-                  type="checkbox"
-                  checked={showOnlyOrganic}
-                  onChange={e => setShowOnlyOrganic(e.target.checked)}
-                  style={{ accentColor: '#059669', width: '15px', height: '15px' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Leaf size={13} color="#059669" />
-                  <span style={{ fontSize: '0.84rem', fontWeight: showOnlyOrganic ? 700 : 500, color: showOnlyOrganic ? '#065F46' : '#44403C' }}>
-                    NMR Certified Raw
-                  </span>
-                </div>
-              </label>
-            </div>
 
             {/* Wishlist filter */}
             {wishlist.length > 0 && (

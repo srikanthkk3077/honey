@@ -190,7 +190,7 @@ export const Testimonials: React.FC = () => {
             </h2>
 
             <p style={{ color: '#57534E', fontSize: '1.05rem', lineHeight: 1.6, margin: 0 }}>
-              Hear what patrons and certified nutritionists across India experience with unheated, unfiltered raw forest honey.
+              Hear what patrons and certified nutritionists across India experience with unheated, unfiltered raw honey.
             </p>
           </div>
 

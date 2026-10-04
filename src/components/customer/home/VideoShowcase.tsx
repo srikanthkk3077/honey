@@ -146,9 +146,9 @@ export const VideoShowcase: React.FC = () => {
               Live Harvest Stories & Purity Reels
             </h2>
 
-            <p style={{ color: '#57534E', fontSize: '1rem', maxWidth: '600px', margin: 0, lineHeight: 1.6 }}>
+            {/* <p style={{ color: '#57534E', fontSize: '1rem', maxWidth: '600px', margin: 0, lineHeight: 1.6 }}>
               Watch unheated raw extraction in action from our Himalayan &amp; Sundarbans apiaries. Tap any reel to watch in HD with sound and shop directly.
-            </p>
+            </p> */}
           </div>
 
           {/* Action Links & Navigation Arrows */}

@@ -14,7 +14,7 @@ export const Home: React.FC = () => {
       <Hero />
       <FeaturedProducts />
       <VideoShowcase />
-      <HoneyJourney />
+      {/* <HoneyJourney /> */}
       {/* <WhyChooseUs /> */}
       <OurStory />
       <Testimonials />

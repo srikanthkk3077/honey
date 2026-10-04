@@ -1,143 +1,153 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Heart, Mail, Phone, MapPin, Leaf, Star, ArrowRight, Share2, MessageCircle, PlayCircle } from 'lucide-react';
-import { APP_NAME, CONTACT_INFO } from '../../../utils/constants';
-import { WhatsAppIcon } from '../../common/WhatsAppIcon';
+import { X, Phone, Mail, MapPin } from 'lucide-react';
+import { APP_NAME, CONTACT_INFO, SOCIAL_LINKS } from '../../../utils/constants';
 import { getWhatsAppUrl } from '../../../utils/whatsapp';
 
-const FooterLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
-  <li>
-    <Link
-      to={to}
-      style={{ color: '#A8A29E', fontSize: '0.88rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px', transition: 'color 0.18s' }}
-      onMouseOver={e => (e.currentTarget.style.color = '#FCD34D')}
-      onMouseOut={e => (e.currentTarget.style.color = '#A8A29E')}
-    >
-      <ArrowRight size={11} style={{ opacity: 0.5 }} />
-      {children}
-    </Link>
-  </li>
+/* ── tiny X/Twitter SVG since lucide doesn't ship it ── */
+const XIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+  </svg>
 );
 
+/* ── WhatsApp SVG ── */
+const WAIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.301-.15-1.782-.879-2.058-.98-.276-.1-.477-.15-.678.15-.201.3-.778.98-.954 1.18-.176.2-.352.226-.653.075-.301-.15-1.272-.469-2.423-1.496-.895-.798-1.5-1.784-1.676-2.085-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.175.201-.3.301-.501.101-.201.05-.377-.025-.527-.075-.151-.678-1.633-.929-2.234-.244-.585-.493-.506-.678-.515-.176-.008-.377-.01-.578-.01-.201 0-.527.075-.803.376-.276.301-1.054 1.03-1.054 2.511s1.079 2.911 1.23 3.112c.15.2 2.124 3.243 5.146 4.548.719.311 1.28.497 1.718.636.722.23 1.378.197 1.898.12.579-.087 1.782-.728 2.033-1.431.251-.703.251-1.305.176-1.431-.076-.126-.276-.201-.577-.351zm-5.467 7.428h-.005c-1.815 0-3.595-.488-5.152-1.412l-.37-.22-3.83 1.004 1.022-3.733-.241-.384c-1.016-1.617-1.554-3.487-1.554-5.405 0-5.617 4.57-10.187 10.191-10.187 2.722 0 5.281 1.06 7.206 2.986 1.924 1.926 2.983 4.486 2.982 7.21 0 5.619-4.57 10.19-10.189 10.19zm8.675-18.865c-2.318-2.321-5.4-3.598-8.68-3.598-6.764 0-12.267 5.503-12.267 12.269 0 2.163.565 4.27 1.637 6.129l-1.74 6.357 6.505-1.706c1.796.979 3.817 1.496 5.865 1.497h.005c6.764 0 12.268-5.504 12.268-12.27 0-3.279-1.277-6.358-3.593-8.678z" />
+  </svg>
+);
+
+/* ── simple modal for policies ── */
+type PolicyKey = 'privacy' | 'terms' | 'refund' | 'shipping';
+const POLICIES: Record<PolicyKey, { title: string; body: string }> = {
+  privacy: {
+    title: 'Privacy Policy',
+    body: 'We collect only the information needed to process and deliver your order — name, shipping address, phone, and email. Your data is never sold or shared with third-party marketers. All payments are protected by 256-bit SSL encryption. To request data deletion write to ' + CONTACT_INFO.email + '.',
+  },
+  terms: {
+    title: 'Terms of Service',
+    body: 'By purchasing from Madhuvan Honey you acknowledge that raw unheated honey naturally crystallises over time — this is a sign of purity, not spoilage. All prices are in INR inclusive of applicable GST. We reserve the right to update product availability without prior notice.',
+  },
+  refund: {
+    title: 'Refund & Returns',
+    body: 'We guarantee every jar. If your delivery arrives damaged, share a photo via WhatsApp (' + CONTACT_INFO.whatsapp + ') within 48 hours for a free replacement or full refund. Opened jars cannot be physically returned per FSSAI food-safety norms, but quality concerns are always resolved.',
+  },
+  shipping: {
+    title: 'Shipping Policy',
+    body: 'Orders placed before 2 PM IST are dispatched within 24–48 hours. Estimated delivery: Metro — 2–4 days; Rest of India — 4–6 days. Free shipping on orders above ₹999. A live tracking link is sent by SMS & WhatsApp once your parcel is scanned.',
+  },
+};
+
 export const Footer: React.FC = () => {
+  const [policy, setPolicy] = useState<PolicyKey | null>(null);
+  const info = policy ? POLICIES[policy] : null;
+
   return (
-    <footer style={{ backgroundColor: '#0F0B07', color: '#E7E5E4', marginTop: 'auto', position: 'relative', overflow: 'hidden' }}>
+    <>
+      {/* ════════════════════════════════════════
+          FOOTER
+      ════════════════════════════════════════ */}
+      <footer style={{
+        background: '#FBF6EC',
+        borderTop: '1px solid #EDE3CE',
+        fontFamily: 'inherit',
+      }}>
 
-      {/* Decorative honeycomb background */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.035,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V18L28 2l28 16v32L28 66zm0 6l28 16v-8L28 64 0 80v8l28-16z' fill='%23F59E0B'/%3E%3C/svg%3E")`,
-        backgroundSize: '56px 100px',
-      }} />
-
-      {/* Amber top border */}
-      <div style={{ height: '3px', background: 'linear-gradient(90deg, transparent 0%, #F59E0B 30%, #D97706 70%, transparent 100%)' }} />
-
-      {/* Trust Strip */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(245,158,11,0.04)' }}>
-        <div className="container" style={{ padding: '1.5rem 1rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1rem' }}>
-            {[
-              { icon: <ShieldCheck size={20} />, label: '100% Raw & Unheated', sub: 'Zero processing, live enzymes intact', color: '#F59E0B' },
-              { icon: <Heart size={20} />, label: 'Ethical Bee Stewardship', sub: 'Bees keep 50% surplus nectar', color: '#F59E0B' },
-              { icon: <Star size={20} fill="#F59E0B" />, label: 'Direct from Apiaries', sub: 'Fair trade with tribal Mowals', color: '#F59E0B' },
-            ].map(item => (
-              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '40px', height: '40px', borderRadius: '12px', flexShrink: 0,
-                  background: `rgba(${item.color === '#10B981' ? '16,185,129' : '245,158,11'},0.12)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color,
-                }}>
-                  {item.icon}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 700, color: '#FFF', fontSize: '0.88rem', lineHeight: 1.2 }}>{item.label}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#78716C', marginTop: '2px' }}>{item.sub}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Footer Body */}
-      <div className="container" style={{ padding: 'clamp(2.5rem,5vw,4rem) 1rem 2.5rem', position: 'relative', zIndex: 1 }}>
+        {/* ── top golden divider line ── */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(min(100%,260px),1.5fr) repeat(3, minmax(min(100%,140px),1fr))',
-          gap: '3rem', marginBottom: '3rem',
-        }}>
+          height: '3px',
+          background: 'linear-gradient(90deg, transparent, #D97706 30%, #F59E0B 50%, #D97706 70%, transparent)',
+        }} />
 
-          {/* Col 1: Brand */}
+        {/* ── main content ── */}
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '3.5rem 1.5rem 2.5rem',
+          display: 'grid',
+          gridTemplateColumns: '1.6fr 1fr 1fr 1fr',
+          gap: '2.5rem',
+        }}
+          className="footer-main-grid"
+        >
+
+          {/* COL 1 — Brand */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.1rem' }}>
+            {/* Logo wordmark */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
               <div style={{
-                width: '44px', height: '44px', borderRadius: '13px',
+                width: '40px', height: '40px', borderRadius: '10px',
                 background: 'linear-gradient(135deg, #FEF3C7, #F59E0B)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 16px rgba(245,158,11,0.35)',
+                boxShadow: '0 3px 10px rgba(217,119,6,0.3)',
+                flexShrink: 0,
               }}>
-                <img src="/icons/bee.svg" alt="Bee" width="26" height="26" />
+                <img src="/icons/bee.svg" alt="bee" width="22" height="22" />
               </div>
               <div>
-                <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#FFFFFF', letterSpacing: '0.08em', lineHeight: 1 }}>MADHUVAN</div>
-                <div style={{ fontSize: '0.62rem', color: '#D97706', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Raw Forest Honey</div>
+                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#1C1917', letterSpacing: '0.06em' }}>
+                  MADHUVAN
+                </div>
+                <div style={{ fontSize: '0.6rem', color: '#D97706', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+                  Raw Honey
+                </div>
               </div>
             </div>
 
-            <p style={{ fontSize: '0.85rem', color: '#78716C', lineHeight: 1.7, marginBottom: '1.5rem', maxWidth: '280px' }}>
-              Pristine wild nectar from Jim Corbett & Sunderbans Reserves â€” cold-extracted, unpasteurised, direct to your doorstep.
+            <p style={{
+              fontSize: '0.84rem', color: '#78716C', lineHeight: 1.7,
+              marginBottom: '1.4rem', maxWidth: '260px',
+            }}>
+              Pure, unheated nectar harvested by tribal Mowals from the forests of Jim Corbett &amp; Sunderbans.
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.84rem' }}>
-              <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g, '')}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#A8A29E', textDecoration: 'none' }}
-                onMouseOver={e => (e.currentTarget.style.color = '#FCD34D')}
-                onMouseOut={e => (e.currentTarget.style.color = '#A8A29E')}
-              >
-                <Phone size={14} color="#F59E0B" />{CONTACT_INFO.phone}
-              </a>
-              <a href={getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey! I would like to inquire about your raw honey.')}
-                target="_blank" rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#25D366', textDecoration: 'none', fontWeight: 600 }}
-              >
-                <WhatsAppIcon size={14} color="#25D366" />WhatsApp: {CONTACT_INFO.whatsapp}
+            {/* Contact micro-list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '1.4rem' }}>
+              <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g,'')}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}>
+                <Phone size={13} color="#D97706" />
+                {CONTACT_INFO.phone}
               </a>
               <a href={`mailto:${CONTACT_INFO.email}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#A8A29E', textDecoration: 'none' }}
-                onMouseOver={e => (e.currentTarget.style.color = '#FCD34D')}
-                onMouseOut={e => (e.currentTarget.style.color = '#A8A29E')}
-              >
-                <Mail size={14} color="#F59E0B" />{CONTACT_INFO.email}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}>
+                <Mail size={13} color="#D97706" />
+                {CONTACT_INFO.email}
               </a>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#78716C', fontSize: '0.82rem' }}>
-                <MapPin size={14} color="#F59E0B" />Jim Corbett & Sunderbans, India
+                <MapPin size={13} color="#D97706" />
+                Jim Corbett &amp; Sunderbans, India
               </div>
             </div>
 
-            {/* Social Icons */}
-            <div style={{ display: 'flex', gap: '10px', marginTop: '1.5rem' }}>
+            {/* Social row */}
+            <div style={{ display: 'flex', gap: '8px' }}>
               {[
-                { icon: <Share2 size={16} />, href: '#', label: 'Instagram' },
-                { icon: <MessageCircle size={16} />, href: '#', label: 'Facebook' },
-                { icon: <PlayCircle size={16} />, href: '#', label: 'YouTube' },
+                { href: SOCIAL_LINKS.instagram, label: 'Instagram', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg> },
+                { href: getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey!'), label: 'WhatsApp', icon: <WAIcon /> },
+                { href: SOCIAL_LINKS.youtube,   label: 'YouTube',   icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg> },
+                { href: SOCIAL_LINKS.twitter,   label: 'X',         icon: <XIcon /> },
               ].map(s => (
-                <a key={s.label} href={s.href} aria-label={s.label} target="_blank" rel="noopener noreferrer"
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                  aria-label={s.label}
                   style={{
-                    width: '36px', height: '36px', borderRadius: '10px',
-                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                    width: '34px', height: '34px', borderRadius: '8px',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#A8A29E', textDecoration: 'none', transition: 'all 0.2s',
+                    background: '#FFF7E6',
+                    border: '1px solid #EDE3CE',
+                    color: '#A8956A',
+                    textDecoration: 'none',
+                    transition: 'all 0.18s',
                   }}
                   onMouseOver={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(245,158,11,0.18)';
-                    (e.currentTarget as HTMLElement).style.color = '#F59E0B';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,158,11,0.4)';
+                    (e.currentTarget as HTMLElement).style.background = '#F59E0B';
+                    (e.currentTarget as HTMLElement).style.color = '#fff';
+                    (e.currentTarget as HTMLElement).style.borderColor = '#F59E0B';
                   }}
                   onMouseOut={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)';
-                    (e.currentTarget as HTMLElement).style.color = '#A8A29E';
-                    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                    (e.currentTarget as HTMLElement).style.background = '#FFF7E6';
+                    (e.currentTarget as HTMLElement).style.color = '#A8956A';
+                    (e.currentTarget as HTMLElement).style.borderColor = '#EDE3CE';
                   }}
                 >
                   {s.icon}
@@ -146,104 +156,199 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Col 2: Collection */}
-          <div>
-            <h4 style={{ color: '#FFFFFF', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '0.08em', textTransform: 'uppercase', paddingBottom: '0.6rem', borderBottom: '2px solid rgba(245,158,11,0.22)' }}>
-              Honey Collection
-            </h4>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <FooterLink to="/shop?category=wild-forest-honey">Sundarbans Wild Forest</FooterLink>
-              <FooterLink to="/shop?category=single-flora">Kashmir White Acacia</FooterLink>
-              <FooterLink to="/shop?category=single-flora">Organic Jamun Blossom</FooterLink>
-              <FooterLink to="/shop?category=ayurvedic-infused">Vedic Holy Tulsi Infusion</FooterLink>
-              <FooterLink to="/shop?category=honeycomb-gourmet">Virgin Raw Honeycomb</FooterLink>
-              <FooterLink to="/shop?category=honeycomb-gourmet">Mustard Creamed Honey</FooterLink>
-            </ul>
-          </div>
+          {/* COL 2 — Shop */}
+          <NavCol title="Shop">
+            <NavItem to="/shop">All Honeys</NavItem>
+            <NavItem to="/shop?category=wild-forest-honey">Ajwain Honey</NavItem>
+            <NavItem to="/shop?category=single-flora">Tulasi Honey</NavItem>
+            <NavItem to="/shop?category=ayurvedic-infused">Sunflower Honey</NavItem>
+            <NavItem to="/shop?category=honeycomb-gourmet">Multifloral Honey</NavItem>
+          </NavCol>
 
-          {/* Col 3: Know Your Honey */}
-          <div>
-            <h4 style={{ color: '#FFFFFF', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '0.08em', textTransform: 'uppercase', paddingBottom: '0.6rem', borderBottom: '2px solid rgba(245,158,11,0.22)' }}>
-              Know Your Honey
-            </h4>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <FooterLink to="/story">Meet the Tribal Mowals</FooterLink>
-              <FooterLink to="/about">How to Test Raw Honey</FooterLink>
-              <FooterLink to="/about">Ayurvedic Benefits</FooterLink>
-              <FooterLink to="/blog">Healthy Honey Recipes</FooterLink>
-              <FooterLink to="/orders">Track Your Parcel</FooterLink>
-              <FooterLink to="/contact">Bulk & Corporate Gifting</FooterLink>
-            </ul>
-          </div>
+          {/* COL 3 — Company */}
+          <NavCol title="Company">
+            <NavItem to="/about">About Purity</NavItem>
+            <NavItem to="/story">Our Story</NavItem>
+            <NavItem to="/blog">Journal</NavItem>
+            <NavItem to="/videos">Apiary Videos</NavItem>
+            <NavItem to="/contact">Contact Us</NavItem>
+          </NavCol>
 
-          {/* Col 4: Our Promise */}
-          <div>
-            <h4 style={{ color: '#FFFFFF', fontSize: '0.85rem', fontWeight: 800, marginBottom: '1.25rem', letterSpacing: '0.08em', textTransform: 'uppercase', paddingBottom: '0.6rem', borderBottom: '2px solid rgba(245,158,11,0.22)' }}>
-              Our Promise
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {[
-                { e: 'ðŸ§ª', t: 'Batch NMR test reports on request' },
-                { e: 'â„ï¸', t: 'Cold-extracted, never heated' },
-                { e: 'ðŸ', t: 'Bee-friendly harvesting only' },
-                { e: 'ðŸ“¦', t: 'Ships in 48 hrs, glass-packed' },
-                { e: 'ðŸŒ¿', t: 'No preservatives or additives' },
-              ].map(item => (
-                <div key={item.e} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ fontSize: '0.95rem', flexShrink: 0 }}>{item.e}</span>
-                  <span style={{ fontSize: '0.82rem', color: '#78716C', lineHeight: 1.5 }}>{item.t}</span>
-                </div>
+          {/* COL 4 — Support */}
+          <NavCol title="Support">
+            <NavItem to="/track-order">Track Order</NavItem>
+            <NavItem to="/orders">My Orders</NavItem>
+            <PolicyBtn onClick={() => setPolicy('shipping')}>Shipping Info</PolicyBtn>
+            <PolicyBtn onClick={() => setPolicy('refund')}>Refund Policy</PolicyBtn>
+            <PolicyBtn onClick={() => setPolicy('privacy')}>Privacy Policy</PolicyBtn>
+          </NavCol>
+
+        </div>
+
+        {/* ── bottom bar ── */}
+        <div style={{ borderTop: '1px solid #EDE3CE' }}>
+          <div style={{
+            maxWidth: '1200px', margin: '0 auto',
+            padding: '1.1rem 1.5rem',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'space-between', flexWrap: 'wrap',
+            gap: '0.75rem',
+          }}>
+            <span style={{ fontSize: '0.78rem', color: '#A8A29E' }}>
+              © {new Date().getFullYear()} <strong style={{ color: '#78716C' }}>{APP_NAME}</strong>. All rights reserved.
+            </span>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+              {(['privacy', 'terms', 'refund', 'shipping'] as PolicyKey[]).map(k => (
+                <button key={k} type="button"
+                  onClick={() => setPolicy(k)}
+                  style={{
+                    background: 'none', border: 'none', padding: 0,
+                    fontSize: '0.78rem', color: '#A8A29E', cursor: 'pointer',
+                    transition: 'color 0.15s',
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.color = '#D97706')}
+                  onMouseOut={e => (e.currentTarget.style.color = '#A8A29E')}
+                >
+                  {POLICIES[k].title}
+                </button>
               ))}
+              <Link to="/admin/login" style={{
+                fontSize: '0.78rem', color: '#D97706', fontWeight: 700,
+                textDecoration: 'none', padding: '3px 9px',
+                background: 'rgba(217,119,6,0.08)',
+                border: '1px solid rgba(217,119,6,0.22)',
+                borderRadius: '6px', transition: 'background 0.15s',
+              }}>
+                Staff
+              </Link>
             </div>
           </div>
         </div>
+      </footer>
 
-        {/* Bottom Bar */}
-        <div style={{
-          paddingTop: '1.75rem', borderTop: '1px solid rgba(255,255,255,0.07)',
-          display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-          justifyContent: 'space-between', gap: '1rem',
-        }}>
-          <div style={{ fontSize: '0.8rem', color: '#57534E' }}>
-            Â© {new Date().getFullYear()} <strong style={{ color: '#78716C' }}>{APP_NAME} Private Limited</strong>. All rights reserved. Sustainably sourced in India. ðŸ¯
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-            {[
-              { label: 'Privacy Policy', to: '/about' },
-              { label: 'Terms of Service', to: '/about' },
-              { label: 'Refund Policy', to: '/about' },
-            ].map(link => (
-              <Link key={link.label} to={link.to}
-                style={{ color: '#57534E', fontSize: '0.8rem', textDecoration: 'none', transition: 'color 0.18s' }}
-                onMouseOver={e => (e.currentTarget.style.color = '#A8A29E')}
-                onMouseOut={e => (e.currentTarget.style.color = '#57534E')}
+      {/* ── Policy Modal ── */}
+      {info && (
+        <div
+          onClick={() => setPolicy(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(15, 10, 5, 0.55)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1.25rem',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF', borderRadius: '18px',
+              maxWidth: '520px', width: '100%',
+              padding: '2rem', position: 'relative',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+              border: '1px solid #F0E8D8',
+            }}
+          >
+            {/* amber top accent */}
+            <div style={{
+              position: 'absolute', top: 0, left: '2rem', right: '2rem',
+              height: '3px', borderRadius: '0 0 3px 3px',
+              background: 'linear-gradient(90deg, #F59E0B, #D97706)',
+            }} />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1C1917', margin: 0 }}>
+                {info.title}
+              </h3>
+              <button
+                onClick={() => setPolicy(null)}
+                style={{
+                  background: '#F5F5F4', border: 'none', borderRadius: '50%',
+                  width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: '#6B7280',
+                }}
               >
-                {link.label}
-              </Link>
-            ))}
-            <Link to="/admin/login"
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.9rem', color: '#57534E', lineHeight: 1.7, margin: 0 }}>
+              {info.body}
+            </p>
+
+            <button
+              onClick={() => setPolicy(null)}
               style={{
-                color: '#D97706', fontWeight: 700, fontSize: '0.8rem', textDecoration: 'none',
-                background: 'rgba(217,119,6,0.1)', padding: '4px 10px', borderRadius: '6px',
-                border: '1px solid rgba(217,119,6,0.25)', transition: 'all 0.18s',
+                marginTop: '1.5rem', float: 'right',
+                background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                color: '#fff', border: 'none', borderRadius: '10px',
+                padding: '8px 20px', fontWeight: 700, fontSize: '0.875rem',
+                cursor: 'pointer', boxShadow: '0 3px 10px rgba(217,119,6,0.3)',
               }}
-              onMouseOver={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(217,119,6,0.2)'; }}
-              onMouseOut={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(217,119,6,0.1)'; }}
             >
-              Staff Portal
-            </Link>
+              Got It
+            </button>
           </div>
         </div>
-      </div>
+      )}
 
+      {/* responsive grid override */}
       <style>{`
         @media (max-width: 900px) {
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .footer-main-grid { grid-template-columns: 1fr 1fr !important; }
         }
-        @media (max-width: 560px) {
-          .footer-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 540px) {
+          .footer-main-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
-    </footer>
+    </>
   );
 };
+
+/* ── small helper components ── */
+const NavCol: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div>
+    <h4 style={{
+      fontSize: '0.72rem', fontWeight: 800, color: '#B45309',
+      textTransform: 'uppercase', letterSpacing: '0.14em',
+      marginBottom: '1.1rem',
+    }}>
+      {title}
+    </h4>
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+      {children}
+    </ul>
+  </div>
+);
+
+const NavItem: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => (
+  <li>
+    <Link
+      to={to}
+      style={{ fontSize: '0.86rem', color: '#57534E', textDecoration: 'none', transition: 'color 0.15s' }}
+      onMouseOver={e => (e.currentTarget.style.color = '#D97706')}
+      onMouseOut={e => (e.currentTarget.style.color = '#57534E')}
+    >
+      {children}
+    </Link>
+  </li>
+);
+
+const PolicyBtn: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <li>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+        fontSize: '0.86rem', color: '#57534E', textAlign: 'left',
+        font: 'inherit', transition: 'color 0.15s',
+      }}
+      onMouseOver={e => (e.currentTarget.style.color = '#D97706')}
+      onMouseOut={e => (e.currentTarget.style.color = '#57534E')}
+    >
+      {children}
+    </button>
+  </li>
+);

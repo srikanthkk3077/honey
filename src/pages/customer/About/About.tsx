@@ -49,17 +49,6 @@ export const About: React.FC = () => {
               Commercial brands boil honey at 70°C+ to speed bottling, destroying heat-sensitive diastase and invertase enzymes. Madhuvan keeps raw extraction temperatures equal to hive warmth.
             </p>
           </div>
-
-          <div style={{ backgroundColor: '#FFFFFF', padding: '2.25rem', borderRadius: '20px', border: '1px solid #E7E5E4' }}>
-            <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: '#ECFDF5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
-              <Award size={26} />
-            </div>
-            <h3 style={{ fontSize: '1.25rem', color: '#1C1917', marginBottom: '0.5rem' }}>NMR Profile Tested</h3>
-            <p style={{ color: '#57534E', fontSize: '0.92rem', lineHeight: 1.6 }}>
-              Nuclear Magnetic Resonance testing generates a chemical fingerprint identifying any presence of golden syrup, inverted rice syrup, or synthetic cane sucrose.
-            </p>
-          </div>
-
           <div style={{ backgroundColor: '#FFFFFF', padding: '2.25rem', borderRadius: '20px', border: '1px solid #E7E5E4' }}>
             <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem' }}>
               <HeartHandshake size={26} />
