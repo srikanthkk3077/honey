@@ -6,9 +6,10 @@ import { TransactionStatsSummary } from '../../../types/transaction.types';
 interface TransactionStatsProps {
   stats: TransactionStatsSummary;
   onFilterStatus?: (status: string) => void;
+  isLoading?: boolean;
 }
 
-export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFilterStatus }) => {
+export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFilterStatus, isLoading = false }) => {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
       {/* Settled Revenue */}
@@ -31,12 +32,21 @@ export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFil
           <div style={{ fontSize: '0.84rem', color: '#78716C', fontWeight: 600, marginBottom: '0.35rem' }}>
             Settled / Verified Revenue
           </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#065F46', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {formatPrice(stats.totalRevenue)}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>
-            ✓ {stats.settledCount} Payments Verified
-          </div>
+          {isLoading ? (
+            <>
+              <div style={{ width: '120px', height: '28px', borderRadius: '6px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite', marginBottom: '0.4rem' }} />
+              <div style={{ width: '130px', height: '14px', borderRadius: '4px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#065F46', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+                {formatPrice(stats.totalRevenue)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>
+                ✓ {stats.settledCount} Payments Verified
+              </div>
+            </>
+          )}
         </div>
         <div
           style={{
@@ -75,12 +85,21 @@ export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFil
           <div style={{ fontSize: '0.84rem', color: stats.pendingVerificationCount > 0 ? '#92400E' : '#78716C', fontWeight: 700, marginBottom: '0.35rem' }}>
             Awaiting Verification
           </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: stats.pendingVerificationCount > 0 ? '#B45309' : '#1C1917', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {formatPrice(stats.pendingVerificationAmount)}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: stats.pendingVerificationCount > 0 ? '#D97706' : '#78716C', fontWeight: 700 }}>
-            ⏳ {stats.pendingVerificationCount} UPI Transfers Pending
-          </div>
+          {isLoading ? (
+            <>
+              <div style={{ width: '120px', height: '28px', borderRadius: '6px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite', marginBottom: '0.4rem' }} />
+              <div style={{ width: '150px', height: '14px', borderRadius: '4px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: stats.pendingVerificationCount > 0 ? '#B45309' : '#1C1917', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+                {formatPrice(stats.pendingVerificationAmount)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: stats.pendingVerificationCount > 0 ? '#D97706' : '#78716C', fontWeight: 700 }}>
+                ⏳ {stats.pendingVerificationCount} UPI Transfers Pending
+              </div>
+            </>
+          )}
         </div>
         <div
           style={{
@@ -119,12 +138,21 @@ export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFil
           <div style={{ fontSize: '0.84rem', color: '#78716C', fontWeight: 600, marginBottom: '0.35rem' }}>
             COD In-Transit Collections
           </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1E40AF', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {formatPrice(stats.codPendingAmount)}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: '#3B82F6', fontWeight: 600 }}>
-            📦 {stats.codPendingCount} Orders to Collect
-          </div>
+          {isLoading ? (
+            <>
+              <div style={{ width: '120px', height: '28px', borderRadius: '6px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite', marginBottom: '0.4rem' }} />
+              <div style={{ width: '140px', height: '14px', borderRadius: '4px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1E40AF', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+                {formatPrice(stats.codPendingAmount)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#3B82F6', fontWeight: 600 }}>
+                📦 {stats.codPendingCount} Orders to Collect
+              </div>
+            </>
+          )}
         </div>
         <div
           style={{
@@ -163,12 +191,21 @@ export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFil
           <div style={{ fontSize: '0.84rem', color: '#78716C', fontWeight: 600, marginBottom: '0.35rem' }}>
             Rejected / Failed Volume
           </div>
-          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: stats.rejectedCount > 0 ? '#DC2626' : '#78716C', lineHeight: 1.2, marginBottom: '0.4rem' }}>
-            {formatPrice(stats.rejectedAmount)}
-          </div>
-          <div style={{ fontSize: '0.8rem', color: stats.rejectedCount > 0 ? '#EF4444' : '#78716C', fontWeight: 600 }}>
-            ✕ {stats.rejectedCount} Disputed / Rejected
-          </div>
+          {isLoading ? (
+            <>
+              <div style={{ width: '120px', height: '28px', borderRadius: '6px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite', marginBottom: '0.4rem' }} />
+              <div style={{ width: '140px', height: '14px', borderRadius: '4px', background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' }} />
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: stats.rejectedCount > 0 ? '#DC2626' : '#78716C', lineHeight: 1.2, marginBottom: '0.4rem' }}>
+                {formatPrice(stats.rejectedAmount)}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: stats.rejectedCount > 0 ? '#EF4444' : '#78716C', fontWeight: 600 }}>
+                ✕ {stats.rejectedCount} Disputed / Rejected
+              </div>
+            </>
+          )}
         </div>
         <div
           style={{
@@ -186,6 +223,13 @@ export const TransactionStats: React.FC<TransactionStatsProps> = ({ stats, onFil
           <AlertTriangle size={22} />
         </div>
       </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </div>
   );
 };

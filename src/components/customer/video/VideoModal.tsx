@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Check,
   Sparkles,
+  ZoomIn,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
@@ -47,6 +48,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [addedAnimation, setAddedAnimation] = useState(false);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [isImageZoomed, setIsImageZoomed] = useState<boolean>(false);
 
   // Active video index in playlist
   const activeList = useMemo(() => {
@@ -69,6 +72,8 @@ export const VideoModal: React.FC<VideoModalProps> = ({
       setAddedAnimation(false);
       setIsDescExpanded(false);
       setQuantity(1);
+      setSelectedImageIndex(0);
+      setIsImageZoomed(false);
 
       // Reset video element playback
       if (videoRef.current) {
@@ -665,28 +670,138 @@ export const VideoModal: React.FC<VideoModalProps> = ({
               )}
             </div>
 
-            {/* Product Hero: Image + Title + Purity Seal */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.25rem', alignItems: 'center' }}>
-              <div
-                style={{
-                  width: '90px',
-                  height: '90px',
-                  borderRadius: '16px',
-                  backgroundColor: '#FAF7F2',
-                  border: '1.5px solid #F0ECE4',
-                  overflow: 'hidden',
-                  flexShrink: 0,
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
-                }}
-              >
-                <img
-                  src={activeProduct.images[0]}
-                  alt={activeProduct.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+            {/* Product Hero: Highlighted Image + Title + Purity Seal */}
+            <div
+              className="reel-product-hero-card"
+              style={{
+                display: 'flex',
+                gap: '1.15rem',
+                marginBottom: '1.15rem',
+                alignItems: 'center',
+                backgroundColor: '#FFFDF7',
+                padding: '0.85rem',
+                borderRadius: '20px',
+                border: '1.5px solid #FEF3C7',
+                boxShadow: '0 6px 20px rgba(217, 119, 6, 0.07)',
+              }}
+            >
+              {/* Highlighted Product Image Showcase */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <div
+                  className="reel-product-img-box"
+                  onClick={() => setIsImageZoomed(true)}
+                  title="Click to view full image"
+                  style={{
+                    position: 'relative',
+                    borderRadius: '16px',
+                    backgroundColor: '#FFFFFF',
+                    border: '2px solid #F59E0B',
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 24px rgba(245, 158, 11, 0.25), 0 2px 6px rgba(0, 0, 0, 0.04)',
+                    cursor: 'zoom-in',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.03)';
+                    e.currentTarget.style.boxShadow = '0 12px 28px rgba(245, 158, 11, 0.35), 0 4px 10px rgba(0, 0, 0, 0.06)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(245, 158, 11, 0.25), 0 2px 6px rgba(0, 0, 0, 0.04)';
+                  }}
+                >
+                  <img
+                    src={activeProduct.images[selectedImageIndex] || activeProduct.images[0]}
+                    alt={activeProduct.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      padding: '4px',
+                      transition: 'transform 0.3s ease',
+                    }}
+                  />
+
+                  {/* Golden Pure Raw Highlight Pill */}
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '6px',
+                      left: '6px',
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      color: '#92400E',
+                      backgroundColor: 'rgba(254, 243, 199, 0.95)',
+                      padding: '2px 7px',
+                      borderRadius: '6px',
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '3px',
+                      border: '1px solid rgba(245, 158, 11, 0.35)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.06)',
+                    }}
+                  >
+                    <Sparkles size={9} color="#D97706" />
+                    PURE RAW
+                  </span>
+
+                  {/* Subtle Zoom In badge in corner */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '6px',
+                      right: '6px',
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(28, 25, 23, 0.75)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                    }}
+                  >
+                    <ZoomIn size={12} />
+                  </div>
+                </div>
+
+                {/* Multiple Images Selector Thumbnails */}
+                {activeProduct.images && activeProduct.images.length > 1 && (
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                    {activeProduct.images.slice(0, 4).map((img, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImageIndex(idx);
+                        }}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '4px',
+                          border: selectedImageIndex === idx ? '2px solid #D97706' : '1px solid #D6D3D1',
+                          overflow: 'hidden',
+                          padding: 0,
+                          cursor: 'pointer',
+                          backgroundColor: '#FFFFFF',
+                        }}
+                      >
+                        <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div>
+              {/* Title & Origin & Purity Badge beside the highlighted image */}
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
                     display: 'inline-flex',
@@ -695,7 +810,11 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                     fontSize: '0.72rem',
                     color: '#059669',
                     fontWeight: 700,
-                    marginBottom: '2px',
+                    marginBottom: '4px',
+                    backgroundColor: '#ECFDF5',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid #A7F3D0',
                   }}
                 >
                   <ShieldCheck size={13} />
@@ -706,7 +825,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   style={{
                     fontSize: '1.35rem',
                     color: '#1C1917',
-                    margin: '0 0 4px 0',
+                    margin: '0 0 6px 0',
                     fontFamily: "'Playfair Display', Georgia, serif",
                     fontWeight: 700,
                     lineHeight: 1.25,
@@ -715,8 +834,9 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   {activeProduct.name}
                 </h2>
 
-                <div style={{ fontSize: '0.8rem', color: '#78716C' }}>
-                  Origin: <strong>{activeProduct.origin}</strong>
+                <div style={{ fontSize: '0.8rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>Origin:</span>
+                  <strong style={{ color: '#44403C' }}>{activeProduct.origin}</strong>
                 </div>
               </div>
             </div>
@@ -959,8 +1079,121 @@ export const VideoModal: React.FC<VideoModalProps> = ({
         </div>
       </div>
 
+      {/* Product Image Lightbox Zoom Modal */}
+      {isImageZoomed && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            animation: 'modalSlideUp 0.2s ease-out',
+          }}
+          onClick={() => setIsImageZoomed(false)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              maxWidth: '460px',
+              width: '100%',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '24px',
+              padding: '1.5rem',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.45)',
+              border: '2px solid #F59E0B',
+              textAlign: 'center',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsImageZoomed(false)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                backgroundColor: '#F5F5F4',
+                border: 'none',
+                borderRadius: '50%',
+                width: '34px',
+                height: '34px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#E7E5E4')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = '#F5F5F4')}
+              aria-label="Close Image Preview"
+            >
+              <X size={18} color="#44403C" />
+            </button>
+
+            <div
+              style={{
+                width: '100%',
+                height: '320px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#FFFDF7',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                padding: '1rem',
+                border: '1px solid #FEF3C7',
+              }}
+            >
+              <img
+                src={activeProduct.images[selectedImageIndex] || activeProduct.images[0]}
+                alt={activeProduct.name}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))',
+                }}
+              />
+            </div>
+
+            <div style={{ marginTop: '1rem' }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.72rem',
+                  color: '#059669',
+                  fontWeight: 700,
+                  marginBottom: '4px',
+                }}
+              >
+                <ShieldCheck size={13} />
+                <span>100% Raw • {activeProduct.purityScore || 99.8}% NMR Tested</span>
+              </div>
+              <h3 style={{ margin: '2px 0 4px 0', fontSize: '1.2rem', color: '#1C1917', fontWeight: 800 }}>
+                {activeProduct.name}
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.84rem', color: '#78716C' }}>
+                Origin: <strong>{activeProduct.origin}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Scoped CSS for modal styling and responsiveness */}
       <style>{`
+        .reel-product-img-box {
+          width: 125px;
+          height: 125px;
+        }
+
         @keyframes modalSlideUp {
           from {
             opacity: 0;
@@ -992,6 +1225,10 @@ export const VideoModal: React.FC<VideoModalProps> = ({
             max-width: 100% !important;
             flex: 1 1 auto !important;
             padding: 1.25rem !important;
+          }
+          .reel-product-img-box {
+            width: 100px !important;
+            height: 100px !important;
           }
         }
       `}</style>

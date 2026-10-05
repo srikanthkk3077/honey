@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { ProductGrid } from '../../../components/customer/product/ProductGrid';
@@ -18,7 +18,21 @@ export const Shop: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter((prod) => {
-      if (selectedCategory !== 'all' && prod.categorySlug !== selectedCategory) return false;
+      if (selectedCategory !== 'all') {
+        const catSlug = (prod.categorySlug || '').toLowerCase();
+        const selCat = selectedCategory.toLowerCase();
+        const prodName = (prod.name || '').toLowerCase();
+        const catName = (typeof prod.category === 'object' && prod.category !== null ? (prod.category as any).name : prod.category || '').toLowerCase();
+
+        const matchesCategory =
+          catSlug === selCat ||
+          catSlug.includes(selCat) ||
+          selCat.includes(catSlug) ||
+          catName.includes(selCat.replace(/-/g, ' ')) ||
+          prodName.includes(selCat.replace(/-/g, ' '));
+
+        if (!matchesCategory) return false;
+      }
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         if (!prod.name.toLowerCase().includes(query) &&
@@ -168,7 +182,13 @@ export const Shop: React.FC = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {[{ name: `All Honeys`, slug: 'all', count: products.length }, ...categories.map(c => ({
                   name: c.name, slug: c.slug,
-                  count: products.filter(p => p.categorySlug === c.slug).length,
+                  count: products.filter(p => {
+                    const pSlug = (p.categorySlug || '').toLowerCase();
+                    const cSlug = (c.slug || '').toLowerCase();
+                    const pName = (p.name || '').toLowerCase();
+                    const cClean = (c.name || '').toLowerCase().replace(' honey', '').trim();
+                    return pSlug === cSlug || (cClean && pName.includes(cClean));
+                  }).length,
                 }))].map(cat => {
                   const isActive = cat.slug === 'all'
                     ? selectedCategory === 'all' && filterParam !== 'wishlist'

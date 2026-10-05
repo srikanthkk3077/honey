@@ -33,6 +33,10 @@ export const Transactions: React.FC = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'amount_high' | 'amount_low'>('newest');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const loadOrders = async () => {
     setIsLoading(true);
     try {
@@ -190,6 +194,40 @@ export const Transactions: React.FC = () => {
         return 0;
       });
   }, [transactions, statusFilter, methodFilter, dateFilter, search, sortBy]);
+
+  // Pagination calculation
+  const totalFiltered = filteredTransactions.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const validPage = Math.min(currentPage, totalPages);
+  const paginatedTransactions = filteredTransactions.slice(
+    (validPage - 1) * pageSize,
+    validPage * pageSize
+  );
+
+  const handleStatusFilterChange = (st: string) => {
+    setStatusFilter(st);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
+
+  const handleMethodFilterChange = (val: string) => {
+    setMethodFilter(val);
+    setCurrentPage(1);
+  };
+
+  const handleDateFilterChange = (val: string) => {
+    setDateFilter(val);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (val: any) => {
+    setSortBy(val);
+    setCurrentPage(1);
+  };
 
   // Handle Verify & Settle
   const handleVerifyPayment = async (orderId: string) => {
@@ -370,7 +408,11 @@ export const Transactions: React.FC = () => {
       </div>
 
       {/* KPI Stats Cards */}
-      <TransactionStats stats={stats} onFilterStatus={(st) => setStatusFilter(st)} />
+      <TransactionStats
+        stats={stats}
+        onFilterStatus={handleStatusFilterChange}
+        isLoading={isLoading && orders.length === 0}
+      />
 
       {/* Filter Toolbar */}
       <div
@@ -391,7 +433,7 @@ export const Transactions: React.FC = () => {
             <Input
               placeholder="Search by UTR, Txn ID, Order #, Customer, Phone..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               leftIcon={<Search size={16} />}
             />
           </div>
@@ -402,7 +444,7 @@ export const Transactions: React.FC = () => {
               <span style={{ fontSize: '0.82rem', color: '#78716C', fontWeight: 600 }}>Channel:</span>
               <select
                 value={methodFilter}
-                onChange={(e) => setMethodFilter(e.target.value)}
+                onChange={(e) => handleMethodFilterChange(e.target.value)}
                 style={{
                   padding: '7px 12px',
                   borderRadius: '8px',
@@ -428,7 +470,7 @@ export const Transactions: React.FC = () => {
               <span style={{ fontSize: '0.82rem', color: '#78716C', fontWeight: 600 }}>Period:</span>
               <select
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(e) => handleDateFilterChange(e.target.value)}
                 style={{
                   padding: '7px 12px',
                   borderRadius: '8px',
@@ -453,7 +495,7 @@ export const Transactions: React.FC = () => {
               <span style={{ fontSize: '0.82rem', color: '#78716C', fontWeight: 600 }}>Sort:</span>
               <select
                 value={sortBy}
-                onChange={(e: any) => setSortBy(e.target.value)}
+                onChange={(e: any) => handleSortChange(e.target.value)}
                 style={{
                   padding: '7px 12px',
                   borderRadius: '8px',
@@ -479,7 +521,7 @@ export const Transactions: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid #F5F1E9', paddingTop: '0.75rem' }}>
           <button
             type="button"
-            onClick={() => setStatusFilter('all')}
+            onClick={() => handleStatusFilterChange('all')}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',
@@ -496,7 +538,7 @@ export const Transactions: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setStatusFilter('verification_pending')}
+            onClick={() => handleStatusFilterChange('verification_pending')}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',
@@ -528,7 +570,7 @@ export const Transactions: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setStatusFilter('paid')}
+            onClick={() => handleStatusFilterChange('paid')}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',
@@ -545,7 +587,7 @@ export const Transactions: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setStatusFilter('cod')}
+            onClick={() => handleStatusFilterChange('cod')}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',
@@ -562,7 +604,7 @@ export const Transactions: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setStatusFilter('rejected')}
+            onClick={() => handleStatusFilterChange('rejected')}
             style={{
               padding: '6px 14px',
               borderRadius: '8px',
@@ -581,10 +623,23 @@ export const Transactions: React.FC = () => {
 
       {/* Transactions Table */}
       <TransactionTable
-        transactions={filteredTransactions}
+        transactions={paginatedTransactions}
+        isLoading={isLoading && orders.length === 0}
         onViewTransaction={(tx) => setSelectedTx(tx)}
         onQuickVerify={(tx) => handleVerifyPayment(tx.orderId || tx.id)}
         onViewScreenshot={(url) => setScreenshotUrl(url)}
+        pagination={{
+          currentPage: validPage,
+          totalPages,
+          totalItems: totalFiltered,
+          pageSize,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          },
+          pageSizeOptions: [10, 20, 50, 100],
+        }}
       />
 
       {/* Transaction Details Modal */}

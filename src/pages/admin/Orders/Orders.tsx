@@ -16,6 +16,10 @@ export const Orders: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   const loadAdminOrders = async () => {
     setIsLoading(true);
     try {
@@ -57,6 +61,25 @@ export const Orders: React.FC = () => {
     }
     return true;
   });
+
+  // Calculate paginated slice
+  const totalFiltered = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const validPage = Math.min(currentPage, totalPages);
+  const paginatedOrders = filtered.slice(
+    (validPage - 1) * pageSize,
+    validPage * pageSize
+  );
+
+  const handleFilterChange = (newStatus: string) => {
+    setStatusFilter(newStatus);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
 
   const handleUpdateStatus = async (st: OrderStatus) => {
     if (selectedOrder) {
@@ -112,14 +135,14 @@ export const Orders: React.FC = () => {
           <Input
             placeholder="Search order #, customer, or UTR..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             leftIcon={<Search size={16} />}
           />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => setStatusFilter('all')}
+            onClick={() => handleFilterChange('all')}
             style={{
               padding: '6px 12px',
               borderRadius: '8px',
@@ -135,7 +158,7 @@ export const Orders: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setStatusFilter('pending_verification')}
+            onClick={() => handleFilterChange('pending_verification')}
             style={{
               padding: '6px 12px',
               borderRadius: '8px',
@@ -168,7 +191,7 @@ export const Orders: React.FC = () => {
           {['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map((st) => (
             <button
               key={st}
-              onClick={() => setStatusFilter(st)}
+              onClick={() => handleFilterChange(st)}
               style={{
                 padding: '6px 12px',
                 borderRadius: '8px',
@@ -187,7 +210,23 @@ export const Orders: React.FC = () => {
         </div>
       </div>
 
-      <OrderTable orders={filtered} onViewOrder={(o) => setSelectedOrder(o)} isLoading={isLoading} />
+      <OrderTable
+        orders={paginatedOrders}
+        onViewOrder={(o) => setSelectedOrder(o)}
+        isLoading={isLoading}
+        pagination={{
+          currentPage: validPage,
+          totalPages,
+          totalItems: totalFiltered,
+          pageSize,
+          onPageChange: setCurrentPage,
+          onPageSizeChange: (size) => {
+            setPageSize(size);
+            setCurrentPage(1);
+          },
+          pageSizeOptions: [10, 20, 50],
+        }}
+      />
 
       {/* Modal for Order Details */}
       <Modal

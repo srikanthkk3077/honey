@@ -467,7 +467,7 @@ export const SliderModal: React.FC<SliderModalProps> = ({
               rows={2}
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
-              placeholder="Direct from wild Sundarbans mangroves and Himalayan apiaries..."
+              placeholder="Direct from wild Sundarbans mangroves..."
               style={{
                 width: '100%',
                 boxSizing: 'border-box',

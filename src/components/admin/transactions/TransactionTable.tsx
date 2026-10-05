@@ -2,19 +2,66 @@ import React, { useState } from 'react';
 import { Transaction } from '../../../types/transaction.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import { Eye, Copy, Check, CheckCircle2, XCircle, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { Pagination } from '../../common/Pagination';
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onViewTransaction: (transaction: Transaction) => void;
   onQuickVerify?: (transaction: Transaction) => void;
   onViewScreenshot?: (url: string) => void;
+  isLoading?: boolean;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange?: (size: number) => void;
+    pageSizeOptions?: number[];
+  };
 }
+
+// ─── Skeleton shimmer row ─────────────────────────────────────────────────────
+const SkeletonRow: React.FC = () => (
+  <tr style={{ borderBottom: '1px solid #F5F1E9' }}>
+    {[130, 80, 140, 90, 80, 110, 80, 110].map((w, i) => (
+      <td key={i} style={{ padding: '1rem' }}>
+        <div
+          style={{
+            height: '14px',
+            width: `${w}px`,
+            maxWidth: '100%',
+            borderRadius: '6px',
+            background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.4s infinite',
+          }}
+        />
+        {i === 2 && (
+          <div
+            style={{
+              height: '10px',
+              width: '90px',
+              borderRadius: '4px',
+              background: 'linear-gradient(90deg,#F5F1E9 25%,#EDE9E0 50%,#F5F1E9 75%)',
+              backgroundSize: '200% 100%',
+              animation: 'shimmer 1.4s infinite',
+              marginTop: '5px',
+            }}
+          />
+        )}
+      </td>
+    ))}
+  </tr>
+);
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   onViewTransaction,
   onQuickVerify,
   onViewScreenshot,
+  isLoading = false,
+  pagination,
 }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -25,7 +72,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  if (transactions.length === 0) {
+  if (!isLoading && transactions.length === 0) {
     return (
       <div
         style={{
@@ -65,7 +112,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             </tr>
           </thead>
           <tbody>
-            {transactions.map((tx) => {
+            {isLoading && transactions.length === 0 ? (
+              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+            ) : (
+              transactions.map((tx) => {
               const isUpi = tx.paymentMethod === 'upi';
               const isPaid = tx.paymentStatus === 'paid';
               const isPending = tx.paymentStatus === 'verification_pending';
@@ -354,10 +404,32 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   </td>
                 </tr>
               );
-            })}
+            })
+          )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {pagination && pagination.totalItems > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          pageSize={pagination.pageSize}
+          onPageChange={pagination.onPageChange}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions || [10, 20, 50, 100]}
+          itemLabel="transactions"
+        />
+      )}
+
+      <style>{`
+        @keyframes shimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
     </div>
   );
 };

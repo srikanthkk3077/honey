@@ -159,10 +159,10 @@ export const Footer: React.FC = () => {
           {/* COL 2 — Shop */}
           <NavCol title="Shop">
             <NavItem to="/shop">All Honeys</NavItem>
-            <NavItem to="/shop?category=wild-forest-honey">Ajwain Honey</NavItem>
-            <NavItem to="/shop?category=single-flora">Tulasi Honey</NavItem>
-            <NavItem to="/shop?category=ayurvedic-infused">Sunflower Honey</NavItem>
-            <NavItem to="/shop?category=honeycomb-gourmet">Multifloral Honey</NavItem>
+            <NavItem to="/shop?category=ajwain-honey">Ajwain Honey</NavItem>
+            <NavItem to="/shop?category=tulasi-honey">Tulasi Honey</NavItem>
+            <NavItem to="/shop?category=sunflower-honey">Sunflower Honey</NavItem>
+            <NavItem to="/shop?category=multifloral-honey">Multifloral Honey</NavItem>
           </NavCol>
 
           {/* COL 3 — Company */}

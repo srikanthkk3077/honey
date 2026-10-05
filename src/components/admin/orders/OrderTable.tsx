@@ -4,11 +4,21 @@ import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from './OrderStatus';
 import { Eye, PackageSearch, MapPin } from 'lucide-react';
 import { generateGoogleMapsLink } from '../../../utils/delivery';
+import { Pagination } from '../../common/Pagination';
 
 interface OrderTableProps {
   orders: Order[];
   onViewOrder: (order: Order) => void;
   isLoading?: boolean;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange?: (size: number) => void;
+    pageSizeOptions?: number[];
+  };
 }
 
 // ─── Skeleton shimmer row ─────────────────────────────────────────────────────
@@ -31,7 +41,7 @@ const SkeletonRow: React.FC = () => (
   </tr>
 );
 
-export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isLoading = false }) => {
+export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isLoading = false, pagination }) => {
   const COLS = ['Order #', 'Customer', 'Items', 'Total', 'Payment', 'Fulfillment', 'Action'];
 
   return (
@@ -46,8 +56,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
-              // ── Skeleton rows ──────────────────────────────────────────────
+            {isLoading && orders.length === 0 ? (
+              // ── Skeleton rows on initial load ──────────────────────────────
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
             ) : orders.length === 0 ? (
               // ── Empty state ────────────────────────────────────────────────
@@ -146,6 +156,20 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Footer */}
+      {pagination && pagination.totalItems > 0 && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          pageSize={pagination.pageSize}
+          onPageChange={pagination.onPageChange}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions || [10, 20, 50]}
+          itemLabel="orders"
+        />
+      )}
 
       <style>{`
         @keyframes shimmer {
