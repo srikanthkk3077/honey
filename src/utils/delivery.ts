@@ -166,23 +166,107 @@ export const checkPincodeServiceability = (
   };
 };
 
-// ─── Convert Address to Clickable Google Maps URL ────────────────────────────
-export const generateGoogleMapsLink = (address?: Partial<ShippingAddress> | null): string => {
-  if (!address) return '#';
-  if (address.googleMapsLink && address.googleMapsLink.trim().startsWith('http')) {
-    return address.googleMapsLink.trim();
+// ─── Clean Address Text for Accurate Google Maps Search ───────────────────────
+export const cleanAddressForMaps = (address?: Partial<ShippingAddress> | null): string => {
+  if (!address) return '';
+
+  let street = (address.addressLine1 || '').trim();
+  if (street) {
+    // Clean regional spacing and common spelling variants
+    street = street.replace(/\bpenu\s+mantra\b/gi, 'Penumantra');
+    street = street.replace(/\bmandalam\b/gi, 'Mandal');
+    street = street.replace(/\bmandlam\b/gi, 'Mandal');
+    // Normalize repeated whitespace and dangling punctuation
+    street = street.replace(/\s{2,}/g, ' ').replace(/,\s*,+/g, ',').trim();
   }
 
-  const parts = [
-    address.addressLine1,
-    address.addressLine2,
-    address.city,
-    address.state,
-    address.pincode,
-    'India',
-  ].filter((p) => p && typeof p === 'string' && p.trim().length > 0);
+  const street2 = (address.addressLine2 || '').trim();
+  const city = (address.city || '').trim();
+  const state = (address.state || '').trim();
+  const pincode = (address.pincode || '').replace(/\D/g, '').slice(0, 6);
 
-  if (parts.length === 0) return '#';
-  const query = parts.join(', ');
+  const parts: string[] = [];
+  if (street) parts.push(street);
+  if (street2) parts.push(street2);
+
+  // Avoid repeating city or state if already clearly stated in street
+  if (city && !street.toLowerCase().includes(city.toLowerCase())) {
+    parts.push(city);
+  }
+  if (state && !street.toLowerCase().includes(state.toLowerCase())) {
+    parts.push(state);
+  }
+  if (pincode) {
+    parts.push(pincode);
+  }
+  parts.push('India');
+
+  return parts.filter(Boolean).join(', ');
+};
+
+// ─── Convert Address to Clickable Google Maps URL ────────────────────────────
+export const generateGoogleMapsLink = (
+  address?: Partial<ShippingAddress> | null,
+  options?: { forceRefresh?: boolean }
+): string => {
+  if (!address) return '#';
+
+  // 1. Direct GPS coordinates (Doorstep Precision)
+  if (
+    typeof address.latitude === 'number' &&
+    typeof address.longitude === 'number' &&
+    !isNaN(address.latitude) &&
+    !isNaN(address.longitude) &&
+    address.latitude !== 0 &&
+    address.longitude !== 0
+  ) {
+    return `https://www.google.com/maps?q=${address.latitude},${address.longitude}&z=17`;
+  }
+
+  // 2. Custom link pasted by user or coordinate link
+  if (
+    !options?.forceRefresh &&
+    address.googleMapsLink &&
+    typeof address.googleMapsLink === 'string' &&
+    address.googleMapsLink.trim().startsWith('http')
+  ) {
+    const link = address.googleMapsLink.trim();
+    if (
+      address.isCustomMapLink ||
+      link.includes('maps.app.goo.gl') ||
+      link.includes('goo.gl/maps') ||
+      link.includes('maps.google.com')
+    ) {
+      return link;
+    }
+  }
+
+  // 3. Cleaned and formatted geographic query
+  const query = cleanAddressForMaps(address);
+  if (!query) return '#';
+
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+};
+
+// ─── Convert Address to Turn-by-Turn Driving Directions Link ─────────────────
+export const generateGoogleMapsDirectionsLink = (
+  address?: Partial<ShippingAddress> | null
+): string => {
+  if (!address) return '#';
+
+  if (
+    typeof address.latitude === 'number' &&
+    typeof address.longitude === 'number' &&
+    !isNaN(address.latitude) &&
+    !isNaN(address.longitude) &&
+    address.latitude !== 0 &&
+    address.longitude !== 0
+  ) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${address.latitude},${address.longitude}`;
+  }
+
+  const query = cleanAddressForMaps(address);
+  if (!query) return '#';
+
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
 };

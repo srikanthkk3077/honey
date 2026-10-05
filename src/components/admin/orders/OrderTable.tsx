@@ -2,8 +2,8 @@ import React from 'react';
 import { Order } from '../../../types/order.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from './OrderStatus';
-import { Eye, PackageSearch, MapPin } from 'lucide-react';
-import { generateGoogleMapsLink } from '../../../utils/delivery';
+import { Eye, PackageSearch, MapPin, Navigation } from 'lucide-react';
+import { generateGoogleMapsLink, generateGoogleMapsDirectionsLink } from '../../../utils/delivery';
 import { Pagination } from '../../common/Pagination';
 
 interface OrderTableProps {
@@ -86,27 +86,52 @@ export const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onVie
                       <div style={{ fontSize: '0.78rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
                         <span>{order.shippingAddress?.city || 'City not set'}</span>
                         {mapsUrl && mapsUrl !== '#' && (
-                          <a
-                            href={mapsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="Open destination in Google Maps"
-                            onClick={(e) => e.stopPropagation()}
-                            style={{
-                              color: '#2563EB',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '2px',
-                              textDecoration: 'none',
-                              fontSize: '0.72rem',
-                              fontWeight: 600,
-                              backgroundColor: '#EFF6FF',
-                              padding: '1px 5px',
-                              borderRadius: '4px',
-                            }}
-                          >
-                            <MapPin size={10} /> Maps ↗
-                          </a>
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
+                            <a
+                              href={mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Open exact destination pin on Google Maps"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                color: '#2563EB',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '2px',
+                                textDecoration: 'none',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                backgroundColor: '#EFF6FF',
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                border: '1px solid #BFDBFE',
+                              }}
+                            >
+                              <MapPin size={10} /> Maps ↗
+                            </a>
+                            <a
+                              href={generateGoogleMapsDirectionsLink(order.shippingAddress)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Start courier turn-by-turn driving directions"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                color: '#047857',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '2px',
+                                textDecoration: 'none',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                backgroundColor: '#ECFDF5',
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                border: '1px solid #A7F3D0',
+                              }}
+                            >
+                              <Navigation size={9} /> Navigate
+                            </a>
+                          </div>
                         )}
                       </div>
                     </td>

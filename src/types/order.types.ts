@@ -23,6 +23,9 @@ export interface ShippingAddress {
   country: string;
   notes?: string;
   googleMapsLink?: string;
+  latitude?: number;
+  longitude?: number;
+  isCustomMapLink?: boolean;
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';

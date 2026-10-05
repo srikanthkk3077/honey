@@ -64,13 +64,12 @@ export const Checkout: React.FC = () => {
       return;
     }
 
-    // Ensure googleMapsLink is populated
-    if (!address.googleMapsLink) {
-      setAddress((prev) => ({
-        ...prev,
-        googleMapsLink: generateGoogleMapsLink(prev),
-      }));
-    }
+    // Ensure googleMapsLink is fresh and populated
+    const freshMapsLink = generateGoogleMapsLink(address, { forceRefresh: !address.isCustomMapLink });
+    setAddress((prev) => ({
+      ...prev,
+      googleMapsLink: freshMapsLink,
+    }));
 
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });

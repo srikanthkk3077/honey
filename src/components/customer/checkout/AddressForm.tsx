@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { ShippingAddress } from '../../../types/order.types';
 import { Button } from '../../common/Button';
-import { CheckCircle2, AlertCircle, User, Phone, Mail, MapPin, Building, Navigation, ExternalLink, Compass } from 'lucide-react';
+import { CheckCircle2, AlertCircle, User, Phone, Mail, MapPin, Building, Navigation, ExternalLink, Compass, Crosshair, Loader, X } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { checkPincodeServiceability, fetchPincodeDetails, generateGoogleMapsLink, PincodeCheckResult } from '../../../utils/delivery';
 
@@ -115,6 +115,87 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
   const [serviceability, setServiceability] = useState<PincodeCheckResult | null>(null);
   const [isLookingUpPin, setIsLookingUpPin] = useState(false);
   const [showCustomMapUrlInput, setShowCustomMapUrlInput] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+
+  const handleDetectLocation = () => {
+    if (!('geolocation' in navigator)) {
+      alert('Geolocation is not supported by your browser.');
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationMessage(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const freshMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}&z=17`;
+
+        const updates: Partial<ShippingAddress> = {
+          latitude,
+          longitude,
+          googleMapsLink: freshMapsUrl,
+          isCustomMapLink: true,
+        };
+
+        // Try reverse geocoding via OpenStreetMap Nominatim
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data?.address;
+            if (addr) {
+              if (!address.pincode && addr.postcode) {
+                const pin = addr.postcode.replace(/\D/g, '').slice(0, 6);
+                if (pin.length === 6) {
+                  updates.pincode = pin;
+                  handlePincodeChange(pin);
+                }
+              }
+              if (!address.city) {
+                updates.city = addr.district || addr.county || addr.city || addr.town || addr.village || '';
+              }
+              if (!address.state && addr.state) {
+                updates.state = addr.state;
+              }
+            }
+          }
+        } catch {
+          // reverse geocoding fallback
+        }
+
+        onChange(updates);
+        setLocationMessage(`Exact doorstep pin locked (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
+        setIsLocating(false);
+      },
+      (err) => {
+        setIsLocating(false);
+        let msg = 'Could not access GPS location.';
+        if (err.code === 1) msg = 'Location permission denied. Please allow location access in your browser.';
+        else if (err.code === 2) msg = 'Location unavailable. Please check your GPS/network.';
+        else if (err.code === 3) msg = 'Location request timed out.';
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+    );
+  };
+
+  const handleClearGps = () => {
+    const freshLink = generateGoogleMapsLink(
+      { ...address, latitude: undefined, longitude: undefined, isCustomMapLink: false },
+      { forceRefresh: true }
+    );
+    onChange({
+      latitude: undefined,
+      longitude: undefined,
+      isCustomMapLink: false,
+      googleMapsLink: freshLink,
+    });
+    setLocationMessage(null);
+  };
 
   // Initialize with stored pincode from product page if address pincode is empty
   useEffect(() => {
@@ -188,9 +269,9 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
       return;
     }
 
-    // Auto-generate Google Maps link if not provided
-    const googleMapsLink = address.googleMapsLink?.trim() || generateGoogleMapsLink(address);
-    onChange({ googleMapsLink });
+    // Auto-generate Google Maps link dynamically if not custom-locked
+    const finalMapsLink = generateGoogleMapsLink(address, { forceRefresh: !address.isCustomMapLink });
+    onChange({ googleMapsLink: finalMapsLink });
 
     onSubmit(e);
   };
@@ -200,8 +281,9 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
   const ok = (f: FK) => show(f) && !errors[f] && !!((address as any)[f] as string)?.trim();
 
   const prog = FIELDS.filter((f) => !validators[f]((address as any)[f] ?? '')).length;
-  const currentMapsUrl = address.googleMapsLink?.trim() || generateGoogleMapsLink(address);
-  const isAddressReadyForMap = !!(address.addressLine1 && (address.city || address.pincode));
+  const currentMapsUrl = generateGoogleMapsLink(address, { forceRefresh: !address.isCustomMapLink });
+  const hasGps = typeof address.latitude === 'number' && typeof address.longitude === 'number';
+  const isAddressReadyForMap = hasGps || !!(address.addressLine1 && (address.city || address.pincode));
 
   return (
     <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
@@ -369,52 +451,122 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
         </div>
       )}
 
-      {/* Google Maps Conversion & Navigation Preview */}
+      {/* Google Maps Conversion, GPS Doorstep Pin & Navigation Preview */}
       <div
         style={{
-          padding: '12px 16px',
+          padding: '14px 16px',
           borderRadius: '12px',
           backgroundColor: '#F8FAFC',
           border: '1.5px solid #E2E8F0',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px',
+          gap: '10px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#334155', fontWeight: 600 }}>
-            <Compass size={16} color="#2563EB" />
-            <span>Google Maps Courier Link:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', color: '#1E293B', fontWeight: 700 }}>
+            <Compass size={17} color="#2563EB" />
+            <span>Doorstep Courier Navigation (Google Maps):</span>
           </div>
 
-          {isAddressReadyForMap && (
-            <a
-              href={currentMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* GPS Detection Button */}
+            <button
+              type="button"
+              onClick={handleDetectLocation}
+              disabled={isLocating}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '4px',
-                fontSize: '0.8rem',
+                gap: '5px',
+                fontSize: '0.78rem',
                 fontWeight: 700,
-                color: '#2563EB',
-                textDecoration: 'none',
-                background: '#EFF6FF',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                border: '1px solid #BFDBFE',
+                color: '#047857',
+                backgroundColor: '#ECFDF5',
+                border: '1px solid #A7F3D0',
+                padding: '5px 11px',
+                borderRadius: '8px',
+                cursor: isLocating ? 'wait' : 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
-              <MapPin size={13} />
-              Open Pin in Google Maps <ExternalLink size={12} />
-            </a>
-          )}
+              {isLocating ? <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} /> : <Crosshair size={13} />}
+              {isLocating ? 'Detecting GPS...' : hasGps ? 'Update GPS Pin' : '📍 Auto-Detect GPS Pin'}
+            </button>
+
+            {isAddressReadyForMap && (
+              <a
+                href={currentMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  color: '#2563EB',
+                  textDecoration: 'none',
+                  background: '#EFF6FF',
+                  padding: '5px 11px',
+                  borderRadius: '8px',
+                  border: '1px solid #BFDBFE',
+                }}
+              >
+                <MapPin size={13} />
+                Open Pin in Google Maps <ExternalLink size={12} />
+              </a>
+            )}
+          </div>
         </div>
 
+        {/* GPS Active Badge */}
+        {hasGps && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              backgroundColor: '#F0FDF4',
+              border: '1px solid #BBF7D0',
+              borderRadius: '8px',
+              padding: '6px 10px',
+              fontSize: '0.76rem',
+              color: '#166534',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <CheckCircle2 size={13} color="#16A34A" />
+              <span>
+                <strong>Exact GPS Pin Locked:</strong> {address.latitude?.toFixed(4)}, {address.longitude?.toFixed(4)}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearGps}
+              title="Remove GPS Pin and revert to text address"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#65A30D',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '2px',
+                fontSize: '0.72rem',
+                textDecoration: 'underline',
+              }}
+            >
+              <X size={12} /> Clear GPS
+            </button>
+          </div>
+        )}
+
         <div style={{ fontSize: '0.76rem', color: '#64748B', lineHeight: 1.4 }}>
-          {isAddressReadyForMap
-            ? '✓ Madhuvan auto-converts your street address into a high-precision Google Maps link so delivery dispatch drivers can navigate directly to your door.'
+          {hasGps
+            ? '✓ Your exact doorstep GPS coordinates will be attached to this order for turn-by-turn delivery navigation.'
+            : isAddressReadyForMap
+            ? '✓ Cleaned and converted automatically for Google Maps. Click "Open Pin in Google Maps" to preview the destination.'
             : 'Enter your street address and PIN code above to generate an instant Google Maps navigation link.'}
         </div>
 
@@ -442,7 +594,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
                 type="url"
                 value={address.googleMapsLink || ''}
                 placeholder="e.g. https://maps.app.goo.gl/... or custom landmark link"
-                onChange={(e) => onChange({ googleMapsLink: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onChange({
+                    googleMapsLink: val,
+                    isCustomMapLink: !!val.trim(),
+                  });
+                }}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
