@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Transaction } from '../../../types/transaction.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import {
@@ -17,6 +17,7 @@ import {
   Package,
 } from 'lucide-react';
 import { Button } from '../../common/Button';
+import orderApi from '../../../services/orderApi';
 
 interface TransactionDetailsModalProps {
   transaction: Transaction;
@@ -25,6 +26,14 @@ interface TransactionDetailsModalProps {
   onClose: () => void;
   onViewScreenshot: (url: string) => void;
 }
+
+const formatDate = (dateStr?: string | Date) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+};
 
 export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({
   transaction,
@@ -37,8 +46,25 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState('Payment could not be matched in bank records');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [screenshot, setScreenshot] = useState<string | undefined>(transaction.paymentScreenshot);
+
+  useEffect(() => {
+    setScreenshot(transaction.paymentScreenshot);
+    const targetId = transaction.orderId || transaction.id;
+    if (!transaction.paymentScreenshot && targetId) {
+      orderApi
+        .getById(targetId)
+        .then((full) => {
+          if (full?.paymentScreenshot) {
+            setScreenshot(full.paymentScreenshot);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [transaction.paymentScreenshot, transaction.orderId, transaction.id]);
 
   const handleCopy = (text: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedUtr(true);
     setTimeout(() => setCopiedUtr(false), 2000);
@@ -93,7 +119,7 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
           </h3>
           <div style={{ fontSize: '0.82rem', color: '#78716C', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Calendar size={14} />
-            Recorded on {new Date(transaction.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+            Recorded on {formatDate(transaction.createdAt)}
           </div>
         </div>
 
@@ -206,7 +232,7 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
             </div>
 
             {/* Receipt Proof Screenshot */}
-            {transaction.paymentScreenshot ? (
+            {screenshot ? (
               <div
                 style={{
                   display: 'flex',
@@ -222,10 +248,10 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <img
-                    src={transaction.paymentScreenshot}
+                    src={screenshot}
                     alt="Payment Slip"
                     style={{ width: '54px', height: '54px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #E7E5E4', cursor: 'pointer' }}
-                    onClick={() => onViewScreenshot(transaction.paymentScreenshot!)}
+                    onClick={() => onViewScreenshot(screenshot)}
                   />
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1C1917' }}>Payment Slip Screenshot Attached</div>
@@ -234,7 +260,7 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
                 </div>
                 <button
                   type="button"
-                  onClick={() => onViewScreenshot(transaction.paymentScreenshot!)}
+                  onClick={() => onViewScreenshot(screenshot)}
                   style={{
                     backgroundColor: '#F5F5F4',
                     border: '1px solid #D6D3D1',
@@ -259,7 +285,7 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
 
             {transaction.paymentVerifiedAt && (
               <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>
-                ✓ Admin Verified on: {new Date(transaction.paymentVerifiedAt).toLocaleString('en-IN')}
+                ✓ Admin Verified on: {formatDate(transaction.paymentVerifiedAt)}
               </div>
             )}
             {transaction.paymentRejectedReason && (
@@ -391,9 +417,9 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
               </button>
               <button
                 type="button"
-                disabled={isProcessing}
+                disabled={isProcessing || !rejectReason.trim()}
                 onClick={handleRejectClick}
-                style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#DC2626', color: '#FFFFFF', fontWeight: 700, cursor: 'pointer', fontSize: '0.85rem' }}
+                style={{ padding: '6px 14px', borderRadius: '8px', border: 'none', background: '#DC2626', color: '#FFFFFF', fontWeight: 700, cursor: isProcessing || !rejectReason.trim() ? 'not-allowed' : 'pointer', fontSize: '0.85rem', opacity: isProcessing || !rejectReason.trim() ? 0.6 : 1 }}
               >
                 {isProcessing ? 'Rejecting...' : 'Confirm Reject'}
               </button>

@@ -338,15 +338,21 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [user?.id]);
 
   // ─── Toast ──────────────────────────────────────────────────────────────────
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
-    const id = Date.now().toString() + Math.random().toString(36).substr(2, 4);
-    setToasts((prev) => [...prev, { id, type, message }]);
-    setTimeout(() => removeToast(id), 4000);
-  };
-
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = Date.now().toString() + Math.random().toString(36).slice(2, 6);
+    setToasts((prev) => {
+      // Prevent identical duplicate toast spam
+      if (prev.some((t) => t.message === message)) return prev;
+      return [...prev.slice(-2), { id, type, message }];
+    });
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  }, []);
 
   // ─── Products & Media ───────────────────────────────────────────────────────────────
   const loadProducts = useCallback(async () => {
@@ -729,8 +735,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const getOrderById = (orderId: string) =>
-    orders.find((o) => o.id === orderId || o.orderNumber === orderId);
+  const getOrderById = useCallback(
+    (orderId: string) => orders.find((o) => o.id === orderId || o.orderNumber === orderId),
+    [orders]
+  );
 
   // ─── Wishlist ─────────────────────────────────────────────────────────────────
   const toggleWishlist = async (productId: string) => {

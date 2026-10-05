@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useStore } from '../../../store/store';
 import orderApi from '../../../services/orderApi';
 import { Order } from '../../../types/order.types';
@@ -37,22 +37,46 @@ export const Transactions: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const loadOrders = async () => {
-    setIsLoading(true);
+  const loadOrders = useCallback(async (isManual = false) => {
+    if (isManual) setIsLoading(true);
     try {
-      const result = await orderApi.getAll({ limit: 300 });
+      const result = await orderApi.getAll({ limit: 50 });
       setOrders(result.orders);
     } catch {
-      showToast('Could not refresh transaction records from server', 'error');
+      if (isManual) {
+        showToast('Could not refresh transaction records from server', 'error');
+      }
     } finally {
-      setIsLoading(false);
+      if (isManual) setIsLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    loadOrders();
-    const interval = setInterval(loadOrders, 30000);
-    return () => clearInterval(interval);
+    let isMounted = true;
+    setIsLoading(true);
+
+    orderApi.getAll({ limit: 50 })
+      .then((res) => {
+        if (isMounted) setOrders(res.orders);
+      })
+      .catch(() => {
+        if (isMounted) {
+          showToast('Could not refresh transaction records from server', 'error');
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    // Auto-refresh every 30 seconds silently in the background
+    const interval = setInterval(() => {
+      loadOrders(false);
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -199,65 +223,71 @@ export const Transactions: React.FC = () => {
   const totalFiltered = filteredTransactions.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const validPage = Math.min(currentPage, totalPages);
-  const paginatedTransactions = filteredTransactions.slice(
-    (validPage - 1) * pageSize,
-    validPage * pageSize
-  );
 
-  const handleStatusFilterChange = (st: string) => {
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedTransactions = useMemo(() => {
+    return filteredTransactions.slice(
+      (validPage - 1) * pageSize,
+      validPage * pageSize
+    );
+  }, [filteredTransactions, validPage, pageSize]);
+
+  const handleStatusFilterChange = useCallback((st: string) => {
     setStatusFilter(st);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchChange = (val: string) => {
+  const handleSearchChange = useCallback((val: string) => {
     setSearch(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleMethodFilterChange = (val: string) => {
+  const handleMethodFilterChange = useCallback((val: string) => {
     setMethodFilter(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleDateFilterChange = (val: string) => {
+  const handleDateFilterChange = useCallback((val: string) => {
     setDateFilter(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortChange = (val: any) => {
+  const handleSortChange = useCallback((val: any) => {
     setSortBy(val);
     setCurrentPage(1);
-  };
+  }, []);
 
   // Handle Verify & Settle
-  const handleVerifyPayment = async (orderId: string) => {
+  const handleVerifyPayment = useCallback(async (orderId: string) => {
     try {
       await verifyPayment(orderId);
-      showToast('Payment verified and settled successfully', 'success');
+      const verifiedAt = new Date().toISOString();
       setOrders((prev) =>
         prev.map((o) =>
           o.id === orderId
-            ? { ...o, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() }
+            ? { ...o, paymentStatus: 'paid', paymentVerifiedAt: verifiedAt }
             : o
         )
       );
-      if (selectedTx && selectedTx.orderId === orderId) {
-        setSelectedTx({
-          ...selectedTx,
-          paymentStatus: 'paid',
-          paymentVerifiedAt: new Date().toISOString(),
-        });
-      }
+      setSelectedTx((prev) =>
+        prev && (prev.orderId === orderId || prev.id === orderId)
+          ? { ...prev, paymentStatus: 'paid', paymentVerifiedAt: verifiedAt }
+          : prev
+      );
     } catch {
       showToast('Failed to verify payment. Please try again.', 'error');
     }
-  };
+  }, [verifyPayment, showToast]);
 
   // Handle Reject Payment
-  const handleRejectPayment = async (orderId: string, reason: string) => {
+  const handleRejectPayment = useCallback(async (orderId: string, reason: string) => {
     try {
       await rejectPayment(orderId, reason);
-      showToast('Payment marked as rejected', 'info');
       setOrders((prev) =>
         prev.map((o) =>
           o.id === orderId
@@ -265,20 +295,18 @@ export const Transactions: React.FC = () => {
             : o
         )
       );
-      if (selectedTx && selectedTx.orderId === orderId) {
-        setSelectedTx({
-          ...selectedTx,
-          paymentStatus: 'rejected',
-          paymentRejectedReason: reason,
-        });
-      }
+      setSelectedTx((prev) =>
+        prev && (prev.orderId === orderId || prev.id === orderId)
+          ? { ...prev, paymentStatus: 'rejected', paymentRejectedReason: reason }
+          : prev
+      );
     } catch {
       showToast('Failed to reject payment.', 'error');
     }
-  };
+  }, [rejectPayment, showToast]);
 
   // CSV Export
-  const handleExportCSV = () => {
+  const handleExportCSV = useCallback(() => {
     if (filteredTransactions.length === 0) {
       showToast('No transactions to export', 'info');
       return;
@@ -305,17 +333,17 @@ export const Transactions: React.FC = () => {
       `"${tx.transactionId}"`,
       `"${tx.orderNumber}"`,
       `"${new Date(tx.createdAt).toISOString()}"`,
-      `"${tx.customerName.replace(/"/g, '""')}"`,
-      `"${tx.customerEmail}"`,
-      `"${tx.customerPhone}"`,
+      `"${(tx.customerName || '').replace(/"/g, '""')}"`,
+      `"${tx.customerEmail || ''}"`,
+      `"${tx.customerPhone || ''}"`,
       `"${tx.paymentMethod.toUpperCase()}"`,
       tx.amount,
       `"${tx.paymentStatus.toUpperCase()}"`,
       `"${tx.utrNumber || ''}"`,
       `"${tx.paymentVerifiedAt || ''}"`,
       `"${(tx.paymentRejectedReason || '').replace(/"/g, '""')}"`,
-      `"${tx.shippingCity}"`,
-      `"${tx.shippingState}"`,
+      `"${tx.shippingCity || ''}"`,
+      `"${tx.shippingState || ''}"`,
     ]);
 
     const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -328,7 +356,7 @@ export const Transactions: React.FC = () => {
     link.click();
     document.body.removeChild(link);
     showToast('Transaction ledger downloaded successfully', 'success');
-  };
+  }, [filteredTransactions, showToast]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -384,7 +412,7 @@ export const Transactions: React.FC = () => {
 
           <button
             type="button"
-            onClick={loadOrders}
+            onClick={() => loadOrders(true)}
             disabled={isLoading}
             style={{
               display: 'inline-flex',

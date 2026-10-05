@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, OrderStatus } from '../../../types/order.types';
 import { formatPrice } from '../../../utils/formatPrice';
 import { OrderStatusBadge } from './OrderStatus';
@@ -6,6 +6,7 @@ import { MapPin, Phone, Mail, Calendar, CheckCircle2, XCircle, Copy, Check, Exte
 import { useStore } from '../../../store/store';
 import { Button } from '../../common/Button';
 import { generateGoogleMapsLink } from '../../../utils/delivery';
+import orderApi from '../../../services/orderApi';
 
 interface OrderDetailsProps {
   order: Order;
@@ -20,8 +21,20 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState('Payment not found in bank statement');
   const [showScreenshotModal, setShowScreenshotModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    if (!order.paymentScreenshot && order.id) {
+      orderApi.getById(order.id).then((full) => {
+        if (full?.paymentScreenshot) {
+          onOrderUpdated?.(full);
+        }
+      }).catch(() => {});
+    }
+  }, [order.id, order.paymentScreenshot, onOrderUpdated]);
 
   const handleCopyUtr = (utr: string) => {
+    if (!utr) return;
     navigator.clipboard.writeText(utr);
     setCopiedUtr(true);
     showToast('UTR copied to clipboard', 'info');
@@ -29,6 +42,7 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
   };
 
   const handleCopyMapsLink = (url: string) => {
+    if (!url || url === '#') return;
     navigator.clipboard.writeText(url);
     setCopiedMaps(true);
     showToast('Google Maps navigation link copied!', 'info');
@@ -36,17 +50,32 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
   };
 
   const handleVerify = async () => {
-    await verifyPayment(order.id);
-    // Build updated order locally and notify parent
-    const updated: Order = { ...order, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() };
-    onOrderUpdated?.(updated);
+    setIsProcessing(true);
+    try {
+      await verifyPayment(order.id);
+      // Build updated order locally and notify parent
+      const updated: Order = { ...order, paymentStatus: 'paid', paymentVerifiedAt: new Date().toISOString() };
+      onOrderUpdated?.(updated);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleConfirmReject = async () => {
-    await rejectPayment(order.id, rejectReason.trim());
-    setShowRejectInput(false);
-    const updated: Order = { ...order, paymentStatus: 'rejected', paymentRejectedReason: rejectReason.trim() };
-    onOrderUpdated?.(updated);
+    const trimmed = rejectReason.trim();
+    if (!trimmed) {
+      showToast('Please provide a reason for rejecting the payment.', 'error');
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await rejectPayment(order.id, trimmed);
+      setShowRejectInput(false);
+      const updated: Order = { ...order, paymentStatus: 'rejected', paymentRejectedReason: trimmed };
+      onOrderUpdated?.(updated);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -193,10 +222,11 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
               <Button
                 size="sm"
                 onClick={handleVerify}
+                disabled={isProcessing}
                 leftIcon={<CheckCircle2 size={16} />}
                 style={{ backgroundColor: '#059669', borderColor: '#059669' }}
               >
-                Verify & Confirm Payment
+                {isProcessing ? 'Verifying...' : 'Verify & Confirm Payment'}
               </Button>
 
               {!showRejectInput ? (
@@ -241,8 +271,8 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="danger" onClick={handleConfirmReject}>
-                    Confirm Rejection
+                  <Button size="sm" variant="danger" disabled={isProcessing || !rejectReason.trim()} onClick={handleConfirmReject}>
+                    {isProcessing ? 'Rejecting...' : 'Confirm Rejection'}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setShowRejectInput(false)}>
                     Cancel
@@ -259,10 +289,11 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
             <span style={{ fontSize: '0.82rem', color: '#78716C' }}>Payment to be collected on doorstep.</span>
             <Button
               size="sm"
+              disabled={isProcessing}
               onClick={handleVerify}
               leftIcon={<CheckCircle2 size={14} />}
             >
-              Mark COD Collected ({formatPrice(order.total)})
+              {isProcessing ? 'Updating...' : `Mark COD Collected (${formatPrice(order.total)})`}
             </Button>
           </div>
         )}
@@ -280,6 +311,7 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
             </div>
             <button
               type="button"
+              disabled={isProcessing}
               onClick={handleVerify}
               style={{
                 background: '#ECFDF5',
@@ -289,10 +321,10 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
                 borderRadius: '6px',
                 fontSize: '0.78rem',
                 fontWeight: 700,
-                cursor: 'pointer',
+                cursor: isProcessing ? 'not-allowed' : 'pointer',
               }}
             >
-              Re-verify as Paid
+              {isProcessing ? 'Updating...' : 'Re-verify as Paid'}
             </button>
           </div>
         )}
@@ -332,9 +364,9 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
         <div>
           <h4 style={{ fontSize: '0.95rem', color: '#1C1917', marginBottom: '0.5rem' }}>Customer Details</h4>
           <div style={{ fontSize: '0.88rem', color: '#44403C', lineHeight: 1.6 }}>
-            <div style={{ fontWeight: 700 }}>{order.customerName}</div>
-            <div className="flex items-center gap-2" style={{ color: '#78716C' }}><Mail size={14} /> {order.customerEmail}</div>
-            <div className="flex items-center gap-2" style={{ color: '#78716C' }}><Phone size={14} /> {order.customerPhone}</div>
+            <div style={{ fontWeight: 700 }}>{order.customerName || 'Customer'}</div>
+            <div className="flex items-center gap-2" style={{ color: '#78716C' }}><Mail size={14} /> {order.customerEmail || '—'}</div>
+            <div className="flex items-center gap-2" style={{ color: '#78716C' }}><Phone size={14} /> {order.customerPhone || '—'}</div>
           </div>
         </div>
 
@@ -344,57 +376,66 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
             <div className="flex items-start gap-2">
               <MapPin size={16} color="#D97706" style={{ marginTop: '3px', flexShrink: 0 }} />
               <div>
-                {order.shippingAddress.addressLine1}
-                {order.shippingAddress.addressLine2 && `, ${order.shippingAddress.addressLine2}`}
-                <br />
-                {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
+                {order.shippingAddress ? (
+                  <>
+                    <div>{order.shippingAddress.addressLine1}</div>
+                    {order.shippingAddress.addressLine2 && <div>{order.shippingAddress.addressLine2}</div>}
+                    <div>
+                      {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ color: '#78716C', fontStyle: 'italic' }}>No shipping address provided</div>
+                )}
               </div>
             </div>
 
             {/* Google Maps Actions for Admin & Drivers */}
-            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <a
-                href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  backgroundColor: '#EFF6FF',
-                  color: '#1D4ED8',
-                  border: '1px solid #BFDBFE',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  textDecoration: 'none',
-                }}
-              >
-                🗺️ Open in Google Maps <ExternalLink size={12} />
-              </a>
+            {order.shippingAddress && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <a
+                  href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: '#EFF6FF',
+                    color: '#1D4ED8',
+                    border: '1px solid #BFDBFE',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                  }}
+                >
+                  🗺️ Open in Google Maps <ExternalLink size={12} />
+                </a>
 
-              <button
-                type="button"
-                onClick={() => handleCopyMapsLink(order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress))}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  backgroundColor: copiedMaps ? '#ECFDF5' : '#F5F5F4',
-                  color: copiedMaps ? '#065F46' : '#57534E',
-                  border: '1px solid #D6D3D1',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                {copiedMaps ? <Check size={12} /> : <Copy size={12} />}
-                {copiedMaps ? 'Link Copied' : 'Copy Maps Link'}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyMapsLink(order.shippingAddress?.googleMapsLink || generateGoogleMapsLink(order.shippingAddress))}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    backgroundColor: copiedMaps ? '#ECFDF5' : '#F5F5F4',
+                    color: copiedMaps ? '#065F46' : '#57534E',
+                    border: '1px solid #D6D3D1',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {copiedMaps ? <Check size={12} /> : <Copy size={12} />}
+                  {copiedMaps ? 'Link Copied' : 'Copy Maps Link'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -403,7 +444,7 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
       <div>
         <h4 style={{ fontSize: '0.95rem', color: '#1C1917', marginBottom: '0.75rem' }}>Ordered Honeys</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid #E7E5E4', borderRadius: '12px', padding: '1rem' }}>
-          {order.items.map((item, idx) => (
+          {(order.items || []).map((item, idx) => (
             <div key={idx} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img

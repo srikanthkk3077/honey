@@ -167,7 +167,8 @@ export const checkPincodeServiceability = (
 };
 
 // ─── Convert Address to Clickable Google Maps URL ────────────────────────────
-export const generateGoogleMapsLink = (address: Partial<ShippingAddress>): string => {
+export const generateGoogleMapsLink = (address?: Partial<ShippingAddress> | null): string => {
+  if (!address) return '#';
   if (address.googleMapsLink && address.googleMapsLink.trim().startsWith('http')) {
     return address.googleMapsLink.trim();
   }
@@ -179,8 +180,9 @@ export const generateGoogleMapsLink = (address: Partial<ShippingAddress>): strin
     address.state,
     address.pincode,
     'India',
-  ].filter((p) => p && p.trim().length > 0);
+  ].filter((p) => p && typeof p === 'string' && p.trim().length > 0);
 
+  if (parts.length === 0) return '#';
   const query = parts.join(', ');
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 };

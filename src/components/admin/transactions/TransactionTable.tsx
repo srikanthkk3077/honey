@@ -55,7 +55,21 @@ const SkeletonRow: React.FC = () => (
   </tr>
 );
 
-export const TransactionTable: React.FC<TransactionTableProps> = ({
+const formatDate = (dateStr?: string | Date) => {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return isNaN(d.getTime())
+    ? '—'
+    : d.toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+};
+
+export const TransactionTable: React.FC<TransactionTableProps> = React.memo(({
   transactions,
   onViewTransaction,
   onQuickVerify,
@@ -67,6 +81,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
   const handleCopy = (e: React.MouseEvent, text: string, id: string) => {
     e.stopPropagation();
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -163,13 +178,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       </button>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: '#78716C', marginTop: '2px' }}>
-                      {new Date(tx.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDate(tx.createdAt)}
                     </div>
                   </td>
 
@@ -177,15 +186,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   <td style={{ padding: '1rem' }}>
                     <div style={{ fontWeight: 700, color: '#D97706' }}>{tx.orderNumber}</div>
                     <div style={{ fontSize: '0.75rem', color: '#78716C' }}>
-                      {tx.itemsCount} jar{tx.itemsCount > 1 ? 's' : ''}
+                      {tx.itemsCount} {tx.itemsCount === 1 ? 'jar' : 'jars'}
                     </div>
                   </td>
 
                   {/* Customer */}
                   <td style={{ padding: '1rem' }}>
-                    <div style={{ fontWeight: 600, color: '#1C1917' }}>{tx.customerName}</div>
+                    <div style={{ fontWeight: 600, color: '#1C1917' }}>{tx.customerName || 'Customer'}</div>
                     <div style={{ fontSize: '0.76rem', color: '#78716C' }}>
-                      {tx.customerPhone || tx.customerEmail}
+                      {tx.customerPhone || tx.customerEmail || '—'}
                     </div>
                   </td>
 
@@ -432,4 +441,4 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       `}</style>
     </div>
   );
-};
+});

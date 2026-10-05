@@ -29,7 +29,7 @@ export const removeToken = (): void => localStorage.removeItem(TOKEN_KEY);
 // ─── Axios instance ───────────────────────────────────────────────────────────
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -51,9 +51,18 @@ api.interceptors.response.use(
   (error: AxiosError<{ message?: string; error?: string }>) => {
     const status = error.response?.status;
     if (status === 401) {
-      // Clear stale credentials without a hard redirect so UI can handle it
+      // Clear stale credentials
       removeToken();
       localStorage.removeItem('madhuvan_auth_user');
+
+      // If session expired while on admin console, smoothly route to login
+      if (
+        typeof window !== 'undefined' &&
+        window.location.pathname.startsWith('/admin') &&
+        !window.location.pathname.includes('/admin/login')
+      ) {
+        window.location.href = '/admin/login';
+      }
     }
     // Bubble up a clean Error with the backend message, but preserve status
     const message =

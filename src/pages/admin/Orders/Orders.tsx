@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useStore } from '../../../store/store';
 import { OrderTable } from '../../../components/admin/orders/OrderTable';
 import { Order, OrderStatus } from '../../../types/order.types';
@@ -9,7 +9,7 @@ import { Search, RefreshCw } from 'lucide-react';
 import orderApi from '../../../services/orderApi';
 
 export const Orders: React.FC = () => {
-  const { updateOrderStatus, verifyPayment, rejectPayment, showToast } = useStore();
+  const { updateOrderStatus, showToast } = useStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -20,81 +20,118 @@ export const Orders: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const loadAdminOrders = async () => {
-    setIsLoading(true);
+  const loadAdminOrders = useCallback(async (isManual = false) => {
+    if (isManual) setIsLoading(true);
     try {
-      const result = await orderApi.getAll({ limit: 200 });
+      const result = await orderApi.getAll({ limit: 50 });
       setOrders(result.orders);
-    } catch (err: any) {
-      showToast('Could not load orders from server.', 'error');
+    } catch {
+      if (isManual) {
+        showToast('Could not load orders from server.', 'error');
+      }
     } finally {
-      setIsLoading(false);
+      if (isManual) setIsLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    loadAdminOrders();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadAdminOrders, 30000);
-    return () => clearInterval(interval);
+    let isMounted = true;
+    setIsLoading(true);
+
+    orderApi.getAll({ limit: 50 })
+      .then((res) => {
+        if (isMounted) setOrders(res.orders);
+      })
+      .catch(() => {
+        if (isMounted) {
+          showToast('Could not load orders from server.', 'error');
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    // Auto-refresh every 30 seconds silently in the background
+    const interval = setInterval(() => {
+      loadAdminOrders(false);
+    }, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const pendingVerificationCount = orders.filter(
-    (o) => o.paymentStatus === 'verification_pending'
-  ).length;
+  const pendingVerificationCount = useMemo(() => {
+    return orders.filter((o) => o.paymentStatus === 'verification_pending').length;
+  }, [orders]);
 
-  const filtered = orders.filter((o) => {
-    if (statusFilter === 'pending_verification') {
-      if (o.paymentStatus !== 'verification_pending') return false;
-    } else if (statusFilter !== 'all' && o.orderStatus !== statusFilter) {
-      return false;
-    }
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (
-        o.orderNumber.toLowerCase().includes(q) ||
-        o.customerName.toLowerCase().includes(q) ||
-        o.customerEmail.toLowerCase().includes(q) ||
-        (o.utrNumber && o.utrNumber.toLowerCase().includes(q))
-      );
-    }
-    return true;
-  });
+  const filtered = useMemo(() => {
+    return orders.filter((o) => {
+      if (statusFilter === 'pending_verification') {
+        if (o.paymentStatus !== 'verification_pending') return false;
+      } else if (statusFilter !== 'all' && o.orderStatus !== statusFilter) {
+        return false;
+      }
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        return (
+          (o.orderNumber || '').toLowerCase().includes(q) ||
+          (o.customerName || '').toLowerCase().includes(q) ||
+          (o.customerEmail || '').toLowerCase().includes(q) ||
+          (o.customerPhone || '').toLowerCase().includes(q) ||
+          (o.shippingAddress?.city || '').toLowerCase().includes(q) ||
+          (o.utrNumber || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [orders, statusFilter, search]);
 
   // Calculate paginated slice
   const totalFiltered = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const validPage = Math.min(currentPage, totalPages);
-  const paginatedOrders = filtered.slice(
-    (validPage - 1) * pageSize,
-    validPage * pageSize
-  );
 
-  const handleFilterChange = (newStatus: string) => {
+  // Keep currentPage within bounds if filtered list changes
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedOrders = useMemo(() => {
+    return filtered.slice(
+      (validPage - 1) * pageSize,
+      validPage * pageSize
+    );
+  }, [filtered, validPage, pageSize]);
+
+  const handleFilterChange = useCallback((newStatus: string) => {
     setStatusFilter(newStatus);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSearchChange = (val: string) => {
+  const handleSearchChange = useCallback((val: string) => {
     setSearch(val);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleUpdateStatus = async (st: OrderStatus) => {
+  const handleUpdateStatus = useCallback(async (st: OrderStatus) => {
     if (selectedOrder) {
       await updateOrderStatus(selectedOrder.id, st);
       const updated = { ...selectedOrder, orderStatus: st };
       setOrders((prev) => prev.map((o) => (o.id === selectedOrder.id ? updated : o)));
       setSelectedOrder(updated);
     }
-  };
+  }, [selectedOrder, updateOrderStatus]);
 
   // Called by OrderDetailsModalContent after verify/reject payment
-  const handleOrderUpdated = (updatedOrder: Order) => {
+  const handleOrderUpdated = useCallback((updatedOrder: Order) => {
     setOrders((prev) => prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
     setSelectedOrder(updatedOrder);
-  };
+  }, []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -108,7 +145,7 @@ export const Orders: React.FC = () => {
           </p>
         </div>
         <button
-          onClick={loadAdminOrders}
+          onClick={() => loadAdminOrders(true)}
           disabled={isLoading}
           style={{
             display: 'inline-flex',

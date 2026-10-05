@@ -41,7 +41,7 @@ const SkeletonRow: React.FC = () => (
   </tr>
 );
 
-export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isLoading = false, pagination }) => {
+export const OrderTable: React.FC<OrderTableProps> = React.memo(({ orders, onViewOrder, isLoading = false, pagination }) => {
   const COLS = ['Order #', 'Customer', 'Items', 'Total', 'Payment', 'Fulfillment', 'Action'];
 
   return (
@@ -72,41 +72,47 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
               </tr>
             ) : (
               // ── Order rows ─────────────────────────────────────────────────
-              orders.map((order) => (
-                <tr key={order.id} style={{ borderBottom: '1px solid #F5F1E9' }}>
-                  <td style={{ padding: '1rem', fontWeight: 700, color: '#1C1917' }}>
-                    {order.orderNumber}
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ fontWeight: 600, color: '#1C1917' }}>{order.customerName}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                      <span>{order.shippingAddress.city}</span>
-                      <a
-                        href={order.shippingAddress.googleMapsLink || generateGoogleMapsLink(order.shippingAddress)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={`Open destination in Google Maps`}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          color: '#2563EB',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '2px',
-                          textDecoration: 'none',
-                          fontSize: '0.72rem',
-                          fontWeight: 600,
-                          backgroundColor: '#EFF6FF',
-                          padding: '1px 5px',
-                          borderRadius: '4px',
-                        }}
-                      >
-                        <MapPin size={10} /> Maps ↗
-                      </a>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem', color: '#57534E' }}>
-                    {order.items.reduce((acc, i) => acc + i.quantity, 0)} jars
-                  </td>
+              orders.map((order) => {
+                const itemCount = (order.items || []).reduce((acc, i) => acc + (i.quantity || 1), 0);
+                const mapsUrl = order.shippingAddress?.googleMapsLink || (order.shippingAddress ? generateGoogleMapsLink(order.shippingAddress) : '');
+
+                return (
+                  <tr key={order.id} style={{ borderBottom: '1px solid #F5F1E9' }}>
+                    <td style={{ padding: '1rem', fontWeight: 700, color: '#1C1917' }}>
+                      {order.orderNumber}
+                    </td>
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ fontWeight: 600, color: '#1C1917' }}>{order.customerName || 'Customer'}</div>
+                      <div style={{ fontSize: '0.78rem', color: '#78716C', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <span>{order.shippingAddress?.city || 'City not set'}</span>
+                        {mapsUrl && mapsUrl !== '#' && (
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open destination in Google Maps"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              color: '#2563EB',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '2px',
+                              textDecoration: 'none',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              backgroundColor: '#EFF6FF',
+                              padding: '1px 5px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <MapPin size={10} /> Maps ↗
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ padding: '1rem', color: '#57534E' }}>
+                      {itemCount} {itemCount === 1 ? 'jar' : 'jars'}
+                    </td>
                   <td style={{ padding: '1rem', fontWeight: 700, color: '#1C1917' }}>
                     {formatPrice(order.total)}
                   </td>
@@ -151,7 +157,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
                     </button>
                   </td>
                 </tr>
-              ))
+              );
+            })
             )}
           </tbody>
         </table>
@@ -179,4 +186,4 @@ export const OrderTable: React.FC<OrderTableProps> = ({ orders, onViewOrder, isL
       `}</style>
     </div>
   );
-};
+});
