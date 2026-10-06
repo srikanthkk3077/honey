@@ -74,9 +74,10 @@ export const Hero: React.FC = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentSlide = HONEYVEDA_SLIDES[currentIndex] || HONEYVEDA_SLIDES[0];
@@ -94,6 +95,14 @@ export const Hero: React.FC = () => {
     };
   }, [currentIndex, isHovered, isVideoModalOpen]);
 
+  // Restart video playback when slide changes
+  useEffect(() => {
+    if (heroVideoRef.current) {
+      heroVideoRef.current.currentTime = 0;
+      heroVideoRef.current.play().catch(() => {});
+    }
+  }, [currentIndex]);
+
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % HONEYVEDA_SLIDES.length);
   };
@@ -102,10 +111,31 @@ export const Hero: React.FC = () => {
     setCurrentIndex((prev) => (prev - 1 + HONEYVEDA_SLIDES.length) % HONEYVEDA_SLIDES.length);
   };
 
+  const toggleAudio = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsMuted((prev) => {
+      const nextMuted = !prev;
+      if (heroVideoRef.current) {
+        heroVideoRef.current.muted = nextMuted;
+      }
+      return nextMuted;
+    });
+  };
+
   const openVideo = (url?: string) => {
     if (url) {
+      if (heroVideoRef.current) {
+        heroVideoRef.current.pause();
+      }
       setActiveVideoUrl(url);
       setIsVideoModalOpen(true);
+    }
+  };
+
+  const closeVideo = () => {
+    setIsVideoModalOpen(false);
+    if (heroVideoRef.current) {
+      heroVideoRef.current.play().catch(() => {});
     }
   };
 
@@ -257,9 +287,9 @@ export const Hero: React.FC = () => {
             width: '100%',
           }}
         >
-          {/* ── LEFT: Smiling Cartoon Avatar (Vineeta Waving Hello) ── */}
+          {/* ── LEFT: Exact Same Box as Right Side Jar - Playing Video ── */}
           <div
-            id="honeyveda-avatar-col"
+            id="honeyveda-video-col"
             style={{
               display: 'flex',
               flexDirection: 'column',
@@ -271,39 +301,142 @@ export const Hero: React.FC = () => {
             <div
               style={{
                 position: 'relative',
-                width: 'clamp(180px, 22vw, 270px)',
-                filter: 'drop-shadow(0 16px 28px rgba(0, 0, 0, 0.35))',
-                animation: 'avatarFloat 5s ease-in-out infinite',
+                width: 'clamp(200px, 24vw, 290px)',
+                filter: 'drop-shadow(0 20px 35px rgba(0, 0, 0, 0.45))',
+                transform: 'rotate(-4deg)',
+                animation: 'videoFloat 6s ease-in-out infinite',
+                cursor: 'pointer',
               }}
+              onClick={() => openVideo(currentSlide.videoUrl)}
+              title="Click to expand video"
             >
-              <img
-                src="/images/brand/vineeta_cutout.png"
-                alt="Vineeta Singh - Shark Tank India"
+              {/* Exact matching box container */}
+              <div
                 style={{
                   width: '100%',
-                  height: 'auto',
-                  objectFit: 'contain',
+                  aspectRatio: '1 / 1',
+                  borderRadius: '22px',
+                  overflow: 'hidden',
+                  boxShadow: '0 16px 36px rgba(0, 0, 0, 0.3)',
+                  background: '#0D0905',
+                  position: 'relative',
                 }}
-              />
+              >
+                <video
+                  ref={heroVideoRef}
+                  key={currentSlide.videoUrl}
+                  src={currentSlide.videoUrl}
+                  autoPlay
+                  loop
+                  muted={isMuted}
+                  playsInline
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
+                />
+
+                {/* Ambient Scrim for badge contrast */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 28%, transparent 65%, rgba(0,0,0,0.6) 100%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Top-Right: Sound toggle button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAudio();
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(10, 8, 6, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    zIndex: 4,
+                  }}
+                  title={isMuted ? 'Click to Unmute' : 'Click to Mute'}
+                  aria-label={isMuted ? 'Unmute video audio' : 'Mute video audio'}
+                >
+                  {isMuted ? <VolumeX size={15} color="#FBBF24" /> : <Volume2 size={15} color="#34D399" />}
+                </button>
+
+                {/* Top-Left: Live Clip pill */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    background: 'rgba(10, 8, 6, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '9999px',
+                    padding: '4px 9px',
+                    fontSize: '0.66rem',
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    zIndex: 4,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: '#EF4444',
+                      boxShadow: '0 0 6px #EF4444',
+                      display: 'inline-block',
+                      animation: 'pulseDot 1.5s infinite',
+                    }}
+                  />
+                  <span>Live Video</span>
+                </div>
+              </div>
+
+              {/* Matching Bottom Pill (Same style as the right-side jar price tag pill) */}
               <div
                 style={{
                   position: 'absolute',
-                  bottom: '-6px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: 'rgba(10, 8, 6, 0.88)',
+                  bottom: '12px',
+                  left: '10px',
+                  background: 'rgba(10, 8, 6, 0.9)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255, 255, 255, 0.25)',
-                  borderRadius: '9999px',
-                  padding: '4px 14px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#FDE68A',
-                  whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: '12px',
+                  padding: '6px 12px',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
+                  zIndex: 4,
                 }}
               >
-                ✦ Shark Tank Loved
+                <Play size={13} fill="#FBBF24" color="#FBBF24" />
+                <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#FBBF24' }}>Shark Tank Pitch</span>
               </div>
             </div>
           </div>
@@ -601,7 +734,7 @@ export const Hero: React.FC = () => {
             justifyContent: 'center',
             padding: '1rem',
           }}
-          onClick={() => setIsVideoModalOpen(false)}
+          onClick={closeVideo}
         >
           <div
             style={{
@@ -618,11 +751,10 @@ export const Hero: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <video
-              ref={videoRef}
+              ref={modalVideoRef}
               src={activeVideoUrl}
               autoPlay
               controls
-              muted={isMuted}
               playsInline
               style={{
                 width: '100%',
@@ -633,7 +765,7 @@ export const Hero: React.FC = () => {
 
             {/* Close Button */}
             <button
-              onClick={() => setIsVideoModalOpen(false)}
+              onClick={closeVideo}
               style={{
                 position: 'absolute',
                 top: '14px',
@@ -660,12 +792,12 @@ export const Hero: React.FC = () => {
 
       {/* ── Keyframe Animations & Responsive Layout Styles ── */}
       <style>{`
-        @keyframes avatarFloat {
+        @keyframes videoFloat {
           0%, 100% {
-            transform: translateY(0px) rotate(0deg);
+            transform: rotate(-4deg) translateY(0px);
           }
           50% {
-            transform: translateY(-8px) rotate(-1deg);
+            transform: rotate(-3deg) translateY(-10px);
           }
         }
 
@@ -675,6 +807,17 @@ export const Hero: React.FC = () => {
           }
           50% {
             transform: rotate(3deg) translateY(-10px);
+          }
+        }
+
+        @keyframes pulseDot {
+          0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.35;
+            transform: scale(0.8);
           }
         }
 
@@ -724,12 +867,12 @@ export const Hero: React.FC = () => {
             gap: 2rem !important;
           }
 
-          #honeyveda-avatar-col {
+          #honeyveda-video-col {
             order: 2 !important;
           }
 
-          #honeyveda-avatar-col > div {
-            width: 180px !important;
+          #honeyveda-video-col > div {
+            width: 200px !important;
           }
 
           #honeyveda-quote-col {
