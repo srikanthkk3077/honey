@@ -4,31 +4,28 @@ import { Sparkles, ShieldCheck, Truck } from 'lucide-react';
 import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 
 export const AnnouncementBar: React.FC = () => {
-  const location = useLocation();
-  const isHome = location.pathname === '/';
-
-  if (isHome) return null;
-
   return (
     <div
       style={{
-        background: 'linear-gradient(90deg, #78350F 0%, #92400E 50%, #78350F 100%)',
-        color: '#FDE68A',
+        background: 'linear-gradient(90deg, #6B3410 0%, #8A4513 50%, #6B3410 100%)',
+        color: '#FEF3C7',
         fontSize: '0.8rem',
         padding: '0.45rem 1rem',
         textAlign: 'center',
-        borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
+        borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
+        letterSpacing: '0.02em',
+        fontWeight: 600,
       }}
     >
-      <div className="container flex items-center justify-between" style={{ padding: 0 }}>
-        <div style={{ margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500 }}>
-          <Sparkles size={14} color="#FBBF24" />
-          <span>Spring Harvest Fest: Free Wooden Honey Dipper + Free Shipping over ₹{FREE_SHIPPING_THRESHOLD}! Code: <strong>MADHUVAN10</strong></span>
-        </div>
-        <div className="flex items-center gap-2" style={{ display: 'none' }} id="announcement-right">
-          <Truck size={14} color="#F59E0B" />
-          <span>Pan-India 2-4 Day Express Dispatch</span>
-        </div>
+      <div
+        className="container flex items-center justify-center flex-wrap gap-4"
+        style={{ padding: 0, fontSize: 'clamp(0.72rem, 1.8vw, 0.82rem)' }}
+      >
+        <span>Up to 24% OFF All Honey + Up to 10% Off on Prepaid</span>
+        <span style={{ color: '#F59E0B' }}>✦</span>
+        <span>First order? Get Flat 10% OFF</span>
+        <span style={{ color: '#F59E0B' }}>✦</span>
+        <span>Free Delivery on orders above ₹{FREE_SHIPPING_THRESHOLD}</span>
       </div>
     </div>
   );

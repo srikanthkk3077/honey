@@ -19,7 +19,7 @@ export const getToken = (): string | null => {
         return u.token;
       }
     }
-  } catch {}
+  } catch { }
   return null;
 };
 export const setToken = (token: string): void =>

@@ -6,584 +6,754 @@ import {
   VolumeX,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   ArrowRight,
+  Sparkles,
+  X,
+  ShieldCheck,
+  Flame,
+  Truck,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { SliderItem } from '../../../types/slider.types';
 import { HeroShimmer } from '../../common/Shimmer';
 
-// Fallback pure honey image thumbnails
-const PURE_HONEY_THUMBNAILS = [
-  'https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1579294800821-694d95e86143?auto=format&fit=crop&w=600&q=80',
-  'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80',
+interface QuoteSlide {
+  id: string;
+  quote: string;
+  author: string;
+  authorRole: string;
+  varietyName: string;
+  price: number;
+  originalPrice: number;
+  linkUrl: string;
+  videoUrl?: string;
+}
+
+const HONEYVEDA_SLIDES: QuoteSlide[] = [
+  {
+    id: 'vineeta-quote',
+    quote: '"Ye ajwain bada interesting hai, meetha hai lekein ajwain vala taste aa raha hai"',
+    author: '— Vineeta Singh',
+    authorRole: 'Shark Tank India Judge • CEO, SUGAR Cosmetics',
+    varietyName: 'Raw Ajwain & Wild Forest Honey',
+    price: 498,
+    originalPrice: 650,
+    linkUrl: '/shop',
+    videoUrl:
+      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1790995078981.mp4',
+  },
+  {
+    id: 'master-beekeeper-quote',
+    quote: '"Ye honey sach me 100% pure aur unheated hai — jungle ki live enzymes aur raw pollen ka asali swaad!"',
+    author: '— Master Beekeeper Ramesh',
+    authorRole: '3rd Generation Forest Apiary Gatherer',
+    varietyName: '100% Raw Forest Comb Harvest',
+    price: 549,
+    originalPrice: 720,
+    linkUrl: '/shop',
+    videoUrl:
+      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1791020235595.mp4',
+  },
+  {
+    id: 'scientist-purity-quote',
+    quote: '"Zero added sugar syrups, zero artificial heating. Tested and certified 100% NMR pure at national labs."',
+    author: '— Dr. Ananya Sen',
+    authorRole: 'Food Biochemist & Honey Purity Researcher',
+    varietyName: 'Himalayan White Acacia Honey',
+    price: 699,
+    originalPrice: 899,
+    linkUrl: '/shop',
+    videoUrl:
+      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1791020416024.mp4',
+  },
 ];
 
 export const Hero: React.FC = () => {
   const { sliders, isSlidersLoading } = useStore();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(true);
-  const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
+  const [isMuted, setIsMuted] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const thumbnailListRef = useRef<HTMLDivElement>(null);
 
-  const activeSliders = sliders.filter((s) => s.isActive !== false);
-  const heroSliders: SliderItem[] = activeSliders.length > 0 ? activeSliders : sliders;
-  const currentSlide: SliderItem | undefined = heroSliders[currentIndex] || heroSliders[0];
+  const currentSlide = HONEYVEDA_SLIDES[currentIndex] || HONEYVEDA_SLIDES[0];
 
-  // Auto-advance hero slides every 9 seconds when not hovered
+  // Auto-advance slides every 7 seconds
   useEffect(() => {
-    if (isHovered || heroSliders.length <= 1) return;
+    if (isHovered || isVideoModalOpen) return;
 
     timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % heroSliders.length);
-    }, 9000);
+      setCurrentIndex((prev) => (prev + 1) % HONEYVEDA_SLIDES.length);
+    }, 7000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentIndex, isHovered, heroSliders.length]);
-
-  // Restart video playback when index changes
-  useEffect(() => {
-    setIsVideoLoading(true);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => { });
-    }
-
-    if (thumbnailListRef.current) {
-      const container = thumbnailListRef.current;
-      const activeThumb = container.children[currentIndex] as HTMLElement;
-      if (activeThumb) {
-        const containerWidth = container.clientWidth;
-        const thumbLeft = activeThumb.offsetLeft;
-        const thumbWidth = activeThumb.offsetWidth;
-        const targetScrollLeft = thumbLeft - containerWidth / 2 + thumbWidth / 2;
-        container.scrollTo({ left: targetScrollLeft, behavior: 'smooth' });
-      }
-    }
-  }, [currentIndex]);
+  }, [currentIndex, isHovered, isVideoModalOpen]);
 
   const handleNext = () => {
-    if (heroSliders.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % heroSliders.length);
-    }
+    setCurrentIndex((prev) => (prev + 1) % HONEYVEDA_SLIDES.length);
   };
 
   const handlePrev = () => {
-    if (heroSliders.length > 0) {
-      setCurrentIndex((prev) => (prev - 1 + heroSliders.length) % heroSliders.length);
+    setCurrentIndex((prev) => (prev - 1 + HONEYVEDA_SLIDES.length) % HONEYVEDA_SLIDES.length);
+  };
+
+  const openVideo = (url?: string) => {
+    if (url) {
+      setActiveVideoUrl(url);
+      setIsVideoModalOpen(true);
     }
   };
 
-  const toggleSound = () => {
-    const nextMute = !isMuted;
-    setIsMuted(nextMute);
-    if (videoRef.current) {
-      videoRef.current.muted = nextMute;
-      if (!nextMute) {
-        videoRef.current.volume = 0.5;
-        videoRef.current.play().catch(() => { });
-      }
-    }
-  };
-
-  const getSlideImage = (slide?: SliderItem, idx: number = 0) => {
-    if (!slide?.imageUrl) {
-      return PURE_HONEY_THUMBNAILS[idx % PURE_HONEY_THUMBNAILS.length];
-    }
-    return slide.imageUrl;
-  };
-
-  if (isSlidersLoading || (!currentSlide && sliders.length === 0)) {
+  if (isSlidersLoading && sliders.length === 0) {
     return <HeroShimmer />;
   }
 
   return (
     <section
+      id="honeyveda-hero-section"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: '100svh',
-        backgroundColor: '#0C0A08',
+        minHeight: '88vh',
+        background: 'linear-gradient(135deg, #F39C12 0%, #E67E22 35%, #D97706 70%, #B45309 100%)',
+        color: '#FFFFFF',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-end',
-        color: '#FFFFFF',
+        justifyContent: 'space-between',
+        paddingTop: '2.25rem',
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      id="ott-hero-section"
     >
-      {/* 1. Full-Length Video or Hero Image */}
-      {currentSlide?.mediaType === 'video' && currentSlide?.videoUrl ? (
-        <video
-          key={currentSlide.videoUrl}
-          ref={videoRef}
-          src={currentSlide.videoUrl}
-          poster={getSlideImage(currentSlide, currentIndex)}
-          autoPlay
-          loop
-          muted={isMuted}
-          playsInline
-          onLoadedData={() => setIsVideoLoading(false)}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 1,
-            filter: 'brightness(0.92) contrast(1.05)',
-            transition: 'opacity 0.5s ease-in-out',
-            opacity: isVideoLoading ? 0.9 : 1,
-          }}
-        />
-      ) : (
-        <div
-          key={currentSlide?.imageUrl || currentIndex}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `url(${getSlideImage(currentSlide, currentIndex)})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            zIndex: 1,
-            filter: 'brightness(0.92) contrast(1.05)',
-            transition: 'opacity 0.6s ease-in-out',
-          }}
-        />
-      )}
-
-      {/* Background Poster Fallback */}
+      {/* ── Background Honey Droplets & Swirl Watermark Texture ── */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: `url(${getSlideImage(currentSlide, currentIndex)})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          zIndex: 0,
-        }}
-      />
-
-      {/* 2. Soft, Seamless Gradient Overlays */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(90deg, rgba(12, 10, 8, 0.88) 0%, rgba(12, 10, 8, 0.55) 45%, rgba(12, 10, 8, 0.3) 100%)',
-          zIndex: 2,
+          backgroundImage: `
+            radial-gradient(circle at 75% 25%, rgba(254, 243, 199, 0.25) 0%, transparent 45%),
+            radial-gradient(circle at 25% 75%, rgba(180, 83, 9, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.15) 0%, transparent 65%)
+          `,
           pointerEvents: 'none',
+          zIndex: 1,
         }}
-        id="hero-left-gradient"
       />
 
-      {/* Sleek light black bottom gradient vignette for depth and button legibility */}
+      {/* ── Top Subtle Dark Vignette: Ensures Clean Header Readability ── */}
       <div
         style={{
           position: 'absolute',
-          bottom: 0,
+          top: 0,
           left: 0,
           right: 0,
-          height: '340px',
-          background: 'linear-gradient(0deg, rgba(10, 8, 6, 0.92) 0%, rgba(10, 8, 6, 0.55) 50%, transparent 100%)',
+          height: '110px',
+          background: 'linear-gradient(180deg, rgba(30, 20, 10, 0.45) 0%, rgba(30, 20, 10, 0.15) 60%, transparent 100%)',
           zIndex: 2,
           pointerEvents: 'none',
         }}
-        id="hero-bottom-fade"
       />
 
-      {/* 3. Main Hero Content Layout */}
+      {/* =========================================================================
+          TOP RIGHT: SHARK TANK INDIA OFFICIAL STYLE RIBBON
+          ========================================================================= */}
       <div
-        className="container"
+        id="shark-tank-ribbon"
         style={{
-          position: 'relative',
-          zIndex: 3,
-          paddingTop: '6rem',
-          paddingBottom: 'clamp(1.75rem, 4vh, 2.75rem)',
-          width: '100%',
+          position: 'absolute',
+          top: 0,
+          right: 'clamp(1rem, 4vw, 3.5rem)',
+          background: 'linear-gradient(180deg, #09172A 0%, #0F2847 100%)',
+          color: '#FFFFFF',
+          padding: '14px 16px 20px',
+          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%)',
+          textAlign: 'center',
+          zIndex: 20,
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+          borderLeft: '1px solid rgba(245, 158, 11, 0.4)',
+          borderRight: '1px solid rgba(245, 158, 11, 0.4)',
+          minWidth: '94px',
+          userSelect: 'none',
         }}
       >
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(320px, 1.25fr) minmax(260px, 1fr)',
-            alignItems: 'flex-end',
-            gap: '2.5rem',
+            fontSize: '0.62rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: '#93C5FD',
+            marginBottom: '2px',
           }}
-          id="hero-content-grid"
         >
-          {/* ==============================================================
-              LEFT COLUMN: Main Text & CTA Action Buttons
-              ============================================================== */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-            {/* Eyebrow Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(245, 158, 11, 0.22)',
-                border: '1px solid rgba(245, 158, 11, 0.45)',
-                backdropFilter: 'blur(8px)',
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                color: '#FEF3C7',
-                fontSize: 'clamp(0.72rem, 2vw, 0.8rem)',
-                fontWeight: 700,
-                letterSpacing: '0.04em',
-                marginBottom: '1rem',
-              }}
-            >
-              <Sparkles size={14} color="#F59E0B" />
-              <span>{currentSlide?.badge || '100% Pure Raw Honey • Single-Origin Harvest'}</span>
-            </div>
+          As seen on
+        </div>
+        <div
+          style={{
+            fontSize: '1rem',
+            fontWeight: 900,
+            letterSpacing: '0.05em',
+            lineHeight: 1.05,
+            color: '#FFFFFF',
+            fontFamily: "'Playfair Display', Georgia, serif",
+          }}
+        >
+          SHARK
+        </div>
+        <div
+          style={{
+            fontSize: '1rem',
+            fontWeight: 900,
+            letterSpacing: '0.05em',
+            lineHeight: 1.05,
+            color: '#FFFFFF',
+            fontFamily: "'Playfair Display', Georgia, serif",
+          }}
+        >
+          TANK
+        </div>
+        <div
+          style={{
+            fontSize: '0.74rem',
+            fontWeight: 800,
+            letterSpacing: '0.14em',
+            color: '#F59E0B',
+            marginTop: '3px',
+          }}
+        >
+          INDIA
+        </div>
+      </div>
 
-            {/* Main Headline */}
-            <h1
-              id="hero-headline"
-              style={{
-                fontFamily: 'var(--font-serif)',
-                fontSize: 'clamp(2.1rem, 5vw, 3.25rem)',
-                lineHeight: 1.15,
-                fontWeight: 800,
-                color: '#FFFFFF',
-                letterSpacing: '-0.02em',
-                margin: '0 0 1rem 0',
-                textShadow: '0 3px 20px rgba(0, 0, 0, 0.8)',
-                maxWidth: '620px',
-                wordBreak: 'normal',
-                overflowWrap: 'break-word',
-              }}
-            >
-              {currentSlide?.title || 'Taste the Liquid Gold of Virgin Forests.'}
-            </h1>
-
-            {/* Description Text */}
-            <p
-              id="hero-description"
-              style={{
-                fontSize: 'clamp(0.95rem, 2.5vw, 1.05rem)',
-                color: 'rgba(255, 255, 255, 0.92)',
-                lineHeight: 1.6,
-                margin: '0 0 1.75rem 0',
-                maxWidth: '540px',
-                textShadow: '0 2px 10px rgba(0, 0, 0, 0.8)',
-              }}
-            >
-              {currentSlide?.subtitle ||
-                'Direct from wild Sundarbans mangroves and Himalayan apiaries. Unheated, raw, and live natural enzymes.'}
-            </p>
-
-            {/* CTA Action Buttons */}
-            <div
-              className="hero-cta-group"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                flexWrap: 'wrap',
-              }}
-            >
-            </div>
-          </div>
-
-          {/* ==============================================================
-              RIGHT COLUMN: Sliders Carousel Navigation & Audio Toggle
-              ============================================================== */}
+      {/* =========================================================================
+          MAIN STAGE: 3-COLUMN COMPOSITION (Cartoon Avatar + Centered Quote + Honey Jar)
+          ========================================================================= */}
+      <div
+        className="container"
+        style={{
+          position: 'relative',
+          zIndex: 5,
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingTop: 'clamp(1rem, 2.5vh, 2.5rem)',
+          paddingBottom: 'clamp(1.5rem, 3.5vh, 3rem)',
+        }}
+      >
+        <div
+          id="honeyveda-stage-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(180px, 1fr) minmax(360px, 2fr) minmax(200px, 1.1fr)',
+            alignItems: 'center',
+            gap: 'clamp(1.5rem, 3vw, 3rem)',
+            width: '100%',
+          }}
+        >
+          {/* ── LEFT: Smiling Cartoon Avatar (Vineeta Waving Hello) ── */}
           <div
-            id="hero-right-col"
+            id="honeyveda-avatar-col"
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '1rem',
-              width: '100%',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
             }}
           >
-            {/* Audio Toggle & Stories Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                {/* Featured Story {currentIndex + 1} of {heroSliders.length} */}
+            <div
+              style={{
+                position: 'relative',
+                width: 'clamp(180px, 22vw, 270px)',
+                filter: 'drop-shadow(0 16px 28px rgba(0, 0, 0, 0.35))',
+                animation: 'avatarFloat 5s ease-in-out infinite',
+              }}
+            >
+              <img
+                src="/images/brand/vineeta_cutout.png"
+                alt="Vineeta Singh - Shark Tank India"
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  objectFit: 'contain',
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '-6px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(10, 8, 6, 0.88)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: '9999px',
+                  padding: '4px 14px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#FDE68A',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                }}
+              >
+                ✦ Shark Tank Loved
               </div>
+            </div>
+          </div>
 
-              {/* Audio Toggle Button (Active when current slide has video) */}
-              {currentSlide?.mediaType === 'video' && currentSlide?.videoUrl && (
+          {/* ── CENTER: Big Viral Quote + Attribution + Slider Dots ── */}
+          <div
+            id="honeyveda-quote-col"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              textAlign: 'center',
+              gap: '1.25rem',
+              padding: '0 clamp(0.5rem, 2vw, 1.5rem)',
+            }}
+          >
+            {/* The Famous Quote */}
+            <h2
+              id="honeyveda-quote-text"
+              style={{
+                fontSize: 'clamp(1.45rem, 2.8vw, 2.35rem)',
+                fontWeight: 700,
+                lineHeight: 1.35,
+                color: '#FFFFFF',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                letterSpacing: '-0.01em',
+                margin: 0,
+                textShadow: '0 2px 14px rgba(0, 0, 0, 0.4)',
+                maxWidth: '680px',
+              }}
+            >
+              {currentSlide.quote}
+            </h2>
+
+            {/* Author Attribution */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+              <div
+                style={{
+                  fontSize: 'clamp(0.95rem, 1.4vw, 1.15rem)',
+                  fontWeight: 600,
+                  color: '#FEF3C7',
+                  fontFamily: "'Playfair Display', serif",
+                  fontStyle: 'italic',
+                }}
+              >
+                {currentSlide.author}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.8rem',
+                  color: 'rgba(255, 255, 255, 0.85)',
+                  fontWeight: 500,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {currentSlide.authorRole}
+              </div>
+            </div>
+
+            {/* CTA Actions: Explore Honey + Watch Video Clip */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                marginTop: '0.5rem',
+              }}
+            >
+              <Link
+                to={currentSlide.linkUrl}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: '#FFFFFF',
+                  color: '#B45309',
+                  padding: '11px 26px',
+                  borderRadius: '9999px',
+                  fontWeight: 800,
+                  fontSize: '0.88rem',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+                  transition: 'all 0.25s ease',
+                }}
+                className="honeyveda-cta-btn"
+              >
+                <span>Shop Raw Honey</span>
+                <ArrowRight size={16} />
+              </Link>
+
+              {currentSlide.videoUrl && (
                 <button
-                  onClick={toggleSound}
+                  onClick={() => openVideo(currentSlide.videoUrl)}
                   style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    background: 'rgba(0, 0, 0, 0.55)',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    backdropFilter: 'blur(8px)',
-                    color: '#FFFFFF',
-                    display: 'flex',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    gap: '8px',
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(255, 255, 255, 0.35)',
+                    backdropFilter: 'blur(10px)',
+                    color: '#FFFFFF',
+                    padding: '11px 22px',
+                    borderRadius: '9999px',
+                    fontWeight: 700,
+                    fontSize: '0.86rem',
                     cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
+                    transition: 'all 0.25s ease',
                   }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
-                    e.currentTarget.style.borderColor = '#F59E0B';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 0, 0, 0.55)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-                  }}
-                  title={isMuted ? 'Unmute Ambient Sound' : 'Mute Sound'}
-                  aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  className="honeyveda-video-btn"
                 >
-                  {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} color="#F59E0B" />}
+                  <Play size={15} fill="#FFFFFF" />
+                  <span>Watch Video Clip</span>
                 </button>
               )}
             </div>
 
-            {/* Horizontal Video Progress Bars / Pure Honey Thumbnails */}
+            {/* Slider Dots (Exact HoneyVeda Style: White & Orange Dots) */}
             <div
-              id="hero-thumbnails-wrapper"
+              id="honeyveda-slider-dots"
               style={{
-                width: '100%',
-                maxWidth: '100%',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                justifyContent: 'flex-end',
-                overflow: 'hidden',
+                marginTop: '1rem',
               }}
             >
-              {/* Prev Arrow */}
-              {heroSliders.length > 3 && (
-                <button
-                  onClick={handlePrev}
-                  className="hero-nav-arrow"
-                  style={{
-                    width: '30px',
-                    height: '46px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    backdropFilter: 'blur(6px)',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                  title="Previous Honey Story"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-              )}
+              {HONEYVEDA_SLIDES.map((slide, idx) => {
+                const isActive = idx === currentIndex;
+                return (
+                  <button
+                    key={slide.id}
+                    onClick={() => setCurrentIndex(idx)}
+                    style={{
+                      width: isActive ? '22px' : '9px',
+                      height: '9px',
+                      borderRadius: '9999px',
+                      background: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
+                      border: 'none',
+                      padding: 0,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: isActive ? '0 0 10px rgba(255, 255, 255, 0.8)' : 'none',
+                    }}
+                    title={`Slide ${idx + 1}`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
 
-              {/* Thumbnails Row */}
-              <div
-                ref={thumbnailListRef}
+          {/* ── RIGHT: Authentic Madhuvan Raw Honey Jar with Jute Lid Tie ── */}
+          <div
+            id="honeyveda-jar-col"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                position: 'relative',
+                width: 'clamp(200px, 24vw, 290px)',
+                filter: 'drop-shadow(0 20px 35px rgba(0, 0, 0, 0.45))',
+                transform: 'rotate(4deg)',
+                animation: 'jarFloat 6s ease-in-out infinite',
+              }}
+            >
+              <img
+                src="/images/brand/madhuvan_jute_jar.jpg"
+                alt="Madhuvan Raw Forest Honey in Jute Burlap Lid Jar"
                 style={{
+                  width: '100%',
+                  height: 'auto',
+                  objectFit: 'contain',
+                  borderRadius: '22px',
+                  boxShadow: '0 16px 36px rgba(0, 0, 0, 0.3)',
+                }}
+              />
+
+              {/* Price Tag Pill */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '12px',
+                  right: '10px',
+                  background: 'rgba(10, 8, 6, 0.9)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  borderRadius: '12px',
+                  padding: '6px 12px',
+                  color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  overflowX: 'auto',
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  padding: '4px',
-                  WebkitOverflowScrolling: 'touch',
+                  gap: '6px',
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
                 }}
-                id="hero-thumbnail-strip"
               >
-                {heroSliders.map((slide, idx) => {
-                  const isActive = idx === currentIndex;
-                  const thumbImg = getSlideImage(slide, idx);
-                  return (
-                    <div
-                      key={slide.id || idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      style={{
-                        position: 'relative',
-                        width: '74px',
-                        height: '48px',
-                        borderRadius: '10px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        border: isActive ? '2px solid #F59E0B' : '1px solid rgba(255, 255, 255, 0.2)',
-                        boxShadow: isActive ? '0 0 14px rgba(245, 158, 11, 0.7)' : 'none',
-                        transform: isActive ? 'scale(1.05)' : 'scale(1)',
-                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        flexShrink: 0,
-                      }}
-                      onMouseOver={(e) => {
-                        if (!isActive) e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.6)';
-                      }}
-                      onMouseOut={(e) => {
-                        if (!isActive) e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                      }}
-                      title={slide.title}
-                    >
-                      <img
-                        src={thumbImg}
-                        alt={slide.title || 'Pure Honey Harvest'}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          filter: isActive ? 'brightness(1)' : 'brightness(0.65)',
-                        }}
-                      />
-
-                      {/* Active Thumbnail Progress Bar */}
-                      {isActive && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            height: '3px',
-                            background: '#F59E0B',
-                            animation: !isHovered ? 'thumbProgress 9s linear infinite' : 'none',
-                          }}
-                        />
-                      )}
-
-                      {/* Small Play icon on video slides */}
-                      {slide.mediaType === 'video' && (
-                        <div
-                          style={{
-                            position: 'absolute',
-                            top: '3px',
-                            right: '3px',
-                            width: '14px',
-                            height: '14px',
-                            borderRadius: '50%',
-                            background: isActive ? '#D97706' : 'rgba(0,0,0,0.6)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Play size={7} fill="#FFFFFF" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                <span style={{ fontSize: '0.96rem', fontWeight: 800, color: '#FBBF24' }}>₹{currentSlide.price}</span>
+                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', textDecoration: 'line-through' }}>₹{currentSlide.originalPrice}</span>
               </div>
-
-              {/* Next Arrow */}
-              {heroSliders.length > 3 && (
-                <button
-                  onClick={handleNext}
-                  className="hero-nav-arrow"
-                  style={{
-                    width: '30px',
-                    height: '46px',
-                    borderRadius: '8px',
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    backdropFilter: 'blur(6px)',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                  title="Next Honey Story"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Keyframe Animations & Responsive Styles */}
+      {/* =========================================================================
+          BOTTOM FULL-WIDTH LUXURY TRUST TICKER (HONEYVEDA MARQUEE STRIP)
+          ========================================================================= */}
+      <div
+        id="honeyveda-bottom-ticker"
+        style={{
+          width: '100%',
+          background: '#FFFFFF',
+          color: '#1C1917',
+          padding: '12px 0',
+          borderTop: '1px solid #E7E5E4',
+          borderBottom: '1px solid #E7E5E4',
+          overflow: 'hidden',
+          zIndex: 10,
+          position: 'relative',
+        }}
+      >
+        <div className="honeyveda-ticker-marquee">
+          <div className="honeyveda-ticker-track">
+            {/* Repeated items for smooth seamless infinite scroll */}
+            {[...Array(2)].map((_, loopIdx) => (
+              <div
+                key={loopIdx}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '2.5rem',
+                  paddingRight: '2.5rem',
+                  fontSize: '0.86rem',
+                  fontWeight: 600,
+                  color: '#292524',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <Flame size={16} color="#DC2626" />
+                  <span>No heating to cut corners</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🐝</span>
+                  <span>Gentle bee colony</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🌱</span>
+                  <span>Sustainable Farming</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🌿</span>
+                  <span>No processing for taste!</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1.1rem' }}>🐝</span>
+                  <span>Focussed Bee Conservation</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={16} color="#059669" />
+                  <span>100% NMR Lab Certified Pure</span>
+                </div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <Truck size={16} color="#D97706" />
+                  <span>Free Delivery on orders above ₹400</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          EMBEDDED VIDEO POPUP MODAL (When "Watch Video Clip" is clicked)
+          ========================================================================= */}
+      {isVideoModalOpen && activeVideoUrl && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(14px)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+          onClick={() => setIsVideoModalOpen(false)}
+        >
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '820px',
+              aspectRatio: '16 / 9',
+              background: '#0C0A08',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <video
+              ref={videoRef}
+              src={activeVideoUrl}
+              autoPlay
+              controls
+              muted={isMuted}
+              playsInline
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
+
+            {/* Close Button */}
+            <button
+              onClick={() => setIsVideoModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '14px',
+                right: '14px',
+                width: '38px',
+                height: '38px',
+                borderRadius: '50%',
+                background: 'rgba(0, 0, 0, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                zIndex: 10,
+              }}
+              aria-label="Close video"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Keyframe Animations & Responsive Layout Styles ── */}
       <style>{`
-        @keyframes thumbProgress {
-          from { width: 0%; }
-          to { width: 100%; }
+        @keyframes avatarFloat {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-8px) rotate(-1deg);
+          }
         }
 
-        #hero-thumbnail-strip::-webkit-scrollbar {
-          display: none;
+        @keyframes jarFloat {
+          0%, 100% {
+            transform: rotate(4deg) translateY(0px);
+          }
+          50% {
+            transform: rotate(3deg) translateY(-10px);
+          }
+        }
+
+        .honeyveda-cta-btn:hover {
+          transform: translateY(-2px) scale(1.03);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
+          background: #FEF3C7 !important;
+        }
+
+        .honeyveda-video-btn:hover {
+          background: rgba(255, 255, 255, 0.2) !important;
+          border-color: rgba(255, 255, 255, 0.6) !important;
+          transform: translateY(-1px);
+        }
+
+        .honeyveda-ticker-marquee {
+          overflow: hidden;
+          width: 100%;
+        }
+
+        .honeyveda-ticker-track {
+          display: flex;
+          width: max-content;
+          animation: tickerScroll 26s linear infinite;
+        }
+
+        .honeyveda-ticker-track:hover {
+          animation-play-state: paused;
+        }
+
+        @keyframes tickerScroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
         }
 
         @media (max-width: 992px) {
-          #ott-hero-section {
-            min-height: 100svh !important;
-            height: auto !important;
-            padding-top: 5rem !important;
-            padding-bottom: 2rem !important;
-            justify-content: flex-end !important;
+          #honeyveda-hero-section {
+            padding-top: 4.5rem !important;
           }
 
-          #hero-content-grid {
+          #honeyveda-stage-grid {
             grid-template-columns: 1fr !important;
-            gap: 1.75rem !important;
+            gap: 2rem !important;
           }
 
-          #hero-left-gradient {
-            background: linear-gradient(180deg, rgba(12, 10, 8, 0.88) 0%, rgba(12, 10, 8, 0.45) 45%, rgba(12, 10, 8, 0.82) 100%) !important;
+          #honeyveda-avatar-col {
+            order: 2 !important;
           }
 
-          #hero-right-col {
-            align-items: flex-start !important;
+          #honeyveda-avatar-col > div {
+            width: 180px !important;
           }
 
-          #hero-thumbnails-wrapper {
-            justify-content: flex-start !important;
+          #honeyveda-quote-col {
+            order: 1 !important;
           }
 
-          #hero-thumbnail-strip {
-            justify-content: flex-start !important;
+          #honeyveda-jar-col {
+            order: 3 !important;
           }
 
-          .hero-nav-arrow {
-            display: none !important;
+          #honeyveda-jar-col > div {
+            width: 200px !important;
           }
         }
 
-        @media (max-width: 480px) {
-          #ott-hero-section {
-            padding-top: 4.85rem !important;
-            padding-bottom: 2.25rem !important;
+        @media (max-width: 640px) {
+          #shark-tank-ribbon {
+            right: 1rem !important;
+            padding: 10px 12px 16px !important;
+            min-width: 80px !important;
           }
 
-          .hero-cta-group {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.75rem !important;
-          }
-
-          .hero-cta-group a,
-          .hero-cta-group button {
-            width: 100% !important;
-            justify-content: center !important;
-          }
-
-          .hero-featured-pill {
-            width: 100% !important;
-          }
-
-          #hero-thumbnail-strip > div {
-            width: 64px !important;
-            height: 42px !important;
+          #honeyveda-quote-text {
+            font-size: 1.35rem !important;
           }
         }
       `}</style>

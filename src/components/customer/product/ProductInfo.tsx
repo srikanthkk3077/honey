@@ -110,7 +110,7 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
           {product.name}
         </h1>
         <p style={{ fontSize: '1.05rem', color: '#78716C', fontStyle: 'italic' }}>
-          {product.tagline}
+          {product.description}
         </p>
       </div>
 

@@ -2,13 +2,518 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../../store/store';
 import { VideoModal } from '../video/VideoModal';
 import { VideoItem } from '../../../types/video.types';
-import { Play, Film, ChevronLeft, ChevronRight, Volume2, ShoppingBag, Sparkles } from 'lucide-react';
+import { Film, ChevronLeft, ChevronRight, Volume2, Sparkles, Check, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VideoCardShimmer } from '../../common/Shimmer';
-import { formatPrice } from '../../../utils/formatPrice';
+
+interface ReelCardProps {
+  video: VideoItem;
+  onSelectVideo: (video: VideoItem) => void;
+}
+
+const ReelCard: React.FC<ReelCardProps> = ({ video, onSelectVideo }) => {
+  const { products, addToCart, setCartDrawerOpen } = useStore();
+
+  const matchedProd = video.taggedProductId
+    ? products.find((p) => p.id === video.taggedProductId || (p as any)._id === video.taggedProductId)
+    : video.taggedProductSlug
+      ? products.find((p) => p.slug === video.taggedProductSlug)
+      : undefined;
+
+  const prodName = matchedProd?.name || video.taggedProductName || 'Wild Forest Raw Honey';
+  const prodPrice = matchedProd?.price || video.taggedProductPrice || 498;
+  const prodOrigPrice = matchedProd?.originalPrice || video.taggedProductOriginalPrice || 650;
+  const prodImage = matchedProd?.images?.[0] || video.taggedProductImage || video.thumbnailUrl;
+
+  const availableSizes = matchedProd?.sizes && matchedProd.sizes.length > 0
+    ? matchedProd.sizes
+    : [{ size: video.taggedProductSize || '500g', price: prodPrice, originalPrice: prodOrigPrice, stock: matchedProd?.stock ?? 15 }];
+
+  const [selectedSize, setSelectedSize] = useState<string>(
+    availableSizes[0]?.size || '500g'
+  );
+  const [isAdded, setIsAdded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeSizeOption = availableSizes.find((s) => s.size === selectedSize) || availableSizes[0];
+  const currentPrice = activeSizeOption?.price || prodPrice;
+  const currentOrigPrice = activeSizeOption?.originalPrice || prodOrigPrice;
+
+  const isOutOfStock = matchedProd
+    ? (matchedProd.stock <= 0 || (activeSizeOption && activeSizeOption.stock !== undefined && activeSizeOption.stock <= 0))
+    : false;
+
+  const discountPercent = currentOrigPrice > currentPrice
+    ? Math.round(((currentOrigPrice - currentPrice) / currentOrigPrice) * 100)
+    : (matchedProd?.discountPercent || 0);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isOutOfStock) return;
+
+    const targetProd = matchedProd || ({
+      id: video.taggedProductId || video.id,
+      name: prodName,
+      slug: video.taggedProductSlug || 'wild-forest-raw-honey',
+      price: currentPrice,
+      originalPrice: currentOrigPrice,
+      stock: 15,
+      images: [prodImage],
+      sizes: availableSizes,
+      selectedSize,
+    } as any);
+
+    addToCart(targetProd, selectedSize, 1);
+    setCartDrawerOpen(true);
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 1600);
+  };
+
+  const handleToggleDropdown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDropdownOpen((prev) => !prev);
+  };
+
+  return (
+    <div
+      className="niyamaya-reel-card"
+      style={{
+        flex: '0 0 245px',
+        width: '245px',
+        borderRadius: '14px',
+        overflow: 'hidden',
+        backgroundColor: '#FFFFFF',
+        boxShadow: '0 4px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
+        border: '1px solid #E5E7EB',
+        display: 'flex',
+        flexDirection: 'column',
+        scrollSnapAlign: 'start',
+        position: 'relative',
+        transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease',
+        cursor: 'pointer',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-6px)';
+        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.12)';
+        const vid = e.currentTarget.querySelector('video');
+        if (vid && vid.paused) vid.play().catch(() => { });
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
+      }}
+      onClick={() => onSelectVideo(video)}
+    >
+      {/* Video Frame & Overlapping Thumbnail */}
+      <div style={{ position: 'relative', width: '100%' }}>
+        <div
+          style={{
+            width: '100%',
+            aspectRatio: '9/13.5',
+            backgroundColor: '#1C1917',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <video
+            src={video.videoUrl}
+            poster={video.thumbnailUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+          />
+
+          {/* Top-Left Red Ribbon Discount Badge (Matches Image 1) */}
+          {discountPercent > 0 && (
+            <div
+              style={{
+                position: 'absolute',
+                top: '10px',
+                left: '10px',
+                backgroundColor: '#C5221F',
+                color: '#FFFFFF',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                padding: '3px 10px 3px 7px',
+                clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 0 100%)',
+                zIndex: 6,
+                textTransform: 'uppercase',
+                boxShadow: '0 2px 6px rgba(197, 34, 31, 0.4)',
+              }}
+            >
+              {discountPercent}% OFF
+            </div>
+          )}
+
+          {/* Top-Right Frosted Sound Icon */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              backdropFilter: 'blur(4px)',
+              color: '#FFFFFF',
+              width: '26px',
+              height: '26px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 6,
+            }}
+          >
+            <Volume2 size={12} />
+          </div>
+
+          {/* Subtle bottom vignette */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '35px',
+              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.25) 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+
+        {/* Overlapping Product Thumbnail (Junction between Video & Details, like Image 1) */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectVideo(video);
+          }}
+          title={prodName}
+          style={{
+            position: 'absolute',
+            bottom: '-18px',
+            left: '12px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '8px',
+            backgroundColor: '#FFFFFF',
+            border: '2px solid #FFFFFF',
+            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.14)',
+            overflow: 'hidden',
+            zIndex: 10,
+            cursor: 'pointer',
+          }}
+        >
+          <img
+            src={prodImage}
+            alt={prodName}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+      </div>
+
+      {/* Product Information & Split Action Button */}
+      <div
+        style={{
+          backgroundColor: '#FFFFFF',
+          padding: '24px 12px 12px 12px',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+        }}
+      >
+        {/* Product Title */}
+        <h4
+          title={prodName}
+          style={{
+            fontSize: '0.86rem',
+            fontWeight: 600,
+            color: '#111827',
+            margin: '0 0 4px 0',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            lineHeight: 1.3,
+          }}
+        >
+          {prodName}
+        </h4>
+
+        {/* Price Row (Selling price in Red Bold, strikethrough in grey, format: Rs. X,XXX.00) */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '8px',
+            marginBottom: '12px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '0.9rem',
+              fontWeight: 700,
+              color: '#C5221F',
+            }}
+          >
+            Rs. {Number(currentPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+          {currentOrigPrice > currentPrice && (
+            <span
+              style={{
+                fontSize: '0.76rem',
+                color: '#9CA3AF',
+                textDecoration: 'line-through',
+                fontWeight: 400,
+              }}
+            >
+              Rs. {Number(currentOrigPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          )}
+        </div>
+
+        {/* Split Action Button Area */}
+        <div style={{ marginTop: 'auto', position: 'relative' }} ref={dropdownRef}>
+          {/* Size Selector Popover */}
+          {isDropdownOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '44px',
+                left: 0,
+                right: 0,
+                backgroundColor: '#FFFFFF',
+                borderRadius: '8px',
+                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.16)',
+                border: '1px solid #E5E7EB',
+                padding: '8px',
+                zIndex: 30,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: '#6B7280',
+                  textTransform: 'uppercase',
+                  padding: '2px 4px 6px 4px',
+                  borderBottom: '1px solid #F3F4F6',
+                  marginBottom: '4px',
+                }}
+              >
+                Select Size
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {availableSizes.map((s) => {
+                  const isSelected = s.size === selectedSize;
+                  const isSizeOOS = s.stock !== undefined && s.stock <= 0;
+                  return (
+                    <button
+                      key={s.size}
+                      type="button"
+                      disabled={isSizeOOS}
+                      onClick={() => {
+                        setSelectedSize(s.size);
+                        setIsDropdownOpen(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        border: isSelected ? '1.5px solid #111827' : '1px solid #E5E7EB',
+                        backgroundColor: isSelected ? '#F9FAFB' : '#FFFFFF',
+                        cursor: isSizeOOS ? 'not-allowed' : 'pointer',
+                        opacity: isSizeOOS ? 0.5 : 1,
+                        fontSize: '0.78rem',
+                        fontWeight: isSelected ? 700 : 500,
+                        color: '#111827',
+                      }}
+                    >
+                      <span>{s.size}</span>
+                      <span style={{ color: isSizeOOS ? '#DC2626' : '#C5221F', fontWeight: 600 }}>
+                        {isSizeOOS ? 'Out of stock' : `Rs. ${Number(s.price).toLocaleString('en-IN')}`}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isOutOfStock ? (
+            /* Sold Out State (Grey Split Button - matches Card 3 & 5 in Image 1) */
+            <div
+              style={{
+                width: '100%',
+                height: '38px',
+                backgroundColor: '#D1D5DB',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                overflow: 'hidden',
+                cursor: 'not-allowed',
+              }}
+            >
+              <button
+                type="button"
+                disabled
+                style={{
+                  flex: 1,
+                  height: '100%',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                Sold out
+              </button>
+              <div
+                style={{
+                  width: '1px',
+                  height: '60%',
+                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                }}
+              />
+              <button
+                type="button"
+                disabled
+                style={{
+                  width: '36px',
+                  height: '100%',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#6B7280',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'not-allowed',
+                }}
+              >
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          ) : (
+            /* In Stock State (Black Split Button - matches Card 1, 2, 4 in Image 1) */
+            <div
+              style={{
+                width: '100%',
+                height: '38px',
+                backgroundColor: '#000000',
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                overflow: 'hidden',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                style={{
+                  flex: 1,
+                  height: '100%',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#FFFFFF',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#1F2937';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {isAdded ? (
+                  <>
+                    <Check size={14} color="#10B981" />
+                    <span style={{ color: '#10B981' }}>Added!</span>
+                  </>
+                ) : (
+                  'Add to Cart'
+                )}
+              </button>
+
+              <div
+                style={{
+                  width: '1px',
+                  height: '60%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={handleToggleDropdown}
+                title="Select size"
+                style={{
+                  width: '36px',
+                  height: '100%',
+                  border: 'none',
+                  backgroundColor: 'transparent',
+                  color: '#FFFFFF',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#1F2937';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                <ChevronDown size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const VideoShowcase: React.FC = () => {
-  const { videos, isVideosLoading, products } = useStore();
+  const { videos, isVideosLoading } = useStore();
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -40,7 +545,7 @@ export const VideoShowcase: React.FC = () => {
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    const scrollAmount = 320;
+    const scrollAmount = 270;
     scrollRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
@@ -55,40 +560,14 @@ export const VideoShowcase: React.FC = () => {
   return (
     <section
       style={{
-        padding: '5.5rem 0',
-        background: 'linear-gradient(180deg, #FAF7F2 0%, #FFFBEB 35%, #FEF3C7 70%, #FAF7F2 100%)',
+        padding: '5rem 0',
+        backgroundColor: '#FAF8F5',
         position: 'relative',
         overflow: 'hidden',
-        borderTop: '1px solid rgba(245, 158, 11, 0.15)',
-        borderBottom: '1px solid rgba(245, 158, 11, 0.15)',
+        borderTop: '1px solid #ECE7DE',
+        borderBottom: '1px solid #ECE7DE',
       }}
     >
-      {/* Subtle Golden Ambient Watermark / Aura */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          right: '5%',
-          width: '550px',
-          height: '550px',
-          background: 'radial-gradient(circle, rgba(245, 158, 11, 0.15) 0%, rgba(254, 243, 199, 0) 70%)',
-          pointerEvents: 'none',
-          borderRadius: '50%',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '-10%',
-          left: '5%',
-          width: '450px',
-          height: '450px',
-          background: 'radial-gradient(circle, rgba(217, 119, 6, 0.1) 0%, rgba(254, 243, 199, 0) 70%)',
-          pointerEvents: 'none',
-          borderRadius: '50%',
-        }}
-      />
-
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
         {/* Header with Title and Scroll Arrows */}
         <div
@@ -145,10 +624,6 @@ export const VideoShowcase: React.FC = () => {
             >
               Live Harvest Stories & Purity Reels
             </h2>
-
-            {/* <p style={{ color: '#57534E', fontSize: '1rem', maxWidth: '600px', margin: 0, lineHeight: 1.6 }}>
-              Watch unheated raw extraction in action from our Himalayan &amp; Sundarbans apiaries. Tap any reel to watch in HD with sound and shop directly.
-            </p> */}
           </div>
 
           {/* Action Links & Navigation Arrows */}
@@ -189,8 +664,8 @@ export const VideoShowcase: React.FC = () => {
               onClick={() => handleScroll('left')}
               disabled={!canScrollLeft}
               style={{
-                width: '46px',
-                height: '46px',
+                width: '44px',
+                height: '44px',
                 borderRadius: '50%',
                 backgroundColor: canScrollLeft ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
                 border: canScrollLeft ? '2px solid #FDE68A' : '2px solid #E7E5E4',
@@ -229,8 +704,8 @@ export const VideoShowcase: React.FC = () => {
               onClick={() => handleScroll('right')}
               disabled={!canScrollRight}
               style={{
-                width: '46px',
-                height: '46px',
+                width: '44px',
+                height: '44px',
                 borderRadius: '50%',
                 backgroundColor: canScrollRight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
                 border: canScrollRight ? '2px solid #FDE68A' : '2px solid #E7E5E4',
@@ -276,250 +751,22 @@ export const VideoShowcase: React.FC = () => {
             className="video-reels-scroll-track"
             style={{
               display: 'flex',
-              gap: '1.35rem',
+              gap: '1.25rem',
               overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              padding: '0.75rem 0.25rem 2rem 0.25rem',
+              padding: '0.75rem 0.25rem 1.5rem 0.25rem',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch',
             }}
           >
-            {displayVideos.map((video) => {
-              const matchedProd = video.taggedProductId
-                ? products.find((p) => p.id === video.taggedProductId || (p as any)._id === video.taggedProductId)
-                : video.taggedProductSlug
-                ? products.find((p) => p.slug === video.taggedProductSlug)
-                : undefined;
-
-              const prodName = matchedProd?.name || video.taggedProductName || 'Wild Forest Raw Honey';
-              const prodPrice = matchedProd?.price || video.taggedProductPrice || 498;
-              const prodOrigPrice = matchedProd?.originalPrice || video.taggedProductOriginalPrice || 650;
-              const prodImage = matchedProd?.images?.[0] || video.taggedProductImage || video.thumbnailUrl;
-
-              return (
-                <div
-                  key={video.id}
-                  onClick={() => setSelectedVideo(video)}
-                  className="artisanal-reel-card"
-                  style={{
-                    flex: '0 0 255px',
-                    width: '255px',
-                    aspectRatio: '9/16',
-                    position: 'relative',
-                    borderRadius: '26px',
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    scrollSnapAlign: 'start',
-                    boxShadow: '0 12px 30px rgba(180, 83, 9, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04)',
-                    border: '3.5px solid #FFFFFF',
-                    outline: '1.5px solid rgba(245, 158, 11, 0.35)',
-                    backgroundColor: '#FAF7F2',
-                    transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-10px) scale(1.02)';
-                    e.currentTarget.style.outlineColor = '#D97706';
-                    e.currentTarget.style.boxShadow =
-                      '0 22px 45px rgba(217, 119, 6, 0.26), 0 8px 18px rgba(0, 0, 0, 0.08)';
-                    const vidEl = e.currentTarget.querySelector('video');
-                    if (vidEl && vidEl.paused) {
-                      vidEl.play().catch(() => {});
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.outlineColor = 'rgba(245, 158, 11, 0.35)';
-                    e.currentTarget.style.boxShadow =
-                      '0 12px 30px rgba(180, 83, 9, 0.12), 0 4px 10px rgba(0, 0, 0, 0.04)';
-                  }}
-                >
-                  {/* Background Video Element (Auto-plays muted) */}
-                  <video
-                    src={video.videoUrl}
-                    poster={video.thumbnailUrl}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
-
-                  {/* Gentle Cinematic Gradient Overlay */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      background:
-                        'linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.65) 100%)',
-                      pointerEvents: 'none',
-                    }}
-                  />
-
-                  {/* Top Header: Floating Frosted Badges */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      left: '12px',
-                      right: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      zIndex: 3,
-                    }}
-                  >
-                    <span
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        backdropFilter: 'blur(8px)',
-                        color: '#FFFFFF',
-                        fontSize: '0.68rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        padding: '4px 9px',
-                        borderRadius: '20px',
-                        letterSpacing: '0.04em',
-                        border: '1px solid rgba(255, 255, 255, 0.25)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          backgroundColor: '#F59E0B',
-                        }}
-                      />
-                      {video.category}
-                    </span>
-
-                    <span
-                      style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        backdropFilter: 'blur(8px)',
-                        color: '#FFFFFF',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        padding: '4px 8px',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                      }}
-                    >
-                      <Volume2 size={12} />
-                    </span>
-                  </div>
-
-                  {/* Elegant Frosted Center Play Pill (Subtle on hover, never blocking) */}
-                 
-
-                  {/* Floating Shoppable Product Card (Artisanal White & Gold) */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      left: '10px',
-                      right: '10px',
-                      zIndex: 4,
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      backdropFilter: 'blur(14px)',
-                      borderRadius: '18px',
-                      padding: '8px 10px',
-                      border: '1.5px solid #FEF3C7',
-                      boxShadow: '0 8px 24px rgba(28, 25, 23, 0.16)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      transition: 'transform 0.2s ease',
-                    }}
-                  >
-                    {/* Small Product Thumbnail */}
-                    <div
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        backgroundColor: '#FAF7F2',
-                        flexShrink: 0,
-                        border: '1.5px solid #FDE68A',
-                      }}
-                    >
-                      <img
-                        src={prodImage}
-                        alt={prodName}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-
-                    {/* Product Name & Pricing */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: '0.82rem',
-                          fontWeight: 800,
-                          color: '#1C1917',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          lineHeight: 1.25,
-                        }}
-                      >
-                        {prodName}
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
-                        <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#B45309' }}>
-                          {formatPrice(prodPrice)}
-                        </span>
-                        {prodOrigPrice > prodPrice && (
-                          <span
-                            style={{
-                              fontSize: '0.72rem',
-                              color: '#A8A29E',
-                              textDecoration: 'line-through',
-                              fontWeight: 500,
-                            }}
-                          >
-                            {formatPrice(prodOrigPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Shop Button Pill */}
-                    <div
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: '10px',
-                        background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        color: '#FFFFFF',
-                        flexShrink: 0,
-                        boxShadow: '0 2px 8px rgba(217, 119, 6, 0.35)',
-                      }}
-                    >
-                      <ShoppingBag size={12} />
-                      <span style={{ fontSize: '0.72rem', fontWeight: 800 }}>Shop</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {displayVideos.map((video) => (
+              <ReelCard
+                key={video.id}
+                video={video}
+                onSelectVideo={(v) => setSelectedVideo(v)}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -546,3 +793,4 @@ export const VideoShowcase: React.FC = () => {
 };
 
 export default VideoShowcase;
+

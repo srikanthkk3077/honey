@@ -176,10 +176,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       sku: s.sku.trim() || `MV-${(slug || name).slice(0, 3).toUpperCase()}-${s.size.replace(/\D/g, '') || 'STD'}`,
     }));
 
-    // Derive primary price & total stock from sizes
+    // Derive primary price & use the typed total stock directly
     const p = cleanedSizes[0]?.price || parseFloat(price) || 599;
     const origP = cleanedSizes[0]?.originalPrice || parseFloat(originalPrice) || 799;
-    const totalStock = cleanedSizes.reduce((sum, s) => sum + s.stock, 0) || parseInt(stock, 10) || 40;
+    const totalStock = parseInt(stock, 10) || 0;
 
     const productPayload: Omit<Product, 'id' | 'createdAt'> = {
       name,
@@ -308,7 +308,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           required
           type="number"
           value={stock}
-          onChange={(e) => setStock(e.target.value)}
+          onChange={(e) => {
+            const newTotal = e.target.value;
+            setStock(newTotal);
+            // Distribute new total across size variants proportionally
+            const parsed = parseInt(newTotal, 10);
+            if (!isNaN(parsed) && parsed >= 0 && sizes.length > 0) {
+              const currentSum = sizes.reduce((s, sz) => s + (sz.stock || 0), 0);
+              setSizes((prev) =>
+                prev.map((sz, i) => ({
+                  ...sz,
+                  stock:
+                    currentSum > 0
+                      ? Math.max(0, Math.round((sz.stock / currentSum) * parsed))
+                      : i === 0
+                      ? parsed
+                      : 0,
+                }))
+              );
+            }
+          }}
         />
       </div>
 

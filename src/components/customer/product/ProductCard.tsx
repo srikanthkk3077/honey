@@ -39,9 +39,14 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const wishlisted = isWishlisted(product.id);
   const discount = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
+  // Out-of-stock: check selected size stock (fallback to product.stock)
+  const currentStock = currentSizeOption?.stock ?? product.stock ?? 0;
+  const isOutOfStock = currentStock <= 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOutOfStock) return;
     addToCart(product, activeSize, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
@@ -55,28 +60,36 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
   return (
     <div
-      onMouseEnter={() => setHovering(true)}
+      onMouseEnter={() => !isOutOfStock && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       style={{
         position: 'relative',
         borderRadius: '20px',
         overflow: 'hidden',
         background: '#fff',
-        boxShadow: hovering
+        boxShadow: isOutOfStock
+          ? '0 2px 10px rgba(0,0,0,0.06)'
+          : hovering
           ? '0 20px 60px rgba(217,119,6,0.22), 0 4px 20px rgba(0,0,0,0.08)'
           : '0 4px 20px rgba(0,0,0,0.06)',
-        transform: hovering ? 'translateY(-6px)' : 'translateY(0)',
+        transform: hovering && !isOutOfStock ? 'translateY(-6px)' : 'translateY(0)',
         transition: 'all 0.38s cubic-bezier(.4,2,.6,1)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        border: hovering ? '1.5px solid rgba(217,119,6,0.28)' : '1.5px solid rgba(230,225,218,0.7)',
+        border: isOutOfStock
+          ? '1.5px solid rgba(200,200,200,0.6)'
+          : hovering
+          ? '1.5px solid rgba(217,119,6,0.28)'
+          : '1.5px solid rgba(230,225,218,0.7)',
+        opacity: isOutOfStock ? 0.72 : 1,
       }}
     >
       {/* ── Image Area ── */}
       <Link
-        to={`/product/${product.slug}`}
-        style={{ display: 'block', position: 'relative', flexShrink: 0 }}
+        to={isOutOfStock ? '#' : `/product/${product.slug}`}
+        onClick={isOutOfStock ? (e) => e.preventDefault() : undefined}
+        style={{ display: 'block', position: 'relative', flexShrink: 0, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
       >
         {/* Amber radial glow */}
         <div style={{
@@ -99,8 +112,29 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           }}
         />
 
+        {/* Out-of-Stock banner overlay */}
+        {isOutOfStock && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 10,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '0',
+          }}>
+            <span style={{
+              background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+              color: '#fff', fontWeight: 800, fontSize: '0.85rem',
+              padding: '7px 18px', borderRadius: '30px',
+              letterSpacing: '0.06em', textTransform: 'uppercase',
+              boxShadow: '0 4px 14px rgba(220,38,38,0.5)',
+              display: 'flex', alignItems: 'center', gap: '6px',
+            }}>
+              <span style={{ fontSize: '1rem' }}>🚫</span> Out of Stock
+            </span>
+          </div>
+        )}
+
         {/* Discount ribbon */}
-        {discount > 0 && (
+        {discount > 0 && !isOutOfStock && (
           <div style={{
             position: 'absolute', top: 0, left: 0, zIndex: 5,
             background: 'linear-gradient(135deg, #DC2626 60%, #B91C1C 100%)',
@@ -196,9 +230,13 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         </div>
 
         {/* Product name */}
-        <Link to={`/product/${product.slug}`} style={{ textDecoration: 'none' }}>
+        <Link
+          to={isOutOfStock ? '#' : `/product/${product.slug}`}
+          onClick={isOutOfStock ? (e) => e.preventDefault() : undefined}
+          style={{ textDecoration: 'none', cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+        >
           <h3 style={{
-            fontSize: '1rem', fontWeight: 800, color: '#1C1917',
+            fontSize: '1rem', fontWeight: 800, color: isOutOfStock ? '#9CA3AF' : '#1C1917',
             lineHeight: 1.3, marginBottom: '0.3rem',
             minHeight: '2.6rem',
           }}>
@@ -214,7 +252,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
           WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           overflow: 'hidden', minHeight: '2.25rem',
         }}>
-          {product.tagline}
+          {product.description}
         </p>
 
         {/* Size Selector */}
@@ -255,7 +293,7 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Price + Quantity Stepper */}
+        {/* Price + Quantity Stepper — hidden when out of stock */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: '0.75rem',
@@ -271,90 +309,117 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             )}
           </div>
 
-          {/* Quantity stepper */}
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            border: '1.5px solid #E7E5E4', borderRadius: '10px', overflow: 'hidden',
-          }}>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setQty(Math.max(1, qty - 1)); }}
-              style={{
-                width: '28px', height: '28px', border: 'none',
-                background: '#FAFAF9', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#57534E', transition: 'background 0.15s',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
-              onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
-            >
-              <Minus size={12} />
-            </button>
-            <span style={{
-              width: '28px', textAlign: 'center', fontSize: '0.82rem',
-              fontWeight: 700, color: '#1C1917', userSelect: 'none',
+          {/* Quantity stepper — hidden when out of stock */}
+          {!isOutOfStock && (
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              border: '1.5px solid #E7E5E4', borderRadius: '10px', overflow: 'hidden',
             }}>
-              {qty}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setQty(qty + 1); }}
-              style={{
-                width: '28px', height: '28px', border: 'none',
-                background: '#FAFAF9', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#57534E', transition: 'background 0.15s',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
-              onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
-            >
-              <Plus size={12} />
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setQty(Math.max(1, qty - 1)); }}
+                style={{
+                  width: '28px', height: '28px', border: 'none',
+                  background: '#FAFAF9', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#57534E', transition: 'background 0.15s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
+                onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
+              >
+                <Minus size={12} />
+              </button>
+              <span style={{
+                width: '28px', textAlign: 'center', fontSize: '0.82rem',
+                fontWeight: 700, color: '#1C1917', userSelect: 'none',
+              }}>
+                {qty}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => { e.preventDefault(); setQty(qty + 1); }}
+                style={{
+                  width: '28px', height: '28px', border: 'none',
+                  background: '#FAFAF9', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#57534E', transition: 'background 0.15s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
+                onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
+              >
+                <Plus size={12} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          style={{
-            width: '100%',
-            padding: '0.68rem 0.5rem',
-            borderRadius: '12px',
-            border: 'none',
-            background: added
-              ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-              : 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: '0.88rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '7px',
-            cursor: 'pointer',
-            boxShadow: added
-              ? '0 4px 14px rgba(5,150,105,0.35)'
-              : '0 4px 16px rgba(217,119,6,0.35)',
-            transition: 'all 0.28s cubic-bezier(.4,2,.6,1)',
-            letterSpacing: '0.02em',
-            transform: added ? 'scale(0.98)' : 'scale(1)',
-          }}
-          onMouseOver={(e) => {
-            if (!added) {
-              e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-              e.currentTarget.style.boxShadow = '0 8px 22px rgba(217,119,6,0.42)';
-            }
-          }}
-          onMouseOut={(e) => {
-            if (!added) {
-              e.currentTarget.style.transform = 'translateY(0) scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(217,119,6,0.35)';
-            }
-          }}
-        >
-          <ShoppingBag size={15} />
-          <span>{added ? '✓ Added to Basket!' : `Add to Basket · ${activeSize}`}</span>
-        </button>
+        {/* Add to Cart / Out of Stock Button */}
+        {isOutOfStock ? (
+          <button
+            disabled
+            style={{
+              width: '100%',
+              padding: '0.68rem 0.5rem',
+              borderRadius: '12px',
+              border: '1.5px solid #D1D5DB',
+              background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
+              color: '#9CA3AF',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '7px',
+              cursor: 'not-allowed',
+              letterSpacing: '0.02em',
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>🚫</span>
+            <span>Out of Stock</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            style={{
+              width: '100%',
+              padding: '0.68rem 0.5rem',
+              borderRadius: '12px',
+              border: 'none',
+              background: added
+                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
+                : 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '7px',
+              cursor: 'pointer',
+              boxShadow: added
+                ? '0 4px 14px rgba(5,150,105,0.35)'
+                : '0 4px 16px rgba(217,119,6,0.35)',
+              transition: 'all 0.28s cubic-bezier(.4,2,.6,1)',
+              letterSpacing: '0.02em',
+              transform: added ? 'scale(0.98)' : 'scale(1)',
+            }}
+            onMouseOver={(e) => {
+              if (!added) {
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+                e.currentTarget.style.boxShadow = '0 8px 22px rgba(217,119,6,0.42)';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!added) {
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(217,119,6,0.35)';
+              }
+            }}
+          >
+            <ShoppingBag size={15} />
+            <span>{added ? '✓ Added to Basket!' : `Add to Basket · ${activeSize}`}</span>
+          </button>
+        )}
       </div>
 
       {/* Animated bottom amber accent bar */}
