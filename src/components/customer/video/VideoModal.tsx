@@ -164,7 +164,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
     nectarSource: 'Wild Himalayan Flora',
     purityScore: video.purityScore || 99.8,
     harvestSeason: 'Spring Blossom',
-    benefits: ['100% Raw & Unheated', 'Naturally High Pollen', 'Lab NMR Tested'],
+    benefits: ['100% Raw & Unheated', 'Naturally High Pollen'],
     nutritionFacts: {
       energy: '304 kcal per 100g',
       carbohydrates: '82.4g',
@@ -818,7 +818,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                   }}
                 >
                   <ShieldCheck size={13} />
-                  <span>100% Raw • {activeProduct.purityScore || 99.8}% NMR Tested</span>
+                  <span>100% Raw • {activeProduct.purityScore || 99.8}%</span>
                 </div>
 
                 <h2
@@ -1174,7 +1174,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({
                 }}
               >
                 <ShieldCheck size={13} />
-                <span>100% Raw • {activeProduct.purityScore || 99.8}% NMR Tested</span>
+                <span>100% Raw • {activeProduct.purityScore || 99.8}%</span>
               </div>
               <h3 style={{ margin: '2px 0 4px 0', fontSize: '1.2rem', color: '#1C1917', fontWeight: 800 }}>
                 {activeProduct.name}

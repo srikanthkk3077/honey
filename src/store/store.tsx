@@ -4,7 +4,7 @@ import { Product, Category, ProductReview } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
 import { VideoItem } from '../types/video.types';
 import { SliderItem } from '../types/slider.types';
-import { StoreSettings } from '../types/customer.types';
+import { StoreSettings, HeroConfig, DEFAULT_HERO_CONFIG } from '../types/customer.types';
 
 // ─── Slices (local storage persistence) ──────────────────────────────────────
 import { getInitialUser, saveUser } from './slices/authSlice';
@@ -142,6 +142,7 @@ interface StoreContextType {
   isSettingsLoading: boolean;
   refreshSettings: () => Promise<void>;
   updateSettings: (settings: Partial<StoreSettings>) => Promise<void>;
+  updateHeroConfig: (heroUpdates: Partial<HeroConfig>) => Promise<void>;
 
   // Reviews & Testimonials
   homeReviews: Testimonial[];
@@ -183,6 +184,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
     isCodActive: true,
   },
   deliveryConfig: DEFAULT_DELIVERY_CONFIG,
+  heroConfig: DEFAULT_HERO_CONFIG,
 };
 
 const SETTINGS_STORAGE_KEY = 'madhuvan_store_settings_v1';
@@ -190,6 +192,9 @@ const getInitialSettings = (): StoreSettings => {
   const loaded = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
   if (!loaded.deliveryConfig) {
     loaded.deliveryConfig = DEFAULT_DELIVERY_CONFIG;
+  }
+  if (!loaded.heroConfig) {
+    loaded.heroConfig = DEFAULT_HERO_CONFIG;
   }
   return loaded;
 };
@@ -288,6 +293,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ...prev.paymentConfig,
             ...(data.paymentConfig || {}),
           },
+          heroConfig: {
+            ...DEFAULT_HERO_CONFIG,
+            ...(prev.heroConfig || {}),
+            ...(data.heroConfig || {}),
+          },
         }));
       }
     } catch {
@@ -308,6 +318,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...prev.paymentConfig,
         ...(updates.paymentConfig || {}),
       },
+      heroConfig: updates.heroConfig
+        ? {
+          ...DEFAULT_HERO_CONFIG,
+          ...(prev.heroConfig || {}),
+          ...updates.heroConfig,
+        }
+        : prev.heroConfig,
     }));
 
     try {
@@ -320,6 +337,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ...prev.paymentConfig,
             ...(result.paymentConfig || {}),
           },
+          heroConfig: result.heroConfig
+            ? {
+              ...DEFAULT_HERO_CONFIG,
+              ...(prev.heroConfig || {}),
+              ...result.heroConfig,
+            }
+            : prev.heroConfig,
         }));
       }
       showToast('Store settings updated successfully!', 'success');
@@ -327,6 +351,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.error('Settings update error:', err);
       showToast('Settings saved locally.', 'info');
     }
+  };
+
+  const updateHeroConfig = async (heroUpdates: Partial<HeroConfig>) => {
+    const currentHero = settings.heroConfig || DEFAULT_HERO_CONFIG;
+    const mergedHero: HeroConfig = {
+      ...currentHero,
+      ...heroUpdates,
+    };
+    await updateSettings({ heroConfig: mergedHero });
   };
 
   // ─── Load orders when user changes ──────────────────────────────────────────
@@ -1189,6 +1222,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isSettingsLoading,
         refreshSettings,
         updateSettings,
+        updateHeroConfig,
 
         // Reviews & Testimonials
         homeReviews,

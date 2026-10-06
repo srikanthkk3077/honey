@@ -11,7 +11,8 @@ export const Header: React.FC = () => {
     isAuthenticated,
     logout,
     setMobileMenuOpen,
-    setCartDrawerOpen
+    setCartDrawerOpen,
+    settings,
   } = useStore();
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -58,9 +59,19 @@ export const Header: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 50,
-        backgroundColor: '#FFFFFF',
-        borderBottom: '1px solid #E7E5E4',
-        boxShadow: isScrolled ? '0 4px 20px rgba(0,0,0,0.06)' : '0 1px 3px rgba(0,0,0,0.02)',
+        backgroundColor:
+          isHome && !isScrolled
+            ? settings?.heroConfig?.backgroundColor || '#FDDCC3'
+            : '#FFFFFF',
+        borderBottom:
+          isHome && !isScrolled
+            ? '1px solid rgba(154, 70, 22, 0.12)'
+            : '1px solid #E7E5E4',
+        boxShadow: isScrolled
+          ? '0 4px 20px rgba(0,0,0,0.06)'
+          : isHome
+            ? 'none'
+            : '0 1px 3px rgba(0,0,0,0.02)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
@@ -279,27 +290,55 @@ export const Header: React.FC = () => {
 
             {/* Account / Admin */}
             <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setProfileOpen(!profileOpen)}
-                style={{
-                  background: isAuthenticated ? '#FEF3C7' : '#F5F5F4',
-                  border: isAuthenticated ? '1px solid #F59E0B' : '1px solid #E7E5E4',
-                  cursor: 'pointer',
-                  padding: '6px 12px',
-                  borderRadius: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  color: isAuthenticated ? '#92400E' : '#44403C',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                }}
-              >
-                <UserIcon size={16} />
-                <span className="account-label" style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {isAuthenticated ? user?.name : 'Account'}
-                </span>
-              </button>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  style={{
+                    background: '#FEF3C7',
+                    border: '1px solid #F59E0B',
+                    cursor: 'pointer',
+                    padding: '6px 14px',
+                    borderRadius: '9999px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: '#92400E',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                  }}
+                >
+                  <UserIcon size={15} />
+                  <span className="account-label" style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user?.name}
+                  </span>
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  id="header-login-btn"
+                  style={{
+                    background: '#4A1F0A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '7px 20px',
+                    borderRadius: '9999px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.88rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.02em',
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 12px rgba(74, 31, 10, 0.22)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#381504')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#4A1F0A')}
+                >
+                  Login
+                </Link>
+              )}
 
               {profileOpen && (
                 <div

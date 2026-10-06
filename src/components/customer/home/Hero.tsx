@@ -1,905 +1,613 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Play,
-  Volume2,
-  VolumeX,
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
-  Sparkles,
+  Play,
   X,
+  Wheat,
+  Ban,
+  FlaskConical,
+  Users,
+  Leaf,
   ShieldCheck,
-  Flame,
-  Truck,
+  CheckCircle2,
+  Edit3,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
-import { SliderItem } from '../../../types/slider.types';
-import { HeroShimmer } from '../../common/Shimmer';
+import { DEFAULT_HERO_CONFIG, HeroBadge } from '../../../types/customer.types';
 
-interface QuoteSlide {
-  id: string;
-  quote: string;
-  author: string;
-  authorRole: string;
-  varietyName: string;
-  price: number;
-  originalPrice: number;
-  linkUrl: string;
-  videoUrl?: string;
-}
-
-const HONEYVEDA_SLIDES: QuoteSlide[] = [
-  {
-    id: 'vineeta-quote',
-    quote: '"Ye ajwain bada interesting hai, meetha hai lekein ajwain vala taste aa raha hai"',
-    author: '— Vineeta Singh',
-    authorRole: 'Shark Tank India Judge • CEO, SUGAR Cosmetics',
-    varietyName: 'Raw Ajwain & Wild Forest Honey',
-    price: 498,
-    originalPrice: 650,
-    linkUrl: '/shop',
-    videoUrl:
-      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1790995078981.mp4',
-  },
-  {
-    id: 'master-beekeeper-quote',
-    quote: '"Ye honey sach me 100% pure aur unheated hai — jungle ki live enzymes aur raw pollen ka asali swaad!"',
-    author: '— Master Beekeeper Ramesh',
-    authorRole: '3rd Generation Forest Apiary Gatherer',
-    varietyName: '100% Raw Forest Comb Harvest',
-    price: 549,
-    originalPrice: 720,
-    linkUrl: '/shop',
-    videoUrl:
-      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1791020235595.mp4',
-  },
-  {
-    id: 'scientist-purity-quote',
-    quote: '"Zero added sugar syrups, zero artificial heating. Tested and certified 100% NMR pure at national labs."',
-    author: '— Dr. Ananya Sen',
-    authorRole: 'Food Biochemist & Honey Purity Researcher',
-    varietyName: 'Himalayan White Acacia Honey',
-    price: 699,
-    originalPrice: 899,
-    linkUrl: '/shop',
-    videoUrl:
-      'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1791020416024.mp4',
-  },
-];
+// Render the trust badge icon based on the icon key
+const renderBadgeIcon = (iconKey: string) => {
+  const size = 20;
+  const strokeWidth = 1.6;
+  switch (iconKey) {
+    case 'natural':
+    case 'wheat':
+      return <Wheat size={size} strokeWidth={strokeWidth} />;
+    case 'no-sugar':
+    case 'flask':
+      return <FlaskConical size={size} strokeWidth={strokeWidth} />;
+    case 'beekeepers':
+    case 'users':
+      return <Users size={size} strokeWidth={strokeWidth} />;
+    case 'leaf':
+      return <Leaf size={size} strokeWidth={strokeWidth} />;
+    case 'shield':
+      return <ShieldCheck size={size} strokeWidth={strokeWidth} />;
+    default:
+      return <CheckCircle2 size={size} strokeWidth={strokeWidth} />;
+  }
+};
 
 export const Hero: React.FC = () => {
-  const { sliders, isSlidersLoading } = useStore();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
+  const { settings, isAdmin } = useStore();
+  const hero = settings?.heroConfig || DEFAULT_HERO_CONFIG;
+
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string>('');
-  const [isMuted, setIsMuted] = useState(true);
 
-  const heroVideoRef = useRef<HTMLVideoElement>(null);
-  const modalVideoRef = useRef<HTMLVideoElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const activeBadges: HeroBadge[] = (hero.trustBadges && hero.trustBadges.length > 0
+    ? hero.trustBadges
+    : DEFAULT_HERO_CONFIG.trustBadges
+  ).filter((b) => b.isActive);
 
-  const currentSlide = HONEYVEDA_SLIDES[currentIndex] || HONEYVEDA_SLIDES[0];
+  const heroImage = hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+  const videoUrl =
+    hero.storyVideoUrl ||
+    'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1790995078981.mp4';
 
-  // Auto-advance slides every 7 seconds
-  useEffect(() => {
-    if (isHovered || isVideoModalOpen) return;
-
-    timerRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % HONEYVEDA_SLIDES.length);
-    }, 7000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentIndex, isHovered, isVideoModalOpen]);
-
-  // Restart video playback when slide changes
-  useEffect(() => {
-    if (heroVideoRef.current) {
-      heroVideoRef.current.currentTime = 0;
-      heroVideoRef.current.play().catch(() => {});
-    }
-  }, [currentIndex]);
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % HONEYVEDA_SLIDES.length);
-  };
-
-  const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + HONEYVEDA_SLIDES.length) % HONEYVEDA_SLIDES.length);
-  };
-
-  const toggleAudio = (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setIsMuted((prev) => {
-      const nextMuted = !prev;
-      if (heroVideoRef.current) {
-        heroVideoRef.current.muted = nextMuted;
-      }
-      return nextMuted;
-    });
-  };
-
-  const openVideo = (url?: string) => {
-    if (url) {
-      if (heroVideoRef.current) {
-        heroVideoRef.current.pause();
-      }
-      setActiveVideoUrl(url);
+  const handleSecondaryClick = (e: React.MouseEvent) => {
+    if (hero.storyVideoUrl || videoUrl) {
+      e.preventDefault();
       setIsVideoModalOpen(true);
     }
   };
 
-  const closeVideo = () => {
-    setIsVideoModalOpen(false);
-    if (heroVideoRef.current) {
-      heroVideoRef.current.play().catch(() => {});
-    }
-  };
-
-  if (isSlidersLoading && sliders.length === 0) {
-    return <HeroShimmer />;
-  }
-
   return (
     <section
-      id="honeyveda-hero-section"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      id="madhuvan-hero-section"
       style={{
         position: 'relative',
         width: '100%',
-        minHeight: '88vh',
-        background: 'linear-gradient(135deg, #F39C12 0%, #E67E22 35%, #D97706 70%, #B45309 100%)',
-        color: '#FFFFFF',
+        backgroundColor: hero.backgroundColor || '#FDDCC3',
+        backgroundImage: `
+          radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
+          radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%)
+        `,
         overflow: 'hidden',
+        minHeight: 'clamp(540px, 82vh, 760px)',
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        paddingTop: '2.25rem',
+        alignItems: 'center',
+        padding: 'clamp(1.5rem, 3.5vw, 3rem) 0 clamp(2rem, 4vw, 3.5rem)',
       }}
     >
-      {/* ── Background Honey Droplets & Swirl Watermark Texture ── */}
+
+
+      {/* ── Bottom-Left Botanical Floral Ornament ── */}
+      {hero.showBotanicalAccent !== false && (
+        <div
+          className="hero-botanical-accent"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            height: 'clamp(140px, 24vh, 220px)',
+            width: 'auto',
+            pointerEvents: 'none',
+            zIndex: 2,
+            opacity: 0.95,
+          }}
+        >
+          <img
+            src="/images/brand/botanical_corner_clean.png"
+            alt="Botanical Wildflower Ornament"
+            style={{
+              height: '100%',
+              width: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+              objectPosition: 'bottom left',
+            }}
+            loading="eager"
+          />
+        </div>
+      )}
+
+      {/* ── Right-Side Full Bleed Cover Image with Total Gradient Cover Blend ── */}
       <div
+        className="hero-right-cover-wrapper"
         style={{
           position: 'absolute',
-          inset: 0,
-          backgroundImage: `
-            radial-gradient(circle at 75% 25%, rgba(254, 243, 199, 0.25) 0%, transparent 45%),
-            radial-gradient(circle at 25% 75%, rgba(180, 83, 9, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.15) 0%, transparent 65%)
-          `,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: 'clamp(52%, 60vw, 68%)',
+          height: '100%',
+          overflow: 'hidden',
           pointerEvents: 'none',
           zIndex: 1,
         }}
-      />
-
-      {/* ── Top Subtle Dark Vignette: Ensures Clean Header Readability ── */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '110px',
-          background: 'linear-gradient(180deg, rgba(30, 20, 10, 0.45) 0%, rgba(30, 20, 10, 0.15) 60%, transparent 100%)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* =========================================================================
-          TOP RIGHT: SHARK TANK INDIA OFFICIAL STYLE RIBBON
-          ========================================================================= */}
-      <div
-        id="shark-tank-ribbon"
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 'clamp(1rem, 4vw, 3.5rem)',
-          background: 'linear-gradient(180deg, #09172A 0%, #0F2847 100%)',
-          color: '#FFFFFF',
-          padding: '14px 16px 20px',
-          clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%)',
-          textAlign: 'center',
-          zIndex: 20,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
-          borderLeft: '1px solid rgba(245, 158, 11, 0.4)',
-          borderRight: '1px solid rgba(245, 158, 11, 0.4)',
-          minWidth: '94px',
-          userSelect: 'none',
-        }}
       >
-        <div
+        <img
+          src={heroImage}
+          alt="Madhuvan Raw Forest Honey"
           style={{
-            fontSize: '0.62rem',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: '#93C5FD',
-            marginBottom: '2px',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center center',
+            display: 'block',
           }}
-        >
-          As seen on
-        </div>
+          loading="eager"
+        />
+
+        {/* ── Smooth Left-Edge Gradient Blend ── */}
         <div
+          className="hero-cover-gradient-mask"
           style={{
-            fontSize: '1rem',
-            fontWeight: 900,
-            letterSpacing: '0.05em',
-            lineHeight: 1.05,
-            color: '#FFFFFF',
-            fontFamily: "'Playfair Display', Georgia, serif",
+            position: 'absolute',
+            inset: 0,
+            background: `
+              linear-gradient(to right,
+                ${hero.backgroundColor || '#FDDCC3'} 0%,
+                rgba(253, 220, 195, 0.82) 18%,
+                rgba(253, 220, 195, 0.35) 38%,
+                rgba(253, 220, 195, 0.08) 58%,
+                transparent 75%
+              )
+            `,
+            pointerEvents: 'none',
           }}
-        >
-          SHARK
-        </div>
-        <div
-          style={{
-            fontSize: '1rem',
-            fontWeight: 900,
-            letterSpacing: '0.05em',
-            lineHeight: 1.05,
-            color: '#FFFFFF',
-            fontFamily: "'Playfair Display', Georgia, serif",
-          }}
-        >
-          TANK
-        </div>
-        <div
-          style={{
-            fontSize: '0.74rem',
-            fontWeight: 800,
-            letterSpacing: '0.14em',
-            color: '#F59E0B',
-            marginTop: '3px',
-          }}
-        >
-          INDIA
-        </div>
+        />
       </div>
 
-      {/* =========================================================================
-          MAIN STAGE: 3-COLUMN COMPOSITION (Cartoon Avatar + Centered Quote + Honey Jar)
-          ========================================================================= */}
       <div
         className="container"
         style={{
           position: 'relative',
           zIndex: 5,
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingTop: 'clamp(1rem, 2.5vh, 2.5rem)',
-          paddingBottom: 'clamp(1.5rem, 3.5vh, 3rem)',
+          maxWidth: '1280px',
+          margin: '0 auto',
+          padding: '0 clamp(1rem, 3.5vw, 2.5rem)',
+          width: '100%',
         }}
       >
         <div
-          id="honeyveda-stage-grid"
+          className="hero-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(180px, 1fr) minmax(360px, 2fr) minmax(200px, 1.1fr)',
+            gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1.15fr)',
             alignItems: 'center',
-            gap: 'clamp(1.5rem, 3vw, 3rem)',
-            width: '100%',
+            gap: 'clamp(1.5rem, 3.5vw, 3.5rem)',
           }}
         >
-          {/* ── LEFT: Exact Same Box as Right Side Jar - Playing Video ── */}
+          {/* =========================================================================
+              LEFT COLUMN: HERO CONTENT & BADGES
+              ========================================================================= */}
           <div
-            id="honeyveda-video-col"
+            className="hero-content"
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
+              zIndex: 3,
+              maxWidth: '580px',
             }}
           >
+            {/* 1. Eyebrow Tagline */}
             <div
               style={{
-                position: 'relative',
-                width: 'clamp(200px, 24vw, 290px)',
-                filter: 'drop-shadow(0 20px 35px rgba(0, 0, 0, 0.45))',
-                transform: 'rotate(-4deg)',
-                animation: 'videoFloat 6s ease-in-out infinite',
-                cursor: 'pointer',
+                fontSize: 'clamp(0.78rem, 1.4vw, 0.92rem)',
+                fontWeight: 800,
+                letterSpacing: '0.18em',
+                textTransform: 'uppercase',
+                color: '#9E4616',
+                marginBottom: 'clamp(0.6rem, 1.2vw, 1rem)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
               }}
-              onClick={() => openVideo(currentSlide.videoUrl)}
-              title="Click to expand video"
             >
-              {/* Exact matching box container */}
-              <div
+              <span>{hero.eyebrow || 'FROM FOREST TO FAMILY'}</span>
+            </div>
+
+            {/* 2. Main Headline (Serif Elegant Typography) */}
+            <h1
+              style={{
+                fontFamily: "var(--font-serif, 'Playfair Display', Georgia, serif)",
+                fontSize: 'clamp(2.4rem, 4.8vw, 3.9rem)',
+                fontWeight: 700,
+                lineHeight: 1.12,
+                color: '#2C150A',
+                margin: '0 0 clamp(0.75rem, 1.5vw, 1.2rem) 0',
+                letterSpacing: '-0.015em',
+              }}
+            >
+              <span style={{ display: 'block' }}>
+                {hero.titleLine1 || 'More Than Honey'}
+              </span>
+              <span style={{ display: 'block', color: '#2C150A' }}>
+                {hero.titleLine2 || 'A Healthier Lifestyle'}
+              </span>
+            </h1>
+
+            {/* 3. Description / Subtitle */}
+            <p
+              style={{
+                fontSize: 'clamp(1rem, 1.8vw, 1.16rem)',
+                lineHeight: 1.62,
+                color: '#553725',
+                margin: '0 0 clamp(1.4rem, 2.5vw, 2.2rem) 0',
+                maxWidth: '520px',
+                fontWeight: 400,
+              }}
+            >
+              {hero.subtitle ||
+                "Pure honey, collected from forest flowers for your family's better health."}
+            </p>
+
+            {/* 4. Action CTA Buttons */}
+            <div
+              className="hero-actions"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(0.75rem, 1.8vw, 1.25rem)',
+                flexWrap: 'wrap',
+                marginBottom: 'clamp(2rem, 3.5vw, 3rem)',
+              }}
+            >
+              {/* Primary Button */}
+              <Link
+                to={hero.primaryCtaLink || '/shop'}
+                className="hero-primary-btn"
+                id="hero-primary-cta"
                 style={{
-                  width: '100%',
-                  aspectRatio: '1 / 1',
-                  borderRadius: '22px',
-                  overflow: 'hidden',
-                  boxShadow: '0 16px 36px rgba(0, 0, 0, 0.3)',
-                  background: '#0D0905',
-                  position: 'relative',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  backgroundColor: '#4A1F0A',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: 'clamp(0.86rem, 1.4vw, 0.95rem)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  padding: 'clamp(0.85rem, 1.4vw, 1rem) clamp(1.6rem, 2.5vw, 2.2rem)',
+                  borderRadius: '9999px',
+                  boxShadow: '0 8px 22px rgba(74, 31, 10, 0.28)',
+                  textDecoration: 'none',
+                  transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  userSelect: 'none',
                 }}
               >
-                <video
-                  ref={heroVideoRef}
-                  key={currentSlide.videoUrl}
-                  src={currentSlide.videoUrl}
-                  autoPlay
-                  loop
-                  muted={isMuted}
-                  playsInline
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
+                <span>{hero.primaryCtaText || 'SHOP RAW HONEY'}</span>
+                <ArrowRight size={17} className="hero-arrow-icon" />
+              </Link>
 
-                {/* Ambient Scrim for badge contrast */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 28%, transparent 65%, rgba(0,0,0,0.6) 100%)',
-                    pointerEvents: 'none',
-                  }}
-                />
-
-                {/* Top-Right: Sound toggle button */}
+              {/* Secondary Button */}
+              {hero.secondaryCtaText && (
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleAudio();
-                  }}
+                  onClick={handleSecondaryClick}
+                  className="hero-secondary-btn"
+                  id="hero-secondary-cta"
                   style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: 'rgba(10, 8, 6, 0.85)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(245, 158, 11, 0.4)',
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-                    zIndex: 4,
-                  }}
-                  title={isMuted ? 'Click to Unmute' : 'Click to Mute'}
-                  aria-label={isMuted ? 'Unmute video audio' : 'Mute video audio'}
-                >
-                  {isMuted ? <VolumeX size={15} color="#FBBF24" /> : <Volume2 size={15} color="#34D399" />}
-                </button>
-
-                {/* Top-Left: Live Clip pill */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '10px',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '5px',
-                    background: 'rgba(10, 8, 6, 0.85)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    gap: '10px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                    color: '#381B0E',
+                    fontWeight: 600,
+                    fontSize: 'clamp(0.86rem, 1.4vw, 0.95rem)',
+                    padding: 'clamp(0.85rem, 1.4vw, 1rem) clamp(1.4rem, 2.2vw, 1.9rem)',
                     borderRadius: '9999px',
-                    padding: '4px 9px',
-                    fontSize: '0.66rem',
-                    fontWeight: 700,
-                    color: '#FFFFFF',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    zIndex: 4,
+                    border: '1.5px solid rgba(138, 70, 32, 0.35)',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    userSelect: 'none',
                   }}
                 >
                   <span
                     style={{
-                      width: '6px',
-                      height: '6px',
+                      width: '20px',
+                      height: '20px',
                       borderRadius: '50%',
-                      backgroundColor: '#EF4444',
-                      boxShadow: '0 0 6px #EF4444',
-                      display: 'inline-block',
-                      animation: 'pulseDot 1.5s infinite',
+                      backgroundColor: '#381B0E',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#FDDCC3',
                     }}
-                  />
-                  <span>Live Video</span>
-                </div>
-              </div>
-
-              {/* Matching Bottom Pill (Same style as the right-side jar price tag pill) */}
-              <div
-                style={{
-                  position: 'absolute',
-                  bottom: '12px',
-                  left: '10px',
-                  background: 'rgba(10, 8, 6, 0.9)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(245, 158, 11, 0.4)',
-                  borderRadius: '12px',
-                  padding: '6px 12px',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
-                  zIndex: 4,
-                }}
-              >
-                <Play size={13} fill="#FBBF24" color="#FBBF24" />
-                <span style={{ fontSize: '0.86rem', fontWeight: 800, color: '#FBBF24' }}>Shark Tank Pitch</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── CENTER: Big Viral Quote + Attribution + Slider Dots ── */}
-          <div
-            id="honeyveda-quote-col"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              gap: '1.25rem',
-              padding: '0 clamp(0.5rem, 2vw, 1.5rem)',
-            }}
-          >
-            {/* The Famous Quote */}
-            <h2
-              id="honeyveda-quote-text"
-              style={{
-                fontSize: 'clamp(1.45rem, 2.8vw, 2.35rem)',
-                fontWeight: 700,
-                lineHeight: 1.35,
-                color: '#FFFFFF',
-                fontFamily: "'Playfair Display', Georgia, serif",
-                letterSpacing: '-0.01em',
-                margin: 0,
-                textShadow: '0 2px 14px rgba(0, 0, 0, 0.4)',
-                maxWidth: '680px',
-              }}
-            >
-              {currentSlide.quote}
-            </h2>
-
-            {/* Author Attribution */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-              <div
-                style={{
-                  fontSize: 'clamp(0.95rem, 1.4vw, 1.15rem)',
-                  fontWeight: 600,
-                  color: '#FEF3C7',
-                  fontFamily: "'Playfair Display', serif",
-                  fontStyle: 'italic',
-                }}
-              >
-                {currentSlide.author}
-              </div>
-              <div
-                style={{
-                  fontSize: '0.8rem',
-                  color: 'rgba(255, 255, 255, 0.85)',
-                  fontWeight: 500,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                {currentSlide.authorRole}
-              </div>
-            </div>
-
-            {/* CTA Actions: Explore Honey + Watch Video Clip */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                marginTop: '0.5rem',
-              }}
-            >
-              <Link
-                to={currentSlide.linkUrl}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: '#FFFFFF',
-                  color: '#B45309',
-                  padding: '11px 26px',
-                  borderRadius: '9999px',
-                  fontWeight: 800,
-                  fontSize: '0.88rem',
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                  textDecoration: 'none',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
-                  transition: 'all 0.25s ease',
-                }}
-                className="honeyveda-cta-btn"
-              >
-                <span>Shop Raw Honey</span>
-                <ArrowRight size={16} />
-              </Link>
-
-              {/* {currentSlide.videoUrl && (
-                <button
-                  onClick={() => openVideo(currentSlide.videoUrl)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    background: 'rgba(0, 0, 0, 0.35)',
-                    border: '1px solid rgba(255, 255, 255, 0.35)',
-                    backdropFilter: 'blur(10px)',
-                    color: '#FFFFFF',
-                    padding: '11px 22px',
-                    borderRadius: '9999px',
-                    fontWeight: 700,
-                    fontSize: '0.86rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s ease',
-                  }}
-                  className="honeyveda-video-btn"
-                >
-                  <Play size={15} fill="#FFFFFF" />
-                  <span>Watch Video Clip</span>
+                  >
+                    <Play size={10} style={{ marginLeft: '1px' }} fill="#FDDCC3" />
+                  </span>
+                  <span>{hero.secondaryCtaText || 'Watch Our Story'}</span>
                 </button>
-              )} */}
+              )}
             </div>
 
-            {/* Slider Dots (Exact HoneyVeda Style: White & Orange Dots) */}
-            <div
-              id="honeyveda-slider-dots"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginTop: '1rem',
-              }}
-            >
-              {HONEYVEDA_SLIDES.map((slide, idx) => {
-                const isActive = idx === currentIndex;
-                return (
-                  <button
-                    key={slide.id}
-                    onClick={() => setCurrentIndex(idx)}
+            {/* 5. Trust Badges Row (4 circular line-art badges) */}
+            {activeBadges.length > 0 && (
+              <div
+                className="hero-trust-badges"
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 'clamp(0.75rem, 2vw, 1.85rem)',
+                  paddingTop: 'clamp(0.5rem, 1.5vw, 1rem)',
+                  borderTop: '1px solid rgba(154, 70, 22, 0.18)',
+                  maxWidth: '560px',
+                }}
+              >
+                {activeBadges.map((badge) => (
+                  <div
+                    key={badge.id}
+                    className="trust-badge-item"
                     style={{
-                      width: isActive ? '22px' : '9px',
-                      height: '9px',
-                      borderRadius: '9999px',
-                      background: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.45)',
-                      border: 'none',
-                      padding: 0,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: isActive ? '0 0 10px rgba(255, 255, 255, 0.8)' : 'none',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      textAlign: 'center',
+                      gap: '7px',
+                      flex: '1 1 0',
+                      minWidth: '70px',
                     }}
-                    title={`Slide ${idx + 1}`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                );
-              })}
-            </div>
+                  >
+                    {/* Circle Icon Container */}
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '50%',
+                        border: '1.5px solid rgba(154, 70, 22, 0.4)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.42)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#8A3E15',
+                        boxShadow: '0 2px 6px rgba(138, 62, 21, 0.08)',
+                        transition: 'transform 0.2s ease, background-color 0.2s ease',
+                      }}
+                    >
+                      {renderBadgeIcon(badge.icon)}
+                    </div>
+                    {/* Badge Label */}
+                    <span
+                      style={{
+                        fontSize: 'clamp(0.72rem, 1.2vw, 0.8rem)',
+                        fontWeight: 600,
+                        color: '#462717',
+                        lineHeight: 1.25,
+                        maxWidth: '92px',
+                      }}
+                    >
+                      {badge.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* ── RIGHT: Authentic Madhuvan Raw Honey Jar with Jute Lid Tie ── */}
+          {/* =========================================================================
+              RIGHT COLUMN: CALLOUT BADGE FLOATING OVER COVER IMAGE
+              ========================================================================= */}
           <div
-            id="honeyveda-jar-col"
+            className="hero-visual"
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
               position: 'relative',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'flex-end',
+              width: '100%',
+              minHeight: 'clamp(360px, 50vh, 480px)',
+              userSelect: 'none',
+              paddingTop: 'clamp(1rem, 3vw, 2.5rem)',
+              paddingRight: 'clamp(0.5rem, 2vw, 2rem)',
             }}
           >
-            <div
-              style={{
-                position: 'relative',
-                width: 'clamp(200px, 24vw, 290px)',
-                filter: 'drop-shadow(0 20px 35px rgba(0, 0, 0, 0.45))',
-                transform: 'rotate(4deg)',
-                animation: 'jarFloat 6s ease-in-out infinite',
-              }}
-            >
-              <img
-                src="/images/brand/madhuvan_jute_jar.jpg"
-                alt="Madhuvan Raw Forest Honey in Jute Burlap Lid Jar"
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  objectFit: 'contain',
-                  borderRadius: '22px',
-                  boxShadow: '0 16px 36px rgba(0, 0, 0, 0.3)',
-                }}
-              />
-
-              {/* Price Tag Pill */}
+            {/* Callout Speech Bubble (Pure Honey / Stronger Communities) */}
+            {hero.showCalloutBadge !== false && (
               <div
+                className="hero-callout-badge"
                 style={{
-                  position: 'absolute',
-                  bottom: '12px',
-                  right: '10px',
-                  background: 'rgba(10, 8, 6, 0.9)',
-                  backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(245, 158, 11, 0.4)',
-                  borderRadius: '12px',
-                  padding: '6px 12px',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 6px 16px rgba(0,0,0,0.4)',
+                  backgroundColor: 'rgba(253, 237, 219, 0.95)',
+                  border: '1.5px solid #C47942',
+                  borderRadius: '50px',
+                  padding: '8px 18px',
+                  boxShadow: '0 8px 22px rgba(138, 70, 32, 0.2)',
+                  transform: 'rotate(-4deg)',
+                  pointerEvents: 'none',
+                  animation: 'floatCallout 4s ease-in-out infinite',
                 }}
               >
-                <span style={{ fontSize: '0.96rem', fontWeight: 800, color: '#FBBF24' }}>₹{currentSlide.price}</span>
-                <span style={{ fontSize: '0.78rem', color: '#9CA3AF', textDecoration: 'line-through' }}>₹{currentSlide.originalPrice}</span>
+                <div
+                  style={{
+                    fontFamily: "var(--font-serif, 'Playfair Display', Georgia, serif)",
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(0.78rem, 1.4vw, 0.92rem)',
+                    fontWeight: 700,
+                    color: '#8C4318',
+                    lineHeight: 1.2,
+                    textAlign: 'center',
+                    whiteSpace: 'pre-line',
+                  }}
+                >
+                  {hero.calloutBadgeText || 'Pure Honey\nStronger Communities'}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* =========================================================================
-          BOTTOM FULL-WIDTH LUXURY TRUST TICKER (HONEYVEDA MARQUEE STRIP)
+          VIDEO SHOWCASE MODAL ("Watch Our Story")
           ========================================================================= */}
-      <div
-        id="honeyveda-bottom-ticker"
-        style={{
-          width: '100%',
-          background: '#FFFFFF',
-          color: '#1C1917',
-          padding: '12px 0',
-          borderTop: '1px solid #E7E5E4',
-          borderBottom: '1px solid #E7E5E4',
-          overflow: 'hidden',
-          zIndex: 10,
-          position: 'relative',
-        }}
-      >
-        <div className="honeyveda-ticker-marquee">
-          <div className="honeyveda-ticker-track">
-            {/* Repeated items for smooth seamless infinite scroll */}
-            {[...Array(2)].map((_, loopIdx) => (
-              <div
-                key={loopIdx}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '2.5rem',
-                  paddingRight: '2.5rem',
-                  fontSize: '0.86rem',
-                  fontWeight: 600,
-                  color: '#292524',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <Flame size={16} color="#DC2626" />
-                  <span>No heating to cut corners</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.1rem' }}>🐝</span>
-                  <span>Gentle bee colony</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.1rem' }}>🌱</span>
-                  <span>Sustainable Farming</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.1rem' }}>🌿</span>
-                  <span>No processing for taste!</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '1.1rem' }}>🐝</span>
-                  <span>Focussed Bee Conservation</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <ShieldCheck size={16} color="#059669" />
-                  <span>100% NMR Lab Certified Pure</span>
-                </div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                  <Truck size={16} color="#D97706" />
-                  <span>Free Delivery on orders above ₹400</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================================
-          EMBEDDED VIDEO POPUP MODAL (When "Watch Video Clip" is clicked)
-          ========================================================================= */}
-      {isVideoModalOpen && activeVideoUrl && (
+      {isVideoModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(14px)',
             zIndex: 9999,
+            backgroundColor: 'rgba(15, 12, 10, 0.85)',
+            backdropFilter: 'blur(10px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '1rem',
           }}
-          onClick={closeVideo}
+          onClick={() => setIsVideoModalOpen(false)}
         >
           <div
             style={{
               position: 'relative',
               width: '100%',
-              maxWidth: '820px',
-              aspectRatio: '16 / 9',
-              background: '#0C0A08',
+              maxWidth: '860px',
+              backgroundColor: '#1C1917',
               borderRadius: '20px',
               overflow: 'hidden',
-              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
               border: '1px solid rgba(245, 158, 11, 0.3)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <video
-              ref={modalVideoRef}
-              src={activeVideoUrl}
-              autoPlay
-              controls
-              playsInline
+            {/* Modal Header */}
+            <div
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-
-            {/* Close Button */}
-            <button
-              onClick={closeVideo}
-              style={{
-                position: 'absolute',
-                top: '14px',
-                right: '14px',
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                background: 'rgba(0, 0, 0, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                zIndex: 10,
+                justifyContent: 'space-between',
+                padding: '1rem 1.5rem',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+                backgroundColor: '#26201A',
               }}
-              aria-label="Close video"
             >
-              <X size={18} />
-            </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🍯</span>
+                <span style={{ color: '#FFFFFF', fontWeight: 700, fontSize: '1rem' }}>
+                  Madhuvan Honey — Our Story & Forest Harvest
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsVideoModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#A8A29E',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'color 0.15s ease',
+                }}
+                aria-label="Close modal"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Video Player */}
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000000' }}>
+              <video
+                src={videoUrl}
+                controls
+                autoPlay
+                playsInline
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {/* ── Keyframe Animations & Responsive Layout Styles ── */}
+      {/* Scoped CSS animations & responsive rules */}
       <style>{`
-        @keyframes videoFloat {
+        @keyframes floatCallout {
           0%, 100% {
-            transform: rotate(-4deg) translateY(0px);
+            transform: rotate(-4deg) translateY(0);
           }
           50% {
-            transform: rotate(-3deg) translateY(-10px);
+            transform: rotate(-3deg) translateY(-6px);
           }
         }
 
-        @keyframes jarFloat {
-          0%, 100% {
-            transform: rotate(4deg) translateY(0px);
+        .hero-primary-btn:hover {
+          background-color: #381504 !important;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 28px rgba(74, 31, 10, 0.38) !important;
+        }
+
+        .hero-primary-btn:hover .hero-arrow-icon {
+          transform: translateX(4px);
+        }
+
+        .hero-arrow-icon {
+          transition: transform 0.2s ease;
+        }
+
+        .hero-secondary-btn:hover {
+          background-color: rgba(255, 255, 255, 0.75) !important;
+          border-color: #8C4318 !important;
+          transform: translateY(-2px);
+        }
+
+        .trust-badge-item:hover > div {
+          transform: translateY(-2px);
+          background-color: rgba(255, 255, 255, 0.75) !important;
+          border-color: #8C4318 !important;
+        }
+
+        @media (max-width: 960px) {
+          .hero-right-cover-wrapper {
+            width: 100% !important;
+            opacity: 0.38 !important;
           }
-          50% {
-            transform: rotate(3deg) translateY(-10px);
+          .hero-visual {
+            display: none !important;
           }
-        }
-
-        @keyframes pulseDot {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.35;
-            transform: scale(0.8);
-          }
-        }
-
-        .honeyveda-cta-btn:hover {
-          transform: translateY(-2px) scale(1.03);
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
-          background: #FEF3C7 !important;
-        }
-
-        .honeyveda-video-btn:hover {
-          background: rgba(255, 255, 255, 0.2) !important;
-          border-color: rgba(255, 255, 255, 0.6) !important;
-          transform: translateY(-1px);
-        }
-
-        .honeyveda-ticker-marquee {
-          overflow: hidden;
-          width: 100%;
-        }
-
-        .honeyveda-ticker-track {
-          display: flex;
-          width: max-content;
-          animation: tickerScroll 26s linear infinite;
-        }
-
-        .honeyveda-ticker-track:hover {
-          animation-play-state: paused;
-        }
-
-        @keyframes tickerScroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-
-        @media (max-width: 992px) {
-          #honeyveda-hero-section {
-            padding-top: 4.5rem !important;
-          }
-
-          #honeyveda-stage-grid {
+          .hero-grid {
             grid-template-columns: 1fr !important;
             gap: 2rem !important;
+            text-align: center;
           }
-
-          #honeyveda-video-col {
-            order: 2 !important;
+          .hero-content {
+            max-width: 100% !important;
+            align-items: center !important;
           }
-
-          #honeyveda-video-col > div {
-            width: 200px !important;
+          .hero-actions {
+            justify-content: center !important;
           }
-
-          #honeyveda-quote-col {
-            order: 1 !important;
+          .hero-trust-badges {
+            justify-content: center !important;
+            margin: 0 auto;
           }
-
-          #honeyveda-jar-col {
-            order: 3 !important;
-          }
-
-          #honeyveda-jar-col > div {
-            width: 200px !important;
+          .hero-botanical-accent {
+            display: none;
           }
         }
 
         @media (max-width: 640px) {
-          #shark-tank-ribbon {
-            right: 1rem !important;
-            padding: 10px 12px 16px !important;
-            min-width: 80px !important;
+          .hero-trust-badges {
+            gap: 0.5rem !important;
+            flex-wrap: wrap !important;
           }
-
-          #honeyveda-quote-text {
-            font-size: 1.35rem !important;
+          .trust-badge-item {
+            min-width: 60px !important;
+          }
+          .trust-badge-item > div {
+            width: 36px !important;
+            height: 36px !important;
           }
         }
       `}</style>
     </section>
   );
 };
+
+export default Hero;
