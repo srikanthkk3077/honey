@@ -531,7 +531,7 @@ export const Hero: React.FC = () => {
                 <ArrowRight size={16} />
               </Link>
 
-              {currentSlide.videoUrl && (
+              {/* {currentSlide.videoUrl && (
                 <button
                   onClick={() => openVideo(currentSlide.videoUrl)}
                   style={{
@@ -554,7 +554,7 @@ export const Hero: React.FC = () => {
                   <Play size={15} fill="#FFFFFF" />
                   <span>Watch Video Clip</span>
                 </button>
-              )}
+              )} */}
             </div>
 
             {/* Slider Dots (Exact HoneyVeda Style: White & Orange Dots) */}
