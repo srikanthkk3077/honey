@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -11,10 +11,12 @@ import {
   Leaf,
   ShieldCheck,
   CheckCircle2,
-  Edit3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
-import { DEFAULT_HERO_CONFIG, HeroBadge } from '../../../types/customer.types';
+import { DEFAULT_HERO_CONFIG, HeroBadge, HeroBannerSlide } from '../../../types/customer.types';
+import { isDarkColor, colorWithAlpha, getSlideGradientMask } from '../../../utils/color';
 
 // Render the trust badge icon based on the icon key
 const renderBadgeIcon = (iconKey: string) => {
@@ -43,6 +45,108 @@ export const Hero: React.FC = () => {
   const { settings, isAdmin } = useStore();
   const hero = settings?.heroConfig || DEFAULT_HERO_CONFIG;
 
+  // ── Build the slides array ──────────────────────────────────────────────────
+  // If admin added multiple banner slides, use those; otherwise fall back to single image
+  const adminSlides: HeroBannerSlide[] = (hero.heroBannerSlides || []).filter(
+    (s) => s.isActive !== false && s.imageUrl
+  ).sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  // Build the effective slides to display
+  const slides: HeroBannerSlide[] = adminSlides.length > 0
+    ? adminSlides
+    : [{
+      id: 'default',
+      imageUrl: hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
+      titleLine1: hero.titleLine1,
+      titleLine2: hero.titleLine2,
+      subtitle: hero.subtitle,
+      eyebrow: hero.eyebrow,
+      primaryCtaText: hero.primaryCtaText,
+      primaryCtaLink: hero.primaryCtaLink,
+      isActive: true,
+      order: 0,
+    }];
+
+  const total = slides.length;
+  const [current, setCurrent] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const goTo = useCallback(
+    (index: number) => {
+      if (isAnimating || index === current) return;
+      setIsAnimating(true);
+      setCurrent((index + total) % total);
+      setTimeout(() => setIsAnimating(false), 700);
+    },
+    [isAnimating, current, total]
+  );
+
+  const goNext = useCallback(() => goTo((current + 1) % total), [current, total, goTo]);
+  const goPrev = useCallback(() => goTo((current - 1 + total) % total), [current, total, goTo]);
+
+  useEffect(() => {
+    if (total <= 1 || isPaused) return;
+    intervalRef.current = setInterval(goNext, 5500);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [goNext, total, isPaused]);
+
+  // Helper for YouTube embed
+  const getYouTubeEmbedUrl = (url?: string) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : null;
+  };
+
+  const slide = slides[current];
+
+  // 1. Cover Image:
+  // Active slide's imageUrl is the source of truth for that slide.
+  const heroImage = slide?.imageUrl || hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+
+  // 2. Headings & Titles:
+  // Slide-specific values take precedence if non-empty; fallback to main hero config.
+  const eyebrow = (slide?.eyebrow && slide.eyebrow.trim())
+    ? slide.eyebrow
+    : (hero.eyebrow || DEFAULT_HERO_CONFIG.eyebrow);
+
+  const titleLine1 = (slide?.titleLine1 && slide.titleLine1.trim())
+    ? slide.titleLine1
+    : (hero.titleLine1 || DEFAULT_HERO_CONFIG.titleLine1);
+
+  const titleLine2 = (slide?.titleLine2 !== undefined && slide.titleLine2.trim() !== '')
+    ? slide.titleLine2
+    : (hero.titleLine2 !== undefined ? hero.titleLine2 : DEFAULT_HERO_CONFIG.titleLine2);
+
+  const subtitle = (slide?.subtitle && slide.subtitle.trim())
+    ? slide.subtitle
+    : (hero.subtitle || DEFAULT_HERO_CONFIG.subtitle);
+
+  // 3. Buttons:
+  const primaryCtaText = (slide?.primaryCtaText && slide.primaryCtaText.trim())
+    ? slide.primaryCtaText
+    : (hero.primaryCtaText || DEFAULT_HERO_CONFIG.primaryCtaText);
+
+  const primaryCtaLink = (slide?.primaryCtaLink && slide.primaryCtaLink.trim())
+    ? slide.primaryCtaLink
+    : (hero.primaryCtaLink || DEFAULT_HERO_CONFIG.primaryCtaLink);
+
+  const secondaryCtaText = (slide?.secondaryCtaText && slide.secondaryCtaText.trim())
+    ? slide.secondaryCtaText
+    : (hero.secondaryCtaText || DEFAULT_HERO_CONFIG.secondaryCtaText);
+
+  const secondaryCtaLink = (slide?.secondaryCtaLink && slide.secondaryCtaLink.trim())
+    ? slide.secondaryCtaLink
+    : (hero.secondaryCtaLink || DEFAULT_HERO_CONFIG.secondaryCtaLink || '/videos');
+
+  // 4. Style & Colors:
+  const activeBgColor = (slide?.backgroundColor && slide.backgroundColor.trim())
+    ? slide.backgroundColor
+    : (hero.backgroundColor || '#FDDCC3');
+
+  const isDark = isDarkColor(activeBgColor);
+
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const activeBadges: HeroBadge[] = (hero.trustBadges && hero.trustBadges.length > 0
@@ -50,15 +154,18 @@ export const Hero: React.FC = () => {
     : DEFAULT_HERO_CONFIG.trustBadges
   ).filter((b) => b.isActive);
 
-  const heroImage = hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
   const videoUrl =
     hero.storyVideoUrl ||
     'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1790995078981.mp4';
 
+  const ytEmbedUrl = getYouTubeEmbedUrl(videoUrl);
+
   const handleSecondaryClick = (e: React.MouseEvent) => {
-    if (hero.storyVideoUrl || videoUrl) {
-      e.preventDefault();
-      setIsVideoModalOpen(true);
+    if (secondaryCtaLink === '#video' || secondaryCtaLink === '/videos' || !secondaryCtaLink) {
+      if (hero.storyVideoUrl || videoUrl) {
+        e.preventDefault();
+        setIsVideoModalOpen(true);
+      }
     }
   };
 
@@ -68,19 +175,100 @@ export const Hero: React.FC = () => {
       style={{
         position: 'relative',
         width: '100%',
-        backgroundColor: hero.backgroundColor || '#FDDCC3',
-        backgroundImage: `
-          radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.4) 0%, transparent 40%),
-          radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.08) 0%, transparent 45%)
-        `,
+        backgroundColor: activeBgColor,
+        transition: 'background-color 0.85s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
-        minHeight: 'clamp(540px, 82vh, 760px)',
+        minHeight: 'clamp(460px, 68vh, 590px)',
         display: 'flex',
         alignItems: 'center',
-        padding: 'clamp(1.5rem, 3.5vw, 3rem) 0 clamp(2rem, 4vw, 3.5rem)',
+        padding: 'clamp(1rem, 2vw, 1.8rem) 0 clamp(1.2rem, 2.5vw, 2rem)',
       }}
+      onMouseEnter={() => total > 1 && setIsPaused(true)}
+      onMouseLeave={() => total > 1 && setIsPaused(false)}
     >
+      {/* ── Stacked Crossfading Slide Backgrounds & Dynamic Gradient Masks ── */}
+      {slides.map((s, idx) => {
+        const isCurrent = idx === current;
+        const sBg = s.backgroundColor && s.backgroundColor.trim()
+          ? s.backgroundColor
+          : (hero.backgroundColor || '#FDDCC3');
+        const sDark = isDarkColor(sBg);
+        const sImg = s.imageUrl || hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+        const mask = getSlideGradientMask(sBg);
 
+        return (
+          <div
+            key={s.id || `slide-bg-${idx}`}
+            className="hero-slide-backdrop"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: sBg,
+              opacity: isCurrent ? 1 : 0,
+              transition: 'opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1)',
+              pointerEvents: 'none',
+              zIndex: isCurrent ? 2 : 1,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Ambient subtle glow */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: sDark
+                  ? `
+                    radial-gradient(circle at 12% 25%, rgba(255, 255, 255, 0.08) 0%, transparent 45%),
+                    radial-gradient(circle at 88% 75%, rgba(245, 158, 11, 0.16) 0%, transparent 50%)
+                  `
+                  : `
+                    radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.45) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.10) 0%, transparent 45%)
+                  `,
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Right-Side Full Bleed Cover Image (NO scale effect, crystal clear display) */}
+            <div
+              className="hero-right-cover-wrapper"
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                width: 'clamp(50%, 58vw, 66%)',
+                height: '100%',
+                overflow: 'hidden',
+              }}
+            >
+              <img
+                src={sImg}
+                alt={s.titleLine1 || 'Madhuvan Raw Forest Honey'}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  display: 'block',
+                }}
+                loading="eager"
+              />
+
+              {/* Dynamic Gradient Mask (Completely derived from this slide's background color) */}
+              <div
+                className="hero-cover-gradient-mask"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: mask,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
 
       {/* ── Bottom-Left Botanical Floral Ornament ── */}
       {hero.showBotanicalAccent !== false && (
@@ -90,11 +278,13 @@ export const Hero: React.FC = () => {
             position: 'absolute',
             bottom: 0,
             left: 0,
-            height: 'clamp(140px, 24vh, 220px)',
+            height: 'clamp(110px, 18vh, 160px)',
             width: 'auto',
             pointerEvents: 'none',
-            zIndex: 2,
+            zIndex: 4,
             opacity: 0.95,
+            filter: isDark ? 'brightness(0.95) drop-shadow(0 4px 14px rgba(0,0,0,0.5))' : 'none',
+            transition: 'filter 0.8s ease',
           }}
         >
           <img
@@ -111,54 +301,6 @@ export const Hero: React.FC = () => {
           />
         </div>
       )}
-
-      {/* ── Right-Side Full Bleed Cover Image with Total Gradient Cover Blend ── */}
-      <div
-        className="hero-right-cover-wrapper"
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 'clamp(52%, 60vw, 68%)',
-          height: '100%',
-          overflow: 'hidden',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }}
-      >
-        <img
-          src={heroImage}
-          alt="Madhuvan Raw Forest Honey"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center center',
-            display: 'block',
-          }}
-          loading="eager"
-        />
-
-        {/* ── Smooth Left-Edge Gradient Blend ── */}
-        <div
-          className="hero-cover-gradient-mask"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `
-              linear-gradient(to right,
-                ${hero.backgroundColor || '#FDDCC3'} 0%,
-                rgba(253, 220, 195, 0.82) 18%,
-                rgba(253, 220, 195, 0.35) 38%,
-                rgba(253, 220, 195, 0.08) 58%,
-                transparent 75%
-              )
-            `,
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
 
       <div
         className="container"
@@ -177,71 +319,78 @@ export const Hero: React.FC = () => {
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1.05fr) minmax(0, 1.15fr)',
             alignItems: 'center',
-            gap: 'clamp(1.5rem, 3.5vw, 3.5rem)',
+            gap: 'clamp(1.2rem, 3vw, 2.8rem)',
           }}
         >
           {/* =========================================================================
               LEFT COLUMN: HERO CONTENT & BADGES
               ========================================================================= */}
           <div
+            key={`hero-content-${current}`}
             className="hero-content"
             style={{
               display: 'flex',
               flexDirection: 'column',
               zIndex: 3,
-              maxWidth: '580px',
+              maxWidth: '560px',
+              animation: total > 1 ? 'heroContentFade 0.65s cubic-bezier(0.16, 1, 0.3, 1) both' : 'none',
             }}
           >
             {/* 1. Eyebrow Tagline */}
             <div
               style={{
-                fontSize: 'clamp(0.78rem, 1.4vw, 0.92rem)',
+                fontSize: 'clamp(0.76rem, 1.3vw, 0.88rem)',
                 fontWeight: 800,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color: '#9E4616',
-                marginBottom: 'clamp(0.6rem, 1.2vw, 1rem)',
+                color: isDark ? '#F59E0B' : '#9E4616',
+                marginBottom: 'clamp(0.4rem, 0.8vw, 0.65rem)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                transition: 'color 0.4s ease',
               }}
             >
-              <span>{hero.eyebrow || 'FROM FOREST TO FAMILY'}</span>
+              <span>{eyebrow}</span>
             </div>
 
             {/* 2. Main Headline (Serif Elegant Typography) */}
             <h1
               style={{
                 fontFamily: "var(--font-serif, 'Playfair Display', Georgia, serif)",
-                fontSize: 'clamp(2.4rem, 4.8vw, 3.9rem)',
+                fontSize: 'clamp(2.1rem, 4.2vw, 3.4rem)',
                 fontWeight: 700,
-                lineHeight: 1.12,
-                color: '#2C150A',
-                margin: '0 0 clamp(0.75rem, 1.5vw, 1.2rem) 0',
+                lineHeight: 1.14,
+                color: isDark ? '#FFFFFF' : '#2C150A',
+                margin: '0 0 clamp(0.5rem, 1vw, 0.85rem) 0',
                 letterSpacing: '-0.015em',
+                textShadow: isDark ? '0 2px 14px rgba(0,0,0,0.45)' : 'none',
+                transition: 'color 0.4s ease',
               }}
             >
               <span style={{ display: 'block' }}>
-                {hero.titleLine1 || 'More Than Honey'}
+                {titleLine1}
               </span>
-              <span style={{ display: 'block', color: '#2C150A' }}>
-                {hero.titleLine2 || 'A Healthier Lifestyle'}
-              </span>
+              {titleLine2 && (
+                <span style={{ display: 'block', color: isDark ? '#FFFBEB' : '#2C150A' }}>
+                  {titleLine2}
+                </span>
+              )}
             </h1>
 
             {/* 3. Description / Subtitle */}
             <p
               style={{
-                fontSize: 'clamp(1rem, 1.8vw, 1.16rem)',
-                lineHeight: 1.62,
-                color: '#553725',
-                margin: '0 0 clamp(1.4rem, 2.5vw, 2.2rem) 0',
-                maxWidth: '520px',
+                fontSize: 'clamp(0.92rem, 1.5vw, 1.05rem)',
+                lineHeight: 1.56,
+                color: isDark ? '#F5EBE1' : '#553725',
+                margin: '0 0 clamp(1rem, 1.8vw, 1.4rem) 0',
+                maxWidth: '500px',
                 fontWeight: 400,
+                transition: 'color 0.4s ease',
               }}
             >
-              {hero.subtitle ||
-                "Pure honey, collected from forest flowers for your family's better health."}
+              {subtitle}
             </p>
 
             {/* 4. Action CTA Buttons */}
@@ -250,79 +399,121 @@ export const Hero: React.FC = () => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 'clamp(0.75rem, 1.8vw, 1.25rem)',
+                gap: 'clamp(0.75rem, 1.6vw, 1.15rem)',
                 flexWrap: 'wrap',
-                marginBottom: 'clamp(2rem, 3.5vw, 3rem)',
+                marginBottom: 'clamp(1.2rem, 2.2vw, 1.8rem)',
               }}
             >
               {/* Primary Button */}
               <Link
-                to={hero.primaryCtaLink || '/shop'}
+                to={primaryCtaLink}
                 className="hero-primary-btn"
                 id="hero-primary-cta"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '10px',
-                  backgroundColor: '#4A1F0A',
-                  color: '#FFFFFF',
+                  backgroundColor: isDark ? '#F59E0B' : '#4A1F0A',
+                  color: isDark ? '#1C1917' : '#FFFFFF',
                   fontWeight: 700,
-                  fontSize: 'clamp(0.86rem, 1.4vw, 0.95rem)',
+                  fontSize: 'clamp(0.82rem, 1.3vw, 0.92rem)',
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  padding: 'clamp(0.85rem, 1.4vw, 1rem) clamp(1.6rem, 2.5vw, 2.2rem)',
+                  padding: 'clamp(0.75rem, 1.2vw, 0.9rem) clamp(1.4rem, 2.2vw, 1.9rem)',
                   borderRadius: '9999px',
-                  boxShadow: '0 8px 22px rgba(74, 31, 10, 0.28)',
+                  boxShadow: isDark ? '0 8px 24px rgba(245, 158, 11, 0.35)' : '0 8px 22px rgba(74, 31, 10, 0.28)',
                   textDecoration: 'none',
                   transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
                   userSelect: 'none',
                 }}
               >
-                <span>{hero.primaryCtaText || 'SHOP RAW HONEY'}</span>
+                <span>{primaryCtaText}</span>
                 <ArrowRight size={17} className="hero-arrow-icon" />
               </Link>
 
               {/* Secondary Button */}
-              {hero.secondaryCtaText && (
-                <button
-                  type="button"
-                  onClick={handleSecondaryClick}
-                  className="hero-secondary-btn"
-                  id="hero-secondary-cta"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.45)',
-                    backdropFilter: 'blur(6px)',
-                    WebkitBackdropFilter: 'blur(6px)',
-                    color: '#381B0E',
-                    fontWeight: 600,
-                    fontSize: 'clamp(0.86rem, 1.4vw, 0.95rem)',
-                    padding: 'clamp(0.85rem, 1.4vw, 1rem) clamp(1.4rem, 2.2vw, 1.9rem)',
-                    borderRadius: '9999px',
-                    border: '1.5px solid rgba(138, 70, 32, 0.35)',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    userSelect: 'none',
-                  }}
-                >
-                  <span
+              {secondaryCtaText && (
+                ((!secondaryCtaLink || secondaryCtaLink === '/videos' || secondaryCtaLink === '#video') && (hero.storyVideoUrl || videoUrl)) ? (
+                  <button
+                    type="button"
+                    onClick={handleSecondaryClick}
+                    className="hero-secondary-btn"
+                    id="hero-secondary-cta"
                     style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '50%',
-                      backgroundColor: '#381B0E',
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#FDDCC3',
+                      gap: '10px',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.45)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      color: isDark ? '#FFFFFF' : '#381B0E',
+                      fontWeight: 600,
+                      fontSize: 'clamp(0.82rem, 1.3vw, 0.92rem)',
+                      padding: 'clamp(0.75rem, 1.2vw, 0.9rem) clamp(1.3rem, 2vw, 1.75rem)',
+                      borderRadius: '9999px',
+                      border: isDark ? '1.5px solid rgba(255, 255, 255, 0.4)' : '1.5px solid rgba(138, 70, 32, 0.35)',
+                      cursor: 'pointer',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      userSelect: 'none',
                     }}
                   >
-                    <Play size={10} style={{ marginLeft: '1px' }} fill="#FDDCC3" />
-                  </span>
-                  <span>{hero.secondaryCtaText || 'Watch Our Story'}</span>
-                </button>
+                    <span
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: isDark ? '#F59E0B' : '#381B0E',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: isDark ? '#1C1917' : '#FDDCC3',
+                      }}
+                    >
+                      <Play size={10} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
+                    </span>
+                    <span>{secondaryCtaText}</span>
+                  </button>
+                ) : (
+                  <Link
+                    to={secondaryCtaLink || '/videos'}
+                    className="hero-secondary-btn"
+                    id="hero-secondary-cta"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.45)',
+                      backdropFilter: 'blur(8px)',
+                      WebkitBackdropFilter: 'blur(8px)',
+                      color: isDark ? '#FFFFFF' : '#381B0E',
+                      fontWeight: 600,
+                      fontSize: 'clamp(0.82rem, 1.3vw, 0.92rem)',
+                      padding: 'clamp(0.75rem, 1.2vw, 0.9rem) clamp(1.3rem, 2vw, 1.75rem)',
+                      borderRadius: '9999px',
+                      border: isDark ? '1.5px solid rgba(255, 255, 255, 0.4)' : '1.5px solid rgba(138, 70, 32, 0.35)',
+                      cursor: 'pointer',
+                      textDecoration: 'none',
+                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        backgroundColor: isDark ? '#F59E0B' : '#381B0E',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: isDark ? '#1C1917' : '#FDDCC3',
+                      }}
+                    >
+                      <Play size={10} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
+                    </span>
+                    <span>{secondaryCtaText}</span>
+                  </Link>
+                )
               )}
             </div>
 
@@ -335,7 +526,7 @@ export const Hero: React.FC = () => {
                   alignItems: 'flex-start',
                   gap: 'clamp(0.75rem, 2vw, 1.85rem)',
                   paddingTop: 'clamp(0.5rem, 1.5vw, 1rem)',
-                  borderTop: '1px solid rgba(154, 70, 22, 0.18)',
+                  borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid rgba(154, 70, 22, 0.18)',
                   maxWidth: '560px',
                 }}
               >
@@ -359,13 +550,13 @@ export const Hero: React.FC = () => {
                         width: '42px',
                         height: '42px',
                         borderRadius: '50%',
-                        border: '1.5px solid rgba(154, 70, 22, 0.4)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.42)',
+                        border: isDark ? '1.5px solid rgba(255, 255, 255, 0.3)' : '1.5px solid rgba(154, 70, 22, 0.4)',
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.42)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#8A3E15',
-                        boxShadow: '0 2px 6px rgba(138, 62, 21, 0.08)',
+                        color: isDark ? '#FBBF24' : '#8A3E15',
+                        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
                         transition: 'transform 0.2s ease, background-color 0.2s ease',
                       }}
                     >
@@ -376,7 +567,7 @@ export const Hero: React.FC = () => {
                       style={{
                         fontSize: 'clamp(0.72rem, 1.2vw, 0.8rem)',
                         fontWeight: 600,
-                        color: '#462717',
+                        color: isDark ? '#FAF4EC' : '#462717',
                         lineHeight: 1.25,
                         maxWidth: '92px',
                       }}
@@ -411,11 +602,11 @@ export const Hero: React.FC = () => {
               <div
                 className="hero-callout-badge"
                 style={{
-                  backgroundColor: 'rgba(253, 237, 219, 0.95)',
-                  border: '1.5px solid #C47942',
+                  backgroundColor: isDark ? 'rgba(28, 14, 8, 0.92)' : 'rgba(253, 237, 219, 0.95)',
+                  border: isDark ? '1.5px solid #F59E0B' : '1.5px solid #C47942',
                   borderRadius: '50px',
                   padding: '8px 18px',
-                  boxShadow: '0 8px 22px rgba(138, 70, 32, 0.2)',
+                  boxShadow: '0 8px 22px rgba(0, 0, 0, 0.25)',
                   transform: 'rotate(-4deg)',
                   pointerEvents: 'none',
                   animation: 'floatCallout 4s ease-in-out infinite',
@@ -427,7 +618,7 @@ export const Hero: React.FC = () => {
                     fontStyle: 'italic',
                     fontSize: 'clamp(0.78rem, 1.4vw, 0.92rem)',
                     fontWeight: 700,
-                    color: '#8C4318',
+                    color: isDark ? '#FBBF24' : '#8C4318',
                     lineHeight: 1.2,
                     textAlign: 'center',
                     whiteSpace: 'pre-line',
@@ -514,13 +705,23 @@ export const Hero: React.FC = () => {
 
             {/* Video Player */}
             <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000000' }}>
-              <video
-                src={videoUrl}
-                controls
-                autoPlay
-                playsInline
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              />
+              {ytEmbedUrl ? (
+                <iframe
+                  src={ytEmbedUrl}
+                  title="Madhuvan Honey Story Video"
+                  style={{ width: '100%', height: '100%', border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video
+                  src={videoUrl}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -538,9 +739,9 @@ export const Hero: React.FC = () => {
         }
 
         .hero-primary-btn:hover {
-          background-color: #381504 !important;
+          filter: brightness(1.12);
           transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(74, 31, 10, 0.38) !important;
+          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.32) !important;
         }
 
         .hero-primary-btn:hover .hero-arrow-icon {
@@ -552,15 +753,13 @@ export const Hero: React.FC = () => {
         }
 
         .hero-secondary-btn:hover {
-          background-color: rgba(255, 255, 255, 0.75) !important;
-          border-color: #8C4318 !important;
+          filter: brightness(1.15);
           transform: translateY(-2px);
         }
 
         .trust-badge-item:hover > div {
           transform: translateY(-2px);
-          background-color: rgba(255, 255, 255, 0.75) !important;
-          border-color: #8C4318 !important;
+          filter: brightness(1.12);
         }
 
         @media (max-width: 960px) {
@@ -604,8 +803,188 @@ export const Hero: React.FC = () => {
             width: 36px !important;
             height: 36px !important;
           }
+          .hero-nav-btn {
+            width: 36px !important;
+            height: 36px !important;
+          }
+        }
+
+        @keyframes heroImageFade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+
+        @keyframes heroContentFade {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes heroProgressBar {
+          from { width: 0%; }
+          to   { width: 100%; }
+        }
+
+        .hero-nav-btn:hover {
+          background-color: rgba(74,31,10,0.18) !important;
+          border-color: rgba(138,62,21,0.6) !important;
+          transform: translateY(-50%) scale(1.1) !important;
         }
       `}</style>
+
+      {/* ── Prev / Next arrows — only when multiple slides ── */}
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            id="hero-slider-prev"
+            onClick={goPrev}
+            aria-label="Previous slide"
+            className="hero-nav-btn"
+            style={{
+              position: 'absolute',
+              left: 'clamp(0.75rem, 2vw, 1.5rem)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 20,
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 248, 240, 0.72)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              border: isDark ? '1.5px solid rgba(255, 255, 255, 0.35)' : '1.5px solid rgba(138, 62, 21, 0.28)',
+              color: isDark ? '#FFFFFF' : '#5C2B0F',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <ChevronLeft size={20} />
+          </button>
+
+          <button
+            type="button"
+            id="hero-slider-next"
+            onClick={goNext}
+            aria-label="Next slide"
+            className="hero-nav-btn"
+            style={{
+              position: 'absolute',
+              right: 'clamp(0.75rem, 2vw, 1.5rem)',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 20,
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 248, 240, 0.72)',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
+              border: isDark ? '1.5px solid rgba(255, 255, 255, 0.35)' : '1.5px solid rgba(138, 62, 21, 0.28)',
+              color: isDark ? '#FFFFFF' : '#5C2B0F',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </>
+      )}
+
+      {/* ── Pill dot indicators ── */}
+      {total > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'clamp(1rem, 2vw, 1.75rem)',
+            left: 0,
+            right: 0,
+            zIndex: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '7px',
+          }}
+        >
+          {slides.map((s, i) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Slide ${i + 1}`}
+              style={{
+                width: i === current ? '32px' : '8px',
+                height: '8px',
+                borderRadius: '9999px',
+                border: 'none',
+                backgroundColor: i === current
+                  ? '#F59E0B'
+                  : (isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(138, 62, 21, 0.35)'),
+                cursor: 'pointer',
+                transition: 'all 0.35s cubic-bezier(0.4,0,0.2,1)',
+                padding: 0,
+                flexShrink: 0,
+                boxShadow: i === current ? '0 0 8px rgba(245, 158, 11, 0.6)' : 'none',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── Slide counter badge (top-right) ── */}
+      {total > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'clamp(0.75rem, 1.5vw, 1.25rem)',
+            right: 'clamp(0.75rem, 2vw, 1.75rem)',
+            zIndex: 20,
+            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(253, 220, 195, 0.8)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(138, 62, 21, 0.25)',
+            borderRadius: '9999px',
+            padding: '4px 12px',
+            color: isDark ? '#FFFFFF' : '#5C2B0F',
+            fontSize: '0.76rem',
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+          }}
+        >
+          {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+        </div>
+      )}
+
+      {/* ── Auto-play progress bar ── */}
+      {total > 1 && !isPaused && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(138, 62, 21, 0.12)',
+            zIndex: 20,
+          }}
+        >
+          <div
+            key={`progress-${current}`}
+            style={{
+              height: '100%',
+              backgroundColor: isDark ? '#F59E0B' : '#9E4616',
+              animation: 'heroProgressBar 5.5s linear forwards',
+            }}
+          />
+        </div>
+      )}
     </section>
   );
 };

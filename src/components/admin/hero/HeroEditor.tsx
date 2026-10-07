@@ -19,12 +19,16 @@ import {
   Loader2,
   ArrowRight,
   Play,
+  Plus,
+  Trash2,
+  GripVertical,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
-import { HeroConfig, HeroBadge, DEFAULT_HERO_CONFIG } from '../../../types/customer.types';
-import { uploadImage, uploadVideo } from '../../../services/uploadApi';
+import { HeroConfig, HeroBadge, HeroBannerSlide, DEFAULT_HERO_CONFIG } from '../../../types/customer.types';
+import { uploadImage, uploadVideo, uploadBase64Image } from '../../../services/uploadApi';
 import { Button } from '../../common/Button';
 import { Input } from '../../common/Input';
+import { isDarkColor, getSlideGradientMask } from '../../../utils/color';
 
 const AVAILABLE_ICONS = [
   { value: 'natural', label: 'Wheat / Natural', icon: <Wheat size={16} /> },
@@ -53,10 +57,14 @@ export const HeroEditor: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
-  const [activeTab, setActiveTab] = useState<'content' | 'actions' | 'media' | 'badges' | 'style'>('content');
+  const [isUploadingBannerImage, setIsUploadingBannerImage] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<'content' | 'actions' | 'media' | 'badges' | 'style' | 'banners'>('banners');
+  const [previewSlideIdx, setPreviewSlideIdx] = useState(0);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const bannerSlideImageRef = useRef<HTMLInputElement>(null);
+  const uploadingSlideIndexRef = useRef<number>(-1);
 
   // Sync state when settings change
   useEffect(() => {
@@ -126,6 +134,84 @@ export const HeroEditor: React.FC = () => {
     }
   };
 
+  // ── Banner Slides (multi-image hero slider) handlers ──────────────────────
+  const handleBannerSlideImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const idx = uploadingSlideIndexRef.current;
+    if (!file || idx < 0) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error');
+      return;
+    }
+    setIsUploadingBannerImage(idx);
+    try {
+      const url = await uploadImage(file);
+      setForm((prev) => {
+        const slides = [...(prev.heroBannerSlides || [])];
+        slides[idx] = { ...slides[idx], imageUrl: url };
+        return { ...prev, heroBannerSlides: slides };
+      });
+      showToast('Banner image uploaded!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Upload failed', 'error');
+    } finally {
+      setIsUploadingBannerImage(null);
+      uploadingSlideIndexRef.current = -1;
+      if (bannerSlideImageRef.current) bannerSlideImageRef.current.value = '';
+    }
+  };
+
+  const addBannerSlide = () => {
+    const slides = form.heroBannerSlides || [];
+    const newSlide: HeroBannerSlide = {
+      id: `slide-${Date.now()}`,
+      imageUrl: form.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
+      titleLine1: '',
+      titleLine2: '',
+      subtitle: '',
+      eyebrow: '',
+      primaryCtaText: '',
+      primaryCtaLink: '',
+      secondaryCtaText: '',
+      secondaryCtaLink: '',
+      backgroundColor: form.backgroundColor || '#FDDCC3',
+      isActive: true,
+      order: slides.length + 1,
+    };
+    setForm((prev) => ({ ...prev, heroBannerSlides: [...(prev.heroBannerSlides || []), newSlide] }));
+  };
+
+  const removeBannerSlide = (idx: number) => {
+    setForm((prev) => {
+      const slides = [...(prev.heroBannerSlides || [])];
+      slides.splice(idx, 1);
+      return { ...prev, heroBannerSlides: slides.map((s, i) => ({ ...s, order: i + 1 })) };
+    });
+  };
+
+  const updateBannerSlide = (idx: number, updates: Partial<HeroBannerSlide>) => {
+    setForm((prev) => {
+      const slides = [...(prev.heroBannerSlides || [])];
+      slides[idx] = { ...slides[idx], ...updates };
+      return { ...prev, heroBannerSlides: slides };
+    });
+  };
+
+  const moveBannerSlide = (idx: number, direction: 'up' | 'down') => {
+    setForm((prev) => {
+      const slides = [...(prev.heroBannerSlides || [])];
+      const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= slides.length) return prev;
+      const temp = slides[idx];
+      slides[idx] = slides[targetIdx];
+      slides[targetIdx] = temp;
+      return {
+        ...prev,
+        heroBannerSlides: slides.map((s, i) => ({ ...s, order: i + 1 })),
+      };
+    });
+  };
+
   const handleResetToDefault = () => {
     if (window.confirm('Reset Hero configuration to original design values?')) {
       setForm(DEFAULT_HERO_CONFIG);
@@ -136,7 +222,41 @@ export const HeroEditor: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateHeroConfig(form);
+      let heroImage = form.heroImageUrl;
+      if (heroImage && heroImage.startsWith('data:image/')) {
+        try {
+          heroImage = await uploadBase64Image(heroImage);
+        } catch (e) {
+          console.warn('Could not upload hero image base64:', e);
+        }
+      }
+
+      let updatedSlides = form.heroBannerSlides ? [...form.heroBannerSlides] : [];
+      if (updatedSlides.length > 0) {
+        updatedSlides = await Promise.all(
+          updatedSlides.map(async (slide) => {
+            if (slide.imageUrl && slide.imageUrl.startsWith('data:image/')) {
+              try {
+                const cdnUrl = await uploadBase64Image(slide.imageUrl);
+                return { ...slide, imageUrl: cdnUrl };
+              } catch (e) {
+                console.warn('Could not upload slide image base64:', e);
+                return slide;
+              }
+            }
+            return slide;
+          })
+        );
+      }
+
+      const finalForm: HeroConfig = {
+        ...form,
+        heroImageUrl: heroImage,
+        heroBannerSlides: updatedSlides,
+      };
+
+      setForm(finalForm);
+      await updateHeroConfig(finalForm);
       showToast('Hero page settings saved and published successfully!', 'success');
     } catch (err: any) {
       console.error('Hero update error:', err);
@@ -145,6 +265,36 @@ export const HeroEditor: React.FC = () => {
       setIsSaving(false);
     }
   };
+
+  // ── Active banner slides for live preview ──
+  const allBannerSlides = (form.heroBannerSlides || []).filter((s) => s.isActive !== false);
+  const totalBannerSlides = allBannerSlides.length;
+  const currentPreviewSlide = totalBannerSlides > 0 ? allBannerSlides[previewSlideIdx % totalBannerSlides] : null;
+
+  const previewImage = currentPreviewSlide?.imageUrl || form.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+  const previewEyebrow = (currentPreviewSlide?.eyebrow && currentPreviewSlide.eyebrow.trim())
+    ? currentPreviewSlide.eyebrow
+    : (form.eyebrow || 'FROM FOREST TO FAMILY');
+  const previewTitle1 = (currentPreviewSlide?.titleLine1 && currentPreviewSlide.titleLine1.trim())
+    ? currentPreviewSlide.titleLine1
+    : (form.titleLine1 || 'More Than Honey');
+  const previewTitle2 = (currentPreviewSlide?.titleLine2 !== undefined && currentPreviewSlide.titleLine2.trim() !== '')
+    ? currentPreviewSlide.titleLine2
+    : (form.titleLine2 !== undefined ? form.titleLine2 : 'A Healthier Lifestyle');
+  const previewSubtitle = (currentPreviewSlide?.subtitle && currentPreviewSlide.subtitle.trim())
+    ? currentPreviewSlide.subtitle
+    : (form.subtitle || "Pure honey, collected from forest flowers for your family's better health.");
+  const previewPrimaryCta = (currentPreviewSlide?.primaryCtaText && currentPreviewSlide.primaryCtaText.trim())
+    ? currentPreviewSlide.primaryCtaText
+    : (form.primaryCtaText || 'SHOP RAW HONEY');
+  const previewSecondaryCta = (currentPreviewSlide?.secondaryCtaText && currentPreviewSlide.secondaryCtaText.trim())
+    ? currentPreviewSlide.secondaryCtaText
+    : (form.secondaryCtaText || 'Watch Our Story');
+  const previewBgColor = (currentPreviewSlide?.backgroundColor && currentPreviewSlide.backgroundColor.trim())
+    ? currentPreviewSlide.backgroundColor
+    : (form.backgroundColor || '#FDDCC3');
+  const isPreviewDark = isDarkColor(previewBgColor);
+  const previewGradientMask = getSlideGradientMask(previewBgColor);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -262,22 +412,54 @@ export const HeroEditor: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '8px',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: 600 }}>
             <Eye size={15} color="#F59E0B" />
             <span>Live Real-Time Hero Preview</span>
+            {totalBannerSlides > 1 && (
+              <span style={{ fontSize: '0.74rem', backgroundColor: '#D97706', color: '#FFFFFF', padding: '2px 8px', borderRadius: '6px' }}>
+                Previewing Slide #{((previewSlideIdx % totalBannerSlides) + 1)} of {totalBannerSlides}
+              </span>
+            )}
           </div>
-          <span style={{ fontSize: '0.75rem', color: '#A8A29E' }}>
-            Updates instantly as you type below
-          </span>
+
+          {/* Quick slide switcher in preview header */}
+          {totalBannerSlides > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '0.74rem', color: '#A8A29E' }}>Switch Slide:</span>
+              {allBannerSlides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPreviewSlideIdx(i)}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    borderRadius: '4px',
+                    border: '1px solid',
+                    borderColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#44403C',
+                    backgroundColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#292524',
+                    color: (previewSlideIdx % totalBannerSlides) === i ? '#1C1917' : '#D6D3D1',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Slide #{i + 1}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Scaled Preview Frame */}
         <div
           style={{
             position: 'relative',
-            backgroundColor: form.backgroundColor || '#FDDCC3',
+            backgroundColor: previewBgColor,
+            transition: 'background-color 0.4s ease',
             padding: '2.5rem 2rem',
             overflow: 'hidden',
             minHeight: '380px',
@@ -300,7 +482,8 @@ export const HeroEditor: React.FC = () => {
             }}
           >
             <img
-              src={form.heroImageUrl || '/images/brand/hero_illustration_feathered.png'}
+              key={`preview-img-${previewSlideIdx}`}
+              src={previewImage}
               alt="Preview Cover"
               style={{
                 width: '100%',
@@ -310,28 +493,12 @@ export const HeroEditor: React.FC = () => {
                 display: 'block',
               }}
             />
-            {/* Multi-Stop Total Gradient Cover Overlay */}
+            {/* Dynamic Color-Matched Gradient Blend Overlay */}
             <div
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: `
-                  linear-gradient(to right,
-                    ${form.backgroundColor || '#FDDCC3'} 0%,
-                    ${form.backgroundColor || '#FDDCC3'} 10%,
-                    rgba(253, 220, 195, 0.94) 22%,
-                    rgba(253, 220, 195, 0.65) 40%,
-                    rgba(253, 220, 195, 0.2) 60%,
-                    transparent 80%
-                  ),
-                  radial-gradient(circle at 0% 100%,
-                    ${form.backgroundColor || '#FDDCC3'} 0%,
-                    rgba(253, 220, 195, 0.88) 28%,
-                    transparent 60%
-                  ),
-                  linear-gradient(to top, rgba(253, 220, 195, 0.45) 0%, transparent 16%),
-                  linear-gradient(to bottom, rgba(253, 220, 195, 0.45) 0%, transparent 16%)
-                `,
+                background: previewGradientMask,
                 pointerEvents: 'none',
               }}
             />
@@ -350,6 +517,7 @@ export const HeroEditor: React.FC = () => {
                 width: 'auto',
                 pointerEvents: 'none',
                 opacity: 0.9,
+                filter: isPreviewDark ? 'brightness(0.95) drop-shadow(0 4px 12px rgba(0,0,0,0.5))' : 'none',
                 objectFit: 'contain',
                 objectPosition: 'bottom left',
                 zIndex: 2,
@@ -378,11 +546,12 @@ export const HeroEditor: React.FC = () => {
                   fontWeight: 800,
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
-                  color: '#9E4616',
+                  color: isPreviewDark ? '#F59E0B' : '#9E4616',
                   marginBottom: '0.5rem',
+                  transition: 'color 0.3s ease',
                 }}
               >
-                {form.eyebrow || 'FROM FOREST TO FAMILY'}
+                {previewEyebrow}
               </div>
 
               <div
@@ -391,32 +560,35 @@ export const HeroEditor: React.FC = () => {
                   fontSize: '2.1rem',
                   fontWeight: 700,
                   lineHeight: 1.15,
-                  color: '#2C150A',
+                  color: isPreviewDark ? '#FFFFFF' : '#2C150A',
                   marginBottom: '0.75rem',
+                  textShadow: isPreviewDark ? '0 2px 12px rgba(0,0,0,0.4)' : 'none',
+                  transition: 'color 0.3s ease',
                 }}
               >
-                <div>{form.titleLine1 || 'More Than Honey'}</div>
-                <div>{form.titleLine2 || 'A Healthier Lifestyle'}</div>
+                <div>{previewTitle1}</div>
+                <div style={{ color: isPreviewDark ? '#FFFBEB' : '#2C150A' }}>{previewTitle2}</div>
               </div>
 
               <div
                 style={{
                   fontSize: '0.92rem',
-                  color: '#553725',
+                  color: isPreviewDark ? '#F5EBE1' : '#553725',
                   lineHeight: 1.5,
                   marginBottom: '1.5rem',
                   maxWidth: '440px',
+                  transition: 'color 0.3s ease',
                 }}
               >
-                {form.subtitle || "Pure honey, collected from forest flowers for your family's better health."}
+                {previewSubtitle}
               </div>
 
               {/* Action Buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.75rem' }}>
                 <span
                   style={{
-                    backgroundColor: '#4A1F0A',
-                    color: '#FFFFFF',
+                    backgroundColor: isPreviewDark ? '#F59E0B' : '#4A1F0A',
+                    color: isPreviewDark ? '#1C1917' : '#FFFFFF',
                     fontWeight: 700,
                     fontSize: '0.8rem',
                     letterSpacing: '0.05em',
@@ -426,17 +598,18 @@ export const HeroEditor: React.FC = () => {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
+                    boxShadow: isPreviewDark ? '0 4px 14px rgba(245, 158, 11, 0.35)' : 'none',
                   }}
                 >
-                  {form.primaryCtaText || 'SHOP RAW HONEY'} <ArrowRight size={13} />
+                  {previewPrimaryCta} <ArrowRight size={13} />
                 </span>
 
-                {form.secondaryCtaText && (
+                {previewSecondaryCta && (
                   <span
                     style={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.45)',
-                      border: '1.5px solid rgba(138, 70, 32, 0.35)',
-                      color: '#381B0E',
+                      backgroundColor: isPreviewDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.45)',
+                      border: isPreviewDark ? '1.5px solid rgba(255, 255, 255, 0.4)' : '1.5px solid rgba(138, 70, 32, 0.35)',
+                      color: isPreviewDark ? '#FFFFFF' : '#381B0E',
                       fontWeight: 600,
                       fontSize: '0.8rem',
                       padding: '8px 16px',
@@ -451,16 +624,16 @@ export const HeroEditor: React.FC = () => {
                         width: '16px',
                         height: '16px',
                         borderRadius: '50%',
-                        backgroundColor: '#381B0E',
+                        backgroundColor: isPreviewDark ? '#F59E0B' : '#381B0E',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#FDDCC3',
+                        color: isPreviewDark ? '#1C1917' : '#FDDCC3',
                       }}
                     >
-                      <Play size={8} fill="#FDDCC3" />
+                      <Play size={8} fill={isPreviewDark ? '#1C1917' : '#FDDCC3'} />
                     </span>
-                    {form.secondaryCtaText || 'Watch Our Story'}
+                    {previewSecondaryCta}
                   </span>
                 )}
               </div>
@@ -476,17 +649,17 @@ export const HeroEditor: React.FC = () => {
                           width: '32px',
                           height: '32px',
                           borderRadius: '50%',
-                          border: '1px solid rgba(154, 70, 22, 0.4)',
-                          backgroundColor: 'rgba(255, 255, 255, 0.42)',
+                          border: isPreviewDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(154, 70, 22, 0.4)',
+                          backgroundColor: isPreviewDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.42)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: '#8A3E15',
+                          color: isPreviewDark ? '#FBBF24' : '#8A3E15',
                         }}
                       >
                         <Wheat size={14} />
                       </div>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#462717', maxWidth: '70px', lineHeight: 1.2 }}>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 600, color: isPreviewDark ? '#FAF4EC' : '#462717', maxWidth: '70px', lineHeight: 1.2 }}>
                         {badge.label}
                       </span>
                     </div>
@@ -500,8 +673,8 @@ export const HeroEditor: React.FC = () => {
                 <div
                   style={{
                     display: 'inline-block',
-                    backgroundColor: 'rgba(253, 237, 219, 0.95)',
-                    border: '1px solid #C47942',
+                    backgroundColor: isPreviewDark ? 'rgba(28, 14, 8, 0.92)' : 'rgba(253, 237, 219, 0.95)',
+                    border: isPreviewDark ? '1px solid #F59E0B' : '1px solid #C47942',
                     borderRadius: '50px',
                     padding: '6px 14px',
                     transform: 'rotate(-4deg)',
@@ -509,9 +682,9 @@ export const HeroEditor: React.FC = () => {
                     fontStyle: 'italic',
                     fontSize: '0.75rem',
                     fontWeight: 700,
-                    color: '#8C4318',
+                    color: isPreviewDark ? '#FBBF24' : '#8C4318',
                     whiteSpace: 'pre-line',
-                    boxShadow: '0 8px 18px rgba(138, 70, 32, 0.18)',
+                    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.2)',
                   }}
                 >
                   {form.calloutBadgeText || 'Pure Honey\nStronger Communities'}
@@ -519,6 +692,44 @@ export const HeroEditor: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Multi-Image Preview Dots (if multiple banner slides exist) */}
+          {totalBannerSlides > 1 && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '12px',
+                left: 0,
+                right: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                zIndex: 10,
+              }}
+            >
+              {allBannerSlides.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setPreviewSlideIdx(i)}
+                  style={{
+                    width: (previewSlideIdx % totalBannerSlides) === i ? '24px' : '7px',
+                    height: '7px',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    backgroundColor: (previewSlideIdx % totalBannerSlides) === i
+                      ? '#F59E0B'
+                      : (isPreviewDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(158, 70, 22, 0.35)'),
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease',
+                    padding: 0,
+                  }}
+                  title={`Preview Slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -533,6 +744,7 @@ export const HeroEditor: React.FC = () => {
         }}
       >
         {[
+          { id: 'banners', label: '🖼️ Banner Images' },
           { id: 'content', label: '1. Titles & Copy' },
           { id: 'actions', label: '2. Buttons & Video' },
           { id: 'media', label: '3. Artwork & Callout' },
@@ -564,6 +776,600 @@ export const HeroEditor: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Hidden banner slide image input */}
+      <input
+        type="file"
+        ref={bannerSlideImageRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleBannerSlideImageUpload}
+      />
+
+      {/* ── Tab 0: Multi-Image Banner Slides ── */}
+      {activeTab === 'banners' && (
+        <div
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            border: '1px solid #E7E5E4',
+            padding: '1.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.75rem',
+          }}
+        >
+          {/* Informational Header */}
+          <div
+            style={{
+              padding: '1.25rem 1.5rem',
+              borderRadius: '12px',
+              backgroundColor: '#FFFBEB',
+              border: '1px solid #FDE68A',
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <span style={{ fontSize: '1.2rem' }}>🖼️</span>
+                <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#92400E' }}>
+                  Hero Banner Multi-Image Slider
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '9999px',
+                    backgroundColor: (form.heroBannerSlides?.length || 0) > 1 ? '#D97706' : '#E5E7EB',
+                    color: (form.heroBannerSlides?.length || 0) > 1 ? '#FFFFFF' : '#4B5563',
+                  }}
+                >
+                  {(form.heroBannerSlides?.length || 0) > 1
+                    ? `${form.heroBannerSlides?.length} Images (Slider Mode Active)`
+                    : `${form.heroBannerSlides?.length || 0} Images`}
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.86rem', color: '#78350F', lineHeight: 1.5 }}>
+                Add multiple images to the Hero Banner! When 2 or more images are added, the Hero Banner automatically animates as a slider with smooth transitions, arrows, dot indicators, and auto-play on the live website.
+              </p>
+            </div>
+
+            <Button
+              size="sm"
+              leftIcon={<Plus size={16} />}
+              onClick={addBannerSlide}
+            >
+              Add Banner Image
+            </Button>
+          </div>
+
+          {/* If no slides added yet */}
+          {(!form.heroBannerSlides || form.heroBannerSlides.length === 0) ? (
+            <div
+              style={{
+                border: '2px dashed #E7E5E4',
+                borderRadius: '14px',
+                padding: '2.5rem 1.5rem',
+                textAlign: 'center',
+                backgroundColor: '#FAFAF9',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem',
+              }}
+            >
+              <div
+                style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FEF3C7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#D97706',
+                }}
+              >
+                <ImageIcon size={28} />
+              </div>
+              <div style={{ maxWidth: '420px' }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1C1917', marginBottom: '4px' }}>
+                  Single Hero Image Currently In Use
+                </div>
+                <div style={{ fontSize: '0.84rem', color: '#78716C' }}>
+                  Currently showing the single hero artwork ({form.heroImageUrl || 'Default image'}). Add multiple images here to enable smooth sliding!
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<Sparkles size={15} />}
+                  onClick={() => {
+                    const firstSlide: HeroBannerSlide = {
+                      id: `slide-1`,
+                      imageUrl: form.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
+                      titleLine1: form.titleLine1 || 'More Than Honey',
+                      titleLine2: form.titleLine2 || 'A Healthier Lifestyle',
+                      subtitle: form.subtitle || "Pure honey, collected from forest flowers for your family's better health.",
+                      eyebrow: form.eyebrow || 'FROM FOREST TO FAMILY',
+                      primaryCtaText: form.primaryCtaText || 'SHOP RAW HONEY',
+                      primaryCtaLink: form.primaryCtaLink || '/shop',
+                      secondaryCtaText: form.secondaryCtaText || 'Watch Our Story',
+                      secondaryCtaLink: form.secondaryCtaLink || '/videos',
+                      backgroundColor: form.backgroundColor || '#FDDCC3',
+                      isActive: true,
+                      order: 1,
+                    };
+                    const secondSlide: HeroBannerSlide = {
+                      id: `slide-2`,
+                      imageUrl: '/images/brand/hero_sunflower_cover.png',
+                      titleLine1: 'Sunflower Honey Harvest',
+                      titleLine2: 'Pure Golden Elixir',
+                      subtitle: 'Sustainably gathered wild blossom nectar enriched with authentic healing floral pollen.',
+                      eyebrow: 'SEASONAL LIMITED EDITION',
+                      primaryCtaText: 'DISCOVER HARVEST',
+                      primaryCtaLink: '/shop',
+                      secondaryCtaText: 'Watch Harvest Video',
+                      secondaryCtaLink: '/videos',
+                      backgroundColor: '#FAF4EC',
+                      isActive: true,
+                      order: 2,
+                    };
+                    setForm((prev) => ({
+                      ...prev,
+                      heroBannerSlides: [firstSlide, secondSlide],
+                    }));
+                  }}
+                >
+                  Create 2-Image Slider Demo
+                </Button>
+                <Button
+                  size="sm"
+                  leftIcon={<Plus size={15} />}
+                  onClick={addBannerSlide}
+                >
+                  Add First Banner Image
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {form.heroBannerSlides.map((slide, idx) => (
+                <div
+                  key={slide.id}
+                  style={{
+                    border: '1.5px solid #E7E5E4',
+                    borderRadius: '14px',
+                    padding: '1.25rem',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '1rem',
+                  }}
+                >
+                  {/* Card Header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderBottom: '1px solid #F5F5F4',
+                      paddingBottom: '0.75rem',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        style={{
+                          backgroundColor: '#FEF3C7',
+                          color: '#92400E',
+                          fontWeight: 800,
+                          fontSize: '0.82rem',
+                          padding: '3px 10px',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        Slide #{idx + 1}
+                      </span>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.84rem', fontWeight: 600, color: '#44403C' }}>
+                        <input
+                          type="checkbox"
+                          checked={slide.isActive !== false}
+                          onChange={(e) => updateBannerSlide(idx, { isActive: e.target.checked })}
+                        />
+                        <span>{slide.isActive !== false ? 'Active' : 'Inactive'}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewSlideIdx(idx)}
+                        style={{
+                          fontSize: '0.74rem',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid #D97706',
+                          backgroundColor: (previewSlideIdx % (form.heroBannerSlides?.length || 1)) === idx ? '#D97706' : '#FFFBEB',
+                          color: (previewSlideIdx % (form.heroBannerSlides?.length || 1)) === idx ? '#FFFFFF' : '#92400E',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        👁️ Preview Live
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => moveBannerSlide(idx, 'up')}
+                        disabled={idx === 0}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.78rem',
+                          borderRadius: '6px',
+                          border: '1px solid #E7E5E4',
+                          backgroundColor: '#FAFAF9',
+                          cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                          opacity: idx === 0 ? 0.5 : 1,
+                        }}
+                        title="Move Up"
+                      >
+                        ↑ Up
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveBannerSlide(idx, 'down')}
+                        disabled={idx === (form.heroBannerSlides?.length || 0) - 1}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '0.78rem',
+                          borderRadius: '6px',
+                          border: '1px solid #E7E5E4',
+                          backgroundColor: '#FAFAF9',
+                          cursor: idx === (form.heroBannerSlides?.length || 0) - 1 ? 'not-allowed' : 'pointer',
+                          opacity: idx === (form.heroBannerSlides?.length || 0) - 1 ? 0.5 : 1,
+                        }}
+                        title="Move Down"
+                      >
+                        ↓ Down
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeBannerSlide(idx)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 10px',
+                          fontSize: '0.78rem',
+                          borderRadius: '6px',
+                          border: '1px solid #FEE2E2',
+                          backgroundColor: '#FEF2F2',
+                          color: '#DC2626',
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                        }}
+                      >
+                        <Trash2 size={13} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Image Preview & URL / Upload */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '1.25rem', alignItems: 'start' }}>
+                    <div
+                      style={{
+                        width: '160px',
+                        height: '110px',
+                        borderRadius: '10px',
+                        backgroundColor: '#FDDCC3',
+                        border: '1px solid #E7E5E4',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {slide.imageUrl ? (
+                        <img
+                          src={slide.imageUrl}
+                          alt={`Slide ${idx + 1}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <ImageIcon size={24} color="#9E4616" />
+                      )}
+                      {isUploadingBannerImage === idx && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#FFFFFF',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          <Loader2 size={18} className="animate-spin" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#44403C' }}>
+                        Banner Slide Image
+                      </label>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ flex: 1 }}>
+                          <Input
+                            value={slide.imageUrl}
+                            onChange={(e) => updateBannerSlide(idx, { imageUrl: e.target.value })}
+                            placeholder="Enter image URL or upload below"
+                          />
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          leftIcon={isUploadingBannerImage === idx ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                          onClick={() => {
+                            uploadingSlideIndexRef.current = idx;
+                            bannerSlideImageRef.current?.click();
+                          }}
+                          disabled={isUploadingBannerImage !== null}
+                        >
+                          {isUploadingBannerImage === idx ? 'Uploading...' : 'Upload Image'}
+                        </Button>
+                      </div>
+
+                      {/* Quick preset images */}
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.74rem', color: '#78716C' }}>Quick pick:</span>
+                        <button
+                          type="button"
+                          onClick={() => updateBannerSlide(idx, { imageUrl: '/images/brand/hero_illustration_feathered.png' })}
+                          style={{
+                            fontSize: '0.74rem',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #E7E5E4',
+                            backgroundColor: '#F5F5F4',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Feathered Forest Artwork
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateBannerSlide(idx, { imageUrl: '/images/brand/hero_sunflower_cover.png' })}
+                          style={{
+                            fontSize: '0.74rem',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #E7E5E4',
+                            backgroundColor: '#F5F5F4',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Sunflower Honey Harvest
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Slide Configuration Sections */}
+                  <div
+                    style={{
+                      padding: '1.25rem',
+                      backgroundColor: '#FAFAF9',
+                      borderRadius: '12px',
+                      border: '1px solid #E7E5E4',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '1.1rem',
+                    }}
+                  >
+                    {/* 1: Titles & Headlines */}
+                    <div>
+                      <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#92400E', marginBottom: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>✍️</span>
+                        <span>Titles & Copy for Slide #{idx + 1}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                        <div style={{ gridColumn: 'span 2' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Eyebrow Tagline
+                          </label>
+                          <Input
+                            value={slide.eyebrow || ''}
+                            onChange={(e) => updateBannerSlide(idx, { eyebrow: e.target.value })}
+                            placeholder={form.eyebrow || 'FROM FOREST TO FAMILY'}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Headline Line 1
+                          </label>
+                          <Input
+                            value={slide.titleLine1 || ''}
+                            onChange={(e) => updateBannerSlide(idx, { titleLine1: e.target.value })}
+                            placeholder={form.titleLine1 || 'More Than Honey'}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Headline Line 2
+                          </label>
+                          <Input
+                            value={slide.titleLine2 || ''}
+                            onChange={(e) => updateBannerSlide(idx, { titleLine2: e.target.value })}
+                            placeholder={form.titleLine2 || 'A Healthier Lifestyle'}
+                          />
+                        </div>
+                        <div style={{ gridColumn: 'span 2' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Subtitle Description
+                          </label>
+                          <Input
+                            value={slide.subtitle || ''}
+                            onChange={(e) => updateBannerSlide(idx, { subtitle: e.target.value })}
+                            placeholder={form.subtitle || "Pure honey, collected from forest flowers for your family's better health."}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2: Action Buttons */}
+                    <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.9rem' }}>
+                      <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#92400E', marginBottom: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>🔘</span>
+                        <span>Buttons & Links for Slide #{idx + 1}</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Primary Button Label
+                          </label>
+                          <Input
+                            value={slide.primaryCtaText || ''}
+                            onChange={(e) => updateBannerSlide(idx, { primaryCtaText: e.target.value })}
+                            placeholder={form.primaryCtaText || 'SHOP RAW HONEY'}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Primary Button Link
+                          </label>
+                          <Input
+                            value={slide.primaryCtaLink || ''}
+                            onChange={(e) => updateBannerSlide(idx, { primaryCtaLink: e.target.value })}
+                            placeholder={form.primaryCtaLink || '/shop'}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Secondary Button Label
+                          </label>
+                          <Input
+                            value={slide.secondaryCtaText || ''}
+                            onChange={(e) => updateBannerSlide(idx, { secondaryCtaText: e.target.value })}
+                            placeholder={form.secondaryCtaText || 'Watch Our Story'}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#57534E', marginBottom: '3px' }}>
+                            Secondary Button Link (or /videos)
+                          </label>
+                          <Input
+                            value={slide.secondaryCtaLink || ''}
+                            onChange={(e) => updateBannerSlide(idx, { secondaryCtaLink: e.target.value })}
+                            placeholder={form.secondaryCtaLink || '/videos'}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3: Slide Style & Background Color */}
+                    <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.9rem' }}>
+                      <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#92400E', marginBottom: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>🎨</span>
+                        <span>Slide Style & Background Color</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="color"
+                            value={slide.backgroundColor || form.backgroundColor || '#FDDCC3'}
+                            onChange={(e) => updateBannerSlide(idx, { backgroundColor: e.target.value })}
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '8px',
+                              border: '1.5px solid #D6D3D1',
+                              cursor: 'pointer',
+                              padding: '2px',
+                            }}
+                            title="Select Background Color"
+                          />
+                          <Input
+                            value={slide.backgroundColor || ''}
+                            onChange={(e) => updateBannerSlide(idx, { backgroundColor: e.target.value })}
+                            placeholder={form.backgroundColor || '#FDDCC3'}
+                            style={{ width: '120px' }}
+                          />
+                        </div>
+
+                        {/* Palette Chips */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.74rem', color: '#78716C' }}>Presets:</span>
+                          {[
+                            { label: 'Honey Peach', color: '#FDDCC3' },
+                            { label: 'Warm Cream', color: '#FAF4EC' },
+                            { label: 'Amber Warmth', color: '#FCE0C9' },
+                            { label: 'Wild Forest', color: '#3A1C0E' },
+                            { label: 'Pure White', color: '#FFFFFF' },
+                          ].map((preset) => (
+                            <button
+                              key={preset.color}
+                              type="button"
+                              onClick={() => updateBannerSlide(idx, { backgroundColor: preset.color })}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '4px 10px',
+                                fontSize: '0.76rem',
+                                borderRadius: '6px',
+                                border: (slide.backgroundColor || form.backgroundColor) === preset.color ? '2px solid #B45309' : '1px solid #E7E5E4',
+                                backgroundColor: '#FFFFFF',
+                                cursor: 'pointer',
+                                fontWeight: (slide.backgroundColor || form.backgroundColor) === preset.color ? 700 : 500,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: '12px',
+                                  height: '12px',
+                                  borderRadius: '50%',
+                                  backgroundColor: preset.color,
+                                  border: '1px solid #D6D3D1',
+                                  display: 'inline-block',
+                                }}
+                              />
+                              <span>{preset.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  leftIcon={<Plus size={15} />}
+                  onClick={addBannerSlide}
+                >
+                  + Add Another Banner Image
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Tab 1: Content (Titles & Subtitle) ── */}
       {activeTab === 'content' && (

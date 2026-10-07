@@ -199,7 +199,16 @@ const getInitialSettings = (): StoreSettings => {
   return loaded;
 };
 const saveSettings = (s: StoreSettings) => {
-  storage.set(SETTINGS_STORAGE_KEY, s);
+  try {
+    storage.set(SETTINGS_STORAGE_KEY, s);
+  } catch (err) {
+    console.warn('[saveSettings] Storage write skipped:', err);
+  }
+  try {
+    window.dispatchEvent(new CustomEvent('madhuvan_settings_updated', { detail: s }));
+  } catch {
+    // Ignore in non-window env
+  }
 };
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -280,25 +289,55 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    const handleSettingsUpdated = (e: any) => {
+      if (e?.detail) {
+        setSettings(e.detail);
+      } else {
+        const fresh = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+        if (fresh) setSettings(fresh);
+      }
+    };
+    window.addEventListener('madhuvan_settings_updated', handleSettingsUpdated);
+    window.addEventListener('storage', handleSettingsUpdated);
+    return () => {
+      window.removeEventListener('madhuvan_settings_updated', handleSettingsUpdated);
+      window.removeEventListener('storage', handleSettingsUpdated);
+    };
+  }, []);
+
   // ─── Settings ───────────────────────────────────────────────────────────────
   const loadSettings = useCallback(async () => {
     setIsSettingsLoading(true);
     try {
       const data = await settingsApi.get();
       if (data) {
-        setSettings((prev) => ({
-          ...prev,
-          ...data,
-          paymentConfig: {
-            ...prev.paymentConfig,
-            ...(data.paymentConfig || {}),
-          },
-          heroConfig: {
-            ...DEFAULT_HERO_CONFIG,
-            ...(prev.heroConfig || {}),
-            ...(data.heroConfig || {}),
-          },
-        }));
+        setSettings((prev) => {
+          const cached = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
+          const cachedHero: Partial<HeroConfig> = cached?.heroConfig || {};
+          const loaded: StoreSettings = {
+            ...prev,
+            ...data,
+            paymentConfig: {
+              ...prev.paymentConfig,
+              ...(data.paymentConfig || {}),
+            },
+            heroConfig: {
+              ...DEFAULT_HERO_CONFIG,
+              ...cachedHero,
+              ...(prev.heroConfig || {}),
+              ...(data.heroConfig || {}),
+              heroBannerSlides: Array.isArray(data.heroConfig?.heroBannerSlides)
+                ? data.heroConfig.heroBannerSlides
+                : (Array.isArray(cachedHero.heroBannerSlides)
+                    ? cachedHero.heroBannerSlides
+                    : (prev.heroConfig?.heroBannerSlides || [])),
+              heroDisplayMode: data.heroConfig?.heroDisplayMode || cachedHero.heroDisplayMode || prev.heroConfig?.heroDisplayMode || 'hero',
+            },
+          };
+          saveSettings(loaded);
+          return loaded;
+        });
       }
     } catch {
       // Keep existing settings if offline
@@ -310,41 +349,57 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const refreshSettings = loadSettings;
 
   const updateSettings = async (updates: Partial<StoreSettings>) => {
-    // Optimistic update
-    setSettings((prev) => ({
-      ...prev,
+    const currentHero = settings.heroConfig || DEFAULT_HERO_CONFIG;
+    const optimisticHero = updates.heroConfig
+      ? {
+          ...DEFAULT_HERO_CONFIG,
+          ...currentHero,
+          ...updates.heroConfig,
+          heroBannerSlides: updates.heroConfig.heroBannerSlides !== undefined
+            ? updates.heroConfig.heroBannerSlides
+            : (currentHero.heroBannerSlides || []),
+          heroDisplayMode: updates.heroConfig.heroDisplayMode || currentHero.heroDisplayMode || 'hero',
+        }
+      : settings.heroConfig;
+
+    // Immediate optimistic update & persist to localStorage
+    const optimistic: StoreSettings = {
+      ...settings,
       ...updates,
       paymentConfig: {
-        ...prev.paymentConfig,
+        ...settings.paymentConfig,
         ...(updates.paymentConfig || {}),
       },
-      heroConfig: updates.heroConfig
-        ? {
-          ...DEFAULT_HERO_CONFIG,
-          ...(prev.heroConfig || {}),
-          ...updates.heroConfig,
-        }
-        : prev.heroConfig,
-    }));
+      heroConfig: optimisticHero,
+    };
+    setSettings(optimistic);
+    saveSettings(optimistic);
 
     try {
       const result = await settingsApi.update(updates);
       if (result) {
-        setSettings((prev) => ({
-          ...prev,
-          ...result,
-          paymentConfig: {
-            ...prev.paymentConfig,
-            ...(result.paymentConfig || {}),
-          },
-          heroConfig: result.heroConfig
-            ? {
+        setSettings((prev) => {
+          const finalSettings: StoreSettings = {
+            ...prev,
+            ...result,
+            paymentConfig: {
+              ...prev.paymentConfig,
+              ...(result.paymentConfig || {}),
+            },
+            heroConfig: {
               ...DEFAULT_HERO_CONFIG,
               ...(prev.heroConfig || {}),
-              ...result.heroConfig,
-            }
-            : prev.heroConfig,
-        }));
+              ...(result.heroConfig || {}),
+              ...(updates.heroConfig || {}), // explicit client updates always take precedence
+              heroBannerSlides: updates.heroConfig?.heroBannerSlides !== undefined
+                ? updates.heroConfig.heroBannerSlides
+                : (result.heroConfig?.heroBannerSlides || prev.heroConfig?.heroBannerSlides || []),
+              heroDisplayMode: updates.heroConfig?.heroDisplayMode || result.heroConfig?.heroDisplayMode || prev.heroConfig?.heroDisplayMode || 'hero',
+            },
+          };
+          saveSettings(finalSettings);
+          return finalSettings;
+        });
       }
       showToast('Store settings updated successfully!', 'success');
     } catch (err: any) {
@@ -358,6 +413,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const mergedHero: HeroConfig = {
       ...currentHero,
       ...heroUpdates,
+      heroBannerSlides: heroUpdates.heroBannerSlides !== undefined
+        ? heroUpdates.heroBannerSlides
+        : (currentHero.heroBannerSlides || []),
     };
     await updateSettings({ heroConfig: mergedHero });
   };

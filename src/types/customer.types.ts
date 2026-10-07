@@ -74,6 +74,23 @@ export interface HeroBadge {
   isActive: boolean;
 }
 
+// A single slide in the Hero Banner multi-image slider
+export interface HeroBannerSlide {
+  id: string;
+  imageUrl: string;
+  titleLine1?: string;
+  titleLine2?: string;
+  subtitle?: string;
+  eyebrow?: string;
+  primaryCtaText?: string;
+  primaryCtaLink?: string;
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  backgroundColor?: string;
+  isActive?: boolean;
+  order?: number;
+}
+
 export interface HeroConfig {
   eyebrow: string;
   titleLine1: string;
@@ -91,6 +108,10 @@ export interface HeroConfig {
   showBotanicalAccent: boolean;
   backgroundColor?: string;
   isActive?: boolean;
+  // Multi-image slider support for Hero Banner
+  heroBannerSlides?: HeroBannerSlide[];
+  // Home page display mode: 'hero' = artisanal hero banner, 'carousel' = admin carousel sliders
+  heroDisplayMode?: 'hero' | 'carousel';
 }
 
 export const DEFAULT_HERO_CONFIG: HeroConfig = {
@@ -115,4 +136,6 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   showBotanicalAccent: true,
   backgroundColor: '#FDDCC3',
   isActive: true,
+  heroBannerSlides: [],
+  heroDisplayMode: 'hero',
 };

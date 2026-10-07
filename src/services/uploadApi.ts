@@ -50,6 +50,28 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
+ * Upload base64 image data to Cloudinary via Backend
+ */
+export const uploadBase64Image = async (base64: string): Promise<string> => {
+  if (!base64 || !base64.startsWith('data:image/')) return base64;
+  try {
+    const response = await api.post<UploadResponse>('/upload/base64', { image: base64 }, {
+      timeout: 60000,
+    });
+    const rawUrl =
+      response.data?.url ||
+      response.data?.data?.primaryUrl ||
+      response.data?.urls?.[0];
+    if (rawUrl) {
+      return normalizeImageUrl(rawUrl);
+    }
+  } catch (error) {
+    console.warn('[uploadBase64Image] Cloudinary base64 upload failed:', error);
+  }
+  return base64;
+};
+
+/**
  * Upload single image file to Cloudinary via Backend
  */
 export const uploadImage = async (file: File): Promise<string> => {
@@ -59,9 +81,6 @@ export const uploadImage = async (file: File): Promise<string> => {
     formData.append('file', file);
 
     const response = await api.post<UploadResponse>('/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
       timeout: 60000,
     });
 
@@ -76,8 +95,17 @@ export const uploadImage = async (file: File): Promise<string> => {
     }
     throw new Error('No URL returned from server');
   } catch (error) {
-    console.warn('[uploadImage] Server upload failed, falling back to local base64 preview:', error);
-    return await fileToBase64(file);
+    console.warn('[uploadImage] Server multipart upload failed, attempting base64 upload:', error);
+    try {
+      const b64 = await fileToBase64(file);
+      const cdnUrl = await uploadBase64Image(b64);
+      if (cdnUrl && !cdnUrl.startsWith('data:')) {
+        return cdnUrl;
+      }
+      return b64;
+    } catch {
+      return await fileToBase64(file);
+    }
   }
 };
 
@@ -94,9 +122,6 @@ export const uploadImages = async (files: File[]): Promise<string[]> => {
     });
 
     const response = await api.post<UploadResponse>('/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
       timeout: 90000,
     });
 
@@ -126,9 +151,6 @@ export const uploadVideo = async (
   formData.append('video', file);
 
   const response = await api.post<UploadResponse>('/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
     timeout: 180000, // 3 minutes timeout for video processing
   });
 
@@ -161,6 +183,7 @@ export {
 export default {
   uploadImage,
   uploadImages,
+  uploadBase64Image,
   uploadVideo,
   normalizeImageUrl,
   fileToBase64,

@@ -5,17 +5,33 @@ import { SliderModal } from '../../../components/admin/sliders/SliderModal';
 import { HeroEditor } from '../../../components/admin/hero/HeroEditor';
 import { SliderItem } from '../../../types/slider.types';
 import { Button } from '../../../components/common/Button';
-import { Plus, SlidersHorizontal, Search, Play, X, ArrowRight, ExternalLink, Film, Sparkles } from 'lucide-react';
+import { Plus, SlidersHorizontal, Search, Play, X, ArrowRight, ExternalLink, Film, Sparkles, LayoutPanelLeft, Layers } from 'lucide-react';
 import { Input } from '../../../components/common/Input';
 import { Link } from 'react-router-dom';
 
 export const Sliders: React.FC = () => {
-  const { sliders, addSlider, updateSlider, deleteSlider } = useStore();
+  const { sliders, addSlider, updateSlider, deleteSlider, settings, updateHeroConfig, showToast } = useStore();
   const [activeTab, setActiveTab] = useState<'hero' | 'carousel'>('hero');
   const [modalOpen, setModalOpen] = useState(false);
   const [previewSlider, setPreviewSlider] = useState<SliderItem | null>(null);
   const [editingSlider, setEditingSlider] = useState<SliderItem | undefined>(undefined);
   const [search, setSearch] = useState('');
+  const [isSavingMode, setIsSavingMode] = useState(false);
+
+  const currentMode = settings?.heroConfig?.heroDisplayMode || 'hero';
+
+  const handleSetDisplayMode = async (mode: 'hero' | 'carousel') => {
+    if (mode === currentMode) return;
+    setIsSavingMode(true);
+    try {
+      await updateHeroConfig({ ...(settings?.heroConfig || {}), heroDisplayMode: mode } as any);
+      showToast(`Home page hero switched to ${mode === 'hero' ? 'Hero Banner' : 'Carousel Sliders'} mode!`, 'success');
+    } catch {
+      showToast('Failed to update display mode', 'error');
+    } finally {
+      setIsSavingMode(false);
+    }
+  };
 
   const filtered = sliders.filter(
     (s) =>
@@ -75,9 +91,78 @@ export const Sliders: React.FC = () => {
               setModalOpen(true);
             }}
           >
-            Add New Hero Slider
+            Add New Carousel Slide
           </Button>
         )}
+      </div>
+
+      {/* ── Home Page Display Mode Toggle ── */}
+      <div
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          border: '1px solid #E7E5E4',
+          padding: '1.25rem 1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+        }}
+      >
+        <div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1C1917', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>🏠</span> Home Page Hero Section — Display Mode
+          </div>
+          <p style={{ fontSize: '0.82rem', color: '#78716C', margin: 0 }}>
+            Choose what to show on the home page hero area. Saved & applied immediately.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button
+            type="button"
+            disabled={isSavingMode}
+            onClick={() => handleSetDisplayMode('hero')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '10px',
+              border: currentMode === 'hero' ? '2px solid #D97706' : '1.5px solid #E7E5E4',
+              backgroundColor: currentMode === 'hero' ? '#FEF3C7' : '#FFFFFF',
+              color: currentMode === 'hero' ? '#92400E' : '#57534E',
+              fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
+              boxShadow: currentMode === 'hero' ? '0 0 0 3px rgba(217,119,6,0.12)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>🍯</span>
+            Hero Banner
+            {currentMode === 'hero' && <span style={{ fontSize: '0.7rem', backgroundColor: '#D97706', color: '#fff', borderRadius: '9999px', padding: '1px 7px', marginLeft: '4px' }}>LIVE</span>}
+          </button>
+
+          <button
+            type="button"
+            disabled={isSavingMode}
+            onClick={() => handleSetDisplayMode('carousel')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: '7px',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '10px',
+              border: currentMode === 'carousel' ? '2px solid #D97706' : '1.5px solid #E7E5E4',
+              backgroundColor: currentMode === 'carousel' ? '#FEF3C7' : '#FFFFFF',
+              color: currentMode === 'carousel' ? '#92400E' : '#57534E',
+              fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
+              boxShadow: currentMode === 'carousel' ? '0 0 0 3px rgba(217,119,6,0.12)' : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <span style={{ fontSize: '1rem' }}>🎞️</span>
+            Carousel Sliders
+            {currentMode === 'carousel' && <span style={{ fontSize: '0.7rem', backgroundColor: '#D97706', color: '#fff', borderRadius: '9999px', padding: '1px 7px', marginLeft: '4px' }}>LIVE</span>}
+          </button>
+        </div>
       </div>
 
       {/* Main Switcher Tabs */}
@@ -181,10 +266,10 @@ export const Sliders: React.FC = () => {
               </div>
               <div>
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#92400E' }}>
-                  Additional Carousel Sliders
+                  Carousel Sliders (Home Hero)
                 </div>
                 <div style={{ fontSize: '0.8rem', color: '#78716C' }}>
-                  Manage multiple rotating slides for campaigns, shark tank clips, or promotional banners.
+                  Add multiple slides with video/image backgrounds. Switch the display mode above to "Carousel Sliders" to show these on the home page instead of the Hero Banner.
                 </div>
               </div>
             </div>
