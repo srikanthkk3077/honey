@@ -178,7 +178,7 @@ export const Hero: React.FC = () => {
         backgroundColor: activeBgColor,
         transition: 'background-color 0.85s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
-        minHeight: 'clamp(460px, 68vh, 590px)',
+        minHeight: 'clamp(460px, 85vh, 620px)',
         display: 'flex',
         alignItems: 'center',
         padding: 'clamp(1rem, 2vw, 1.8rem) 0 clamp(1.2rem, 2.5vw, 2rem)',
@@ -831,73 +831,6 @@ export const Hero: React.FC = () => {
         }
       `}</style>
 
-      {/* ── Prev / Next arrows — only when multiple slides ── */}
-      {total > 1 && (
-        <>
-          <button
-            type="button"
-            id="hero-slider-prev"
-            onClick={goPrev}
-            aria-label="Previous slide"
-            className="hero-nav-btn"
-            style={{
-              position: 'absolute',
-              left: 'clamp(0.75rem, 2vw, 1.5rem)',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 20,
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 248, 240, 0.72)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              border: isDark ? '1.5px solid rgba(255, 255, 255, 0.35)' : '1.5px solid rgba(138, 62, 21, 0.28)',
-              color: isDark ? '#FFFFFF' : '#5C2B0F',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-            }}
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <button
-            type="button"
-            id="hero-slider-next"
-            onClick={goNext}
-            aria-label="Next slide"
-            className="hero-nav-btn"
-            style={{
-              position: 'absolute',
-              right: 'clamp(0.75rem, 2vw, 1.5rem)',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              zIndex: 20,
-              width: '42px',
-              height: '42px',
-              borderRadius: '50%',
-              backgroundColor: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 248, 240, 0.72)',
-              backdropFilter: 'blur(6px)',
-              WebkitBackdropFilter: 'blur(6px)',
-              border: isDark ? '1.5px solid rgba(255, 255, 255, 0.35)' : '1.5px solid rgba(138, 62, 21, 0.28)',
-              color: isDark ? '#FFFFFF' : '#5C2B0F',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
-            }}
-          >
-            <ChevronRight size={20} />
-          </button>
-        </>
-      )}
-
       {/* ── Pill dot indicators ── */}
       {total > 1 && (
         <div
@@ -935,30 +868,6 @@ export const Hero: React.FC = () => {
               }}
             />
           ))}
-        </div>
-      )}
-
-      {/* ── Slide counter badge (top-right) ── */}
-      {total > 1 && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 'clamp(0.75rem, 1.5vw, 1.25rem)',
-            right: 'clamp(0.75rem, 2vw, 1.75rem)',
-            zIndex: 20,
-            backgroundColor: isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(253, 220, 195, 0.8)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-            border: isDark ? '1px solid rgba(255, 255, 255, 0.25)' : '1px solid rgba(138, 62, 21, 0.25)',
-            borderRadius: '9999px',
-            padding: '4px 12px',
-            color: isDark ? '#FFFFFF' : '#5C2B0F',
-            fontSize: '0.76rem',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-          }}
-        >
-          {String(current + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </div>
       )}
 
