@@ -49,10 +49,86 @@ api.interceptors.request.use(
   (error: AxiosError) => Promise.reject(error)
 );
 
-// ─── Response interceptor: unwrap data / handle 401 ──────────────────────────
+// ─── Error Message Formatter ──────────────────────────────────────────────────
+export const formatApiErrorMessage = (error: AxiosError<any>): string => {
+  if (!error.response) {
+    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+      return `Request Timeout: Server at ${API_BASE_URL} took too long to respond (timeout 30s).`;
+    }
+    if (error.message === 'Network Error' || error.code === 'ERR_NETWORK') {
+      return `Network Error: Cannot connect to backend server at ${API_BASE_URL}. Ensure your server is running on port 5000.`;
+    }
+    return `Connection Failed: ${error.message || 'Unable to connect to backend server.'}`;
+  }
+
+  const { status, data } = error.response;
+  let detailMsg = '';
+
+  if (typeof data === 'string') {
+    detailMsg = data.length < 150 ? data : `HTTP ${status} response`;
+  } else if (data && typeof data === 'object') {
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      detailMsg = data.errors
+        .map((e: any) => (typeof e === 'string' ? e : e.msg || e.message || JSON.stringify(e)))
+        .join(', ');
+    } else if (data.message) {
+      detailMsg = data.message;
+    } else if (data.error) {
+      detailMsg = typeof data.error === 'string' ? data.error : data.error.message || JSON.stringify(data.error);
+    }
+  }
+
+  if (status === 400) {
+    return `Validation Error (400): ${detailMsg || 'Invalid request parameters'}`;
+  }
+  if (status === 401) {
+    return `Authentication Error (401): ${detailMsg || 'Session expired. Please log in again.'}`;
+  }
+  if (status === 403) {
+    return `Access Denied (403): ${detailMsg || 'You do not have permission to perform this action.'}`;
+  }
+  if (status === 404) {
+    return `Resource Not Found (404): ${detailMsg || error.config?.url || 'Requested endpoint not found'}`;
+  }
+  if (status === 413) {
+    return 'Payload Too Large (413): The uploaded image or payload exceeds the server limit.';
+  }
+  if (status === 500) {
+    return `Server Error (500): ${detailMsg || 'Internal server error occurred.'}`;
+  }
+  if (status >= 502 && status <= 504) {
+    return `Backend Unavailable (${status}): Server is temporarily offline or unreachable.`;
+  }
+
+  return detailMsg || error.message || `Request failed with HTTP status ${status}.`;
+};
+
+// ─── Global Error Dispatcher with Deduplication ──────────────────────────────
+let lastErrorMsg = '';
+let lastErrorTime = 0;
+
+export const dispatchApiError = (message: string, status?: number, url?: string, method?: string) => {
+  const now = Date.now();
+  // Prevent repeating identical error within 3 seconds
+  if (message === lastErrorMsg && now - lastErrorTime < 3000) {
+    return;
+  }
+  lastErrorMsg = message;
+  lastErrorTime = now;
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('madhuvan_api_error', {
+        detail: { message, status, url, method },
+      })
+    );
+  }
+};
+
+// ─── Response interceptor: unwrap data / handle 401 & surface errors ──────────
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string; error?: string }>) => {
+  (error: AxiosError<{ message?: string; error?: string; errors?: any }>) => {
     const status = error.response?.status;
     if (status === 401) {
       // Clear stale credentials
@@ -68,15 +144,19 @@ api.interceptors.response.use(
         window.location.href = '/admin/login';
       }
     }
-    // Bubble up a clean Error with the backend message, but preserve status
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      'Something went wrong';
-    const enriched = new Error(message) as any;
-    enriched.status = status;          // attach HTTP status so callers can check it
-    enriched.response = error.response; // keep response reference for further inspection
+
+    // Format a comprehensive, user-friendly error message
+    const detailedMessage = formatApiErrorMessage(error);
+    const enriched = new Error(detailedMessage) as any;
+    enriched.status = status;
+    enriched.response = error.response;
+    enriched.rawError = error;
+
+    // Dispatch global toast event unless explicitly silenced in request config
+    if (!(error.config as any)?.silent) {
+      dispatchApiError(detailedMessage, status, error.config?.url, error.config?.method?.toUpperCase());
+    }
+
     return Promise.reject(enriched);
   }
 );

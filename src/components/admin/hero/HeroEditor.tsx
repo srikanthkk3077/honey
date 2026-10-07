@@ -260,7 +260,7 @@ export const HeroEditor: React.FC = () => {
       showToast('Hero page settings saved and published successfully!', 'success');
     } catch (err: any) {
       console.error('Hero update error:', err);
-      showToast('Failed to save Hero settings', 'error');
+      showToast(`Failed to save Hero settings: ${err?.message || 'Server error'}`, 'error');
     } finally {
       setIsSaving(false);
     }

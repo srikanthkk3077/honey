@@ -26,8 +26,8 @@ export const Sliders: React.FC = () => {
     try {
       await updateHeroConfig({ ...(settings?.heroConfig || {}), heroDisplayMode: mode } as any);
       showToast(`Home page hero switched to ${mode === 'hero' ? 'Hero Banner' : 'Carousel Sliders'} mode!`, 'success');
-    } catch {
-      showToast('Failed to update display mode', 'error');
+    } catch (err: any) {
+      showToast(`Failed to update display mode: ${err?.message || 'Server error'}`, 'error');
     } finally {
       setIsSavingMode(false);
     }

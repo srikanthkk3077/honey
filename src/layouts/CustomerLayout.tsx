@@ -7,7 +7,7 @@ import { MobileMenu } from '../components/customer/layout/MobileMenu';
 import { useStore } from '../store/store';
 import { CartItem } from '../components/customer/cart/CartItem';
 import { EmptyCart } from '../components/customer/cart/EmptyCart';
-import { X, ShoppingBag, ArrowRight, Truck } from 'lucide-react';
+import { X, ShoppingBag, ArrowRight, Truck, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { formatPrice } from '../utils/formatPrice';
 import { FREE_SHIPPING_THRESHOLD } from '../utils/constants';
 import { PageLoader } from '../components/common/PageLoader';
@@ -267,13 +267,36 @@ export const CustomerLayout: React.FC = () => {
       )}
 
       {/* Floating Global Toasts */}
-      <div className="toast-container">
+      <div className="toast-container" style={{ zIndex: 99999 }}>
         {toasts.map((toast) => (
           <div key={toast.id} className={`toast ${toast.type}`}>
-            <span>{toast.message}</span>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, minWidth: 0 }}>
+              {toast.type === 'error' && (
+                <AlertCircle size={18} style={{ color: '#FCA5A5', flexShrink: 0, marginTop: '2px' }} />
+              )}
+              {toast.type === 'success' && (
+                <CheckCircle2 size={18} style={{ color: '#6EE7B7', flexShrink: 0, marginTop: '2px' }} />
+              )}
+              {toast.type === 'info' && (
+                <Info size={18} style={{ color: '#FCD34D', flexShrink: 0, marginTop: '2px' }} />
+              )}
+              <span style={{ fontSize: '0.88rem', lineHeight: '1.4', wordBreak: 'break-word' }}>
+                {toast.message}
+              </span>
+            </div>
             <button
               onClick={() => removeToast(toast.id)}
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', padding: 0 }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.7)',
+                cursor: 'pointer',
+                padding: '2px',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              title="Close notification"
             >
               <X size={16} />
             </button>

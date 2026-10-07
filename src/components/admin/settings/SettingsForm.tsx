@@ -238,6 +238,8 @@ export const SettingsForm: React.FC = () => {
     try {
       await updateSettings(payload);
       showToast('Store & delivery settings updated successfully!', 'success');
+    } catch (err: any) {
+      console.error('Settings update failed:', err);
     } finally {
       setIsSaving(false);
     }

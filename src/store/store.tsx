@@ -404,7 +404,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       showToast('Store settings updated successfully!', 'success');
     } catch (err: any) {
       console.error('Settings update error:', err);
-      showToast('Settings saved locally.', 'info');
+      showToast(`Saved locally, but backend sync failed: ${err.message}`, 'error');
+      throw err;
     }
   };
 
@@ -440,10 +441,25 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (prev.some((t) => t.message === message)) return prev;
       return [...prev.slice(-2), { id, type, message }];
     });
+    const duration = type === 'error' ? 8000 : 4000;
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
+    }, duration);
   }, []);
+
+  // ─── Listen for Global API Errors ──────────────────────────────────────────
+  useEffect(() => {
+    const handleApiError = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.message) {
+        showToast(detail.message, 'error');
+      }
+    };
+    window.addEventListener('madhuvan_api_error', handleApiError);
+    return () => {
+      window.removeEventListener('madhuvan_api_error', handleApiError);
+    };
+  }, [showToast]);
 
   // ─── Products & Media ───────────────────────────────────────────────────────────────
   const loadProducts = useCallback(async () => {
