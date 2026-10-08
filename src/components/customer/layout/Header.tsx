@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
     { name: 'About Purity', path: '/about' },
     // { name: 'Blog & Recipes', path: '/blog' },
     { name: 'Contact', path: '/contact' },
-    ...(isAuthenticated ? [{ name: 'My Orders', path: '/orders' }] : []),
+    { name: 'My Orders', path: '/orders' },
   ];
 
   const isHome = location.pathname === '/';

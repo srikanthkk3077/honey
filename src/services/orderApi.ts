@@ -14,13 +14,23 @@ const DEFAULT_HONEY_IMAGE = 'https://res.cloudinary.com/kisnodzz/image/upload/v1
 function normaliseOrder(raw: any): Order {
   const items: OrderItem[] = (raw.items || raw.orderItems || []).map(
     (i: any) => {
+      let name = i.productName || i.name || '';
+      const nameLower = name.toLowerCase();
       let img = i.image || '';
       if (!img || img.includes('honey-backend-s8qf.onrender.com') || img.includes('/uploads/')) {
-        img = DEFAULT_HONEY_IMAGE;
+        if (nameLower.includes('sunflower')) {
+          img = '/images/products/sunflower_honey.jpg';
+        } else if (nameLower.includes('ajwain')) {
+          img = '/images/products/ajwain_honey.jpg';
+        } else if (nameLower.includes('honeycomb') || nameLower.includes('frame')) {
+          img = '/images/products/honeycomb_frame.jpg';
+        } else {
+          img = DEFAULT_HONEY_IMAGE;
+        }
       }
       return {
         productId: i.productId || i.product || i._id || '',
-        productName: i.productName || i.name || '',
+        productName: name,
         size: i.size || '500g',
         image: img,
         price: i.price || 0,
