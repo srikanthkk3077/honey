@@ -4,7 +4,7 @@ import { Product, Category, ProductReview } from '../types/product.types';
 import { CartItem, Order, OrderStatus, ShippingAddress, PaymentMethodType } from '../types/order.types';
 import { VideoItem } from '../types/video.types';
 import { SliderItem } from '../types/slider.types';
-import { StoreSettings, HeroConfig, DEFAULT_HERO_CONFIG } from '../types/customer.types';
+import { StoreSettings, HeroConfig, DEFAULT_HERO_CONFIG, ShopConfig, DEFAULT_SHOP_CONFIG } from '../types/customer.types';
 
 // ─── Slices (local storage persistence) ──────────────────────────────────────
 import { getInitialUser, saveUser } from './slices/authSlice';
@@ -143,6 +143,7 @@ interface StoreContextType {
   refreshSettings: () => Promise<void>;
   updateSettings: (settings: Partial<StoreSettings>) => Promise<void>;
   updateHeroConfig: (heroUpdates: Partial<HeroConfig>) => Promise<void>;
+  updateShopConfig: (shopUpdates: Partial<ShopConfig>) => Promise<void>;
 
   // Reviews & Testimonials
   homeReviews: Testimonial[];
@@ -185,6 +186,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
   },
   deliveryConfig: DEFAULT_DELIVERY_CONFIG,
   heroConfig: DEFAULT_HERO_CONFIG,
+  shopConfig: DEFAULT_SHOP_CONFIG,
 };
 
 const SETTINGS_STORAGE_KEY = 'madhuvan_store_settings_v1';
@@ -195,6 +197,9 @@ const getInitialSettings = (): StoreSettings => {
   }
   if (!loaded.heroConfig) {
     loaded.heroConfig = DEFAULT_HERO_CONFIG;
+  }
+  if (!loaded.shopConfig) {
+    loaded.shopConfig = DEFAULT_SHOP_CONFIG;
   }
   return loaded;
 };
@@ -334,6 +339,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     : (prev.heroConfig?.heroBannerSlides || [])),
               heroDisplayMode: data.heroConfig?.heroDisplayMode || cachedHero.heroDisplayMode || prev.heroConfig?.heroDisplayMode || 'hero',
             },
+            shopConfig: {
+              ...DEFAULT_SHOP_CONFIG,
+              ...(cached?.shopConfig || {}),
+              ...(prev.shopConfig || {}),
+              ...(data.shopConfig || {}),
+            },
           };
           saveSettings(loaded);
           return loaded;
@@ -350,6 +361,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const updateSettings = async (updates: Partial<StoreSettings>) => {
     const currentHero = settings.heroConfig || DEFAULT_HERO_CONFIG;
+    const currentShop = settings.shopConfig || DEFAULT_SHOP_CONFIG;
     const optimisticHero = updates.heroConfig
       ? {
           ...DEFAULT_HERO_CONFIG,
@@ -361,6 +373,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           heroDisplayMode: updates.heroConfig.heroDisplayMode || currentHero.heroDisplayMode || 'hero',
         }
       : settings.heroConfig;
+    const optimisticShop = updates.shopConfig
+      ? {
+          ...DEFAULT_SHOP_CONFIG,
+          ...currentShop,
+          ...updates.shopConfig,
+        }
+      : settings.shopConfig;
 
     // Immediate optimistic update & persist to localStorage
     const optimistic: StoreSettings = {
@@ -371,6 +390,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ...(updates.paymentConfig || {}),
       },
       heroConfig: optimisticHero,
+      shopConfig: optimisticShop,
     };
     setSettings(optimistic);
     saveSettings(optimistic);
@@ -396,6 +416,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 : (result.heroConfig?.heroBannerSlides || prev.heroConfig?.heroBannerSlides || []),
               heroDisplayMode: updates.heroConfig?.heroDisplayMode || result.heroConfig?.heroDisplayMode || prev.heroConfig?.heroDisplayMode || 'hero',
             },
+            shopConfig: {
+              ...DEFAULT_SHOP_CONFIG,
+              ...(prev.shopConfig || {}),
+              ...(result.shopConfig || {}),
+              ...(updates.shopConfig || {}),
+            },
           };
           saveSettings(finalSettings);
           return finalSettings;
@@ -419,6 +445,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         : (currentHero.heroBannerSlides || []),
     };
     await updateSettings({ heroConfig: mergedHero });
+  };
+
+  const updateShopConfig = async (shopUpdates: Partial<ShopConfig>) => {
+    const currentShop = settings.shopConfig || DEFAULT_SHOP_CONFIG;
+    const mergedShop: ShopConfig = {
+      ...currentShop,
+      ...shopUpdates,
+    };
+    await updateSettings({ shopConfig: mergedShop });
   };
 
   // ─── Load orders when user changes ──────────────────────────────────────────
@@ -1297,6 +1332,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         refreshSettings,
         updateSettings,
         updateHeroConfig,
+        updateShopConfig,
 
         // Reviews & Testimonials
         homeReviews,

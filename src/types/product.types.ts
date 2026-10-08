@@ -56,6 +56,7 @@ export interface Product {
   isFeatured: boolean;
   isBestSeller: boolean;
   isOrganicCertified: boolean;
+  badge?: string;
   reviews: ProductReview[];
   createdAt: string;
 }

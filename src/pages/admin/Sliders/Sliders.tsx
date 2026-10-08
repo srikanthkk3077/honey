@@ -3,15 +3,16 @@ import { useStore } from '../../../store/store';
 import { SliderTable } from '../../../components/admin/sliders/SliderTable';
 import { SliderModal } from '../../../components/admin/sliders/SliderModal';
 import { HeroEditor } from '../../../components/admin/hero/HeroEditor';
+import { ShopHeroEditor } from '../../../components/admin/shop/ShopHeroEditor';
 import { SliderItem } from '../../../types/slider.types';
 import { Button } from '../../../components/common/Button';
-import { Plus, SlidersHorizontal, Search, Play, X, ArrowRight, ExternalLink, Film, Sparkles, LayoutPanelLeft, Layers } from 'lucide-react';
+import { Plus, SlidersHorizontal, Search, Play, X, ArrowRight, ExternalLink, Film, Sparkles, LayoutPanelLeft, Layers, ShoppingBag } from 'lucide-react';
 import { Input } from '../../../components/common/Input';
 import { Link } from 'react-router-dom';
 
 export const Sliders: React.FC = () => {
   const { sliders, addSlider, updateSlider, deleteSlider, settings, updateHeroConfig, showToast } = useStore();
-  const [activeTab, setActiveTab] = useState<'hero' | 'carousel'>('hero');
+  const [activeTab, setActiveTab] = useState<'hero' | 'shop' | 'carousel'>('hero');
   const [modalOpen, setModalOpen] = useState(false);
   const [previewSlider, setPreviewSlider] = useState<SliderItem | null>(null);
   const [editingSlider, setEditingSlider] = useState<SliderItem | undefined>(undefined);
@@ -203,6 +204,33 @@ export const Sliders: React.FC = () => {
 
         <button
           type="button"
+          onClick={() => setActiveTab('shop')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '0.75rem 1.5rem',
+            border: 'none',
+            backgroundColor: activeTab === 'shop' ? '#FFFFFF' : 'transparent',
+            color: activeTab === 'shop' ? '#B45309' : '#78716C',
+            fontWeight: activeTab === 'shop' ? 800 : 600,
+            fontSize: '0.96rem',
+            cursor: 'pointer',
+            borderRadius: '12px 12px 0 0',
+            borderTop: activeTab === 'shop' ? '3px solid #D97706' : '3px solid transparent',
+            borderLeft: activeTab === 'shop' ? '1px solid #E7E5E4' : '1px solid transparent',
+            borderRight: activeTab === 'shop' ? '1px solid #E7E5E4' : '1px solid transparent',
+            boxShadow: activeTab === 'shop' ? '0 -2px 10px rgba(0,0,0,0.03)' : 'none',
+            position: 'relative',
+            bottom: '-2px',
+          }}
+        >
+          <ShoppingBag size={17} color={activeTab === 'shop' ? '#D97706' : '#A8A29E'} />
+          <span>Shop Honey Page (Banner & Badges)</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('carousel')}
           style={{
             display: 'inline-flex',
@@ -229,10 +257,13 @@ export const Sliders: React.FC = () => {
         </button>
       </div>
 
-      {/* ── TAB 1: ARTISANAL HERO EDITOR ── */}
+      {/* ── TAB 1: ARTISANAL HOME HERO EDITOR ── */}
       {activeTab === 'hero' && <HeroEditor />}
 
-      {/* ── TAB 2: CAROUSEL SLIDERS TABLE ── */}
+      {/* ── TAB 2: SHOP HONEY PAGE EDITOR ── */}
+      {activeTab === 'shop' && <ShopHeroEditor />}
+
+      {/* ── TAB 3: CAROUSEL SLIDERS TABLE ── */}
       {activeTab === 'carousel' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Distinction Info Banner */}

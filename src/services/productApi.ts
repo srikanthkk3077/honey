@@ -69,6 +69,7 @@ function normaliseProduct(raw: any): Product {
     isFeatured: raw.isFeatured || false,
     isBestSeller: raw.isBestSeller || false,
     isOrganicCertified: raw.isOrganicCertified || false,
+    badge: raw.badge || '',
     reviews: Array.isArray(raw.reviews) ? raw.reviews : [],
     createdAt: raw.createdAt || new Date().toISOString(),
   };

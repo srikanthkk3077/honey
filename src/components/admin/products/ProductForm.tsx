@@ -37,6 +37,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [isFeatured, setIsFeatured] = useState(initialData?.isFeatured ?? true);
   const [isBestSeller, setIsBestSeller] = useState(initialData?.isBestSeller ?? false);
   const [isOrganicCertified, setIsOrganicCertified] = useState(initialData?.isOrganicCertified ?? true);
+  const [badge, setBadge] = useState(initialData?.badge || '');
+  const [benefits, setBenefits] = useState<string[]>(() => {
+    if (initialData?.benefits && initialData.benefits.length > 0) {
+      return [...initialData.benefits];
+    }
+    return ['Rich in Antioxidants', 'Digestive Support', '100% Pure & Natural'];
+  });
   const [images, setImages] = useState<string[]>(
     initialData?.images && initialData.images.length > 0
       ? initialData.images
@@ -143,6 +150,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       ]);
       setPrice('149');
       setOriginalPrice('199');
+    } else if (preset === 'trio' as any) {
+      setSizes([
+        { size: '500g', price: p, originalPrice: origP, stock: parseInt(stock, 10) || 50, sku: 'MV-500G' },
+        { size: '1kg', price: Math.round(p * 1.85), originalPrice: Math.round(origP * 1.85), stock: 30, sku: 'MV-1KG' },
+        { size: '2kg', price: Math.round(p * 3.5), originalPrice: Math.round(origP * 3.5), stock: 15, sku: 'MV-2KG' },
+      ]);
     } else if (preset === 'single') {
       setSizes([
         { size: '500g Jar', price: p, originalPrice: origP, stock: parseInt(stock, 10) || 40, sku: 'MV-500G' },
@@ -205,11 +218,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       reviewsCount: initialData?.reviewsCount || 1,
       selectedSize: cleanedSizes[0]?.size || '500g',
       sizes: cleanedSizes,
-      benefits: initialData?.benefits || [
-        '100% Raw and unheated enzymatically active nectar',
-        'Certified zero adulteration or C3/C4 sugars',
-        'Rich in natural bee propolis and trace minerals',
-      ],
+      badge: badge.trim(),
+      benefits: benefits.filter((b) => b.trim().length > 0),
       nutritionFacts: initialData?.nutritionFacts || {
         energy: '304 kcal per 100g',
         carbohydrates: '82.4g',
@@ -275,6 +285,100 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             </option>
           ))}
         </select>
+      </div>
+
+      {/* ── Product Ribbon Badge & Highlights Badges (Storefront Card Design) ── */}
+      <div
+        style={{
+          backgroundColor: '#FFFDF9',
+          borderRadius: '14px',
+          padding: '1.25rem',
+          border: '1.5px solid #FDE68A',
+        }}
+      >
+        <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#92400E', fontWeight: 800 }}>
+          🏷️ Storefront Card Ribbon Badge & Micro-Badges
+        </h4>
+        <p style={{ margin: '0 0 1rem 0', fontSize: '0.8rem', color: '#78716C' }}>
+          Customize the ribbon badge (e.g. BEST SELLER, 27% OFF, NEW) and the 3 benefit micro-badges that appear on each honey card.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#44403C', marginBottom: '0.3rem' }}>
+              Ribbon Badge
+            </label>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              {['', 'BEST SELLER', 'NEW', '27% OFF', '22% OFF', 'ORGANIC'].map((presetBadge) => (
+                <button
+                  key={presetBadge}
+                  type="button"
+                  onClick={() => setBadge(presetBadge)}
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    backgroundColor: badge === presetBadge ? '#FEF3C7' : '#F5F5F4',
+                    color: badge === presetBadge ? '#92400E' : '#57534E',
+                    border: badge === presetBadge ? '1px solid #D97706' : '1px solid #E5E7EB',
+                  }}
+                >
+                  {presetBadge || 'Auto Detect'}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              placeholder="Or type custom badge (e.g. LIMITED EDITION)"
+              value={badge}
+              onChange={(e) => setBadge(e.target.value)}
+              style={{
+                marginTop: '6px',
+                width: '100%',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: '1px solid #D6D3D1',
+                fontSize: '0.82rem',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#44403C', marginBottom: '0.3rem' }}>
+              3 Key Benefits / Micro-Badges
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {[0, 1, 2].map((idx) => (
+                <input
+                  key={idx}
+                  type="text"
+                  placeholder={`Benefit #${idx + 1} (e.g. ${
+                    idx === 0
+                      ? 'Rich in Antioxidants'
+                      : idx === 1
+                      ? 'Digestive Support'
+                      : '100% Pure & Natural'
+                  })`}
+                  value={benefits[idx] || ''}
+                  onChange={(e) => {
+                    const updated = [...benefits];
+                    updated[idx] = e.target.value;
+                    setBenefits(updated);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid #D6D3D1',
+                    fontSize: '0.82rem',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ── Base Pricing & Inventory Preview ─────────────────────────────────── */}
@@ -359,6 +463,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           {/* Quick Presets */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.75rem', color: '#78716C', fontWeight: 600 }}>Presets:</span>
+            <button
+              type="button"
+              onClick={() => applyPreset('trio' as any)}
+              style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid #D97706', backgroundColor: '#FEF3C7', color: '#92400E', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 700 }}
+            >
+              ⭐ 500g / 1kg / 2kg (Shop Standard)
+            </button>
             <button
               type="button"
               onClick={() => applyPreset('standard')}

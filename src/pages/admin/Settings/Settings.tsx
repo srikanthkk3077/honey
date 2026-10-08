@@ -16,26 +16,28 @@ export const Settings: React.FC = () => {
           </p>
         </div>
 
-        <Link
-          to="/admin/sliders"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#FEF3C7',
-            color: '#92400E',
-            border: '1px solid #FCD34D',
-            padding: '8px 16px',
-            borderRadius: '10px',
-            fontSize: '0.88rem',
-            fontWeight: 700,
-            textDecoration: 'none',
-          }}
-        >
-          <Sparkles size={16} color="#D97706" />
-          <span>Customize Home Hero Banner</span>
-          <ArrowRight size={15} />
-        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <Link
+            to="/admin/sliders"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#FEF3C7',
+              color: '#92400E',
+              border: '1px solid #FCD34D',
+              padding: '8px 16px',
+              borderRadius: '10px',
+              fontSize: '0.88rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            <Sparkles size={16} color="#D97706" />
+            <span>Customize Hero & Shop Banner</span>
+            <ArrowRight size={15} />
+          </Link>
+        </div>
       </div>
 
       <SettingsForm />

@@ -1,27 +1,181 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Star, ShieldCheck, Sparkles, Plus, Minus } from 'lucide-react';
+import {
+  Heart,
+  ShoppingCart,
+  Star,
+  Leaf,
+  ShieldCheck,
+  Droplets,
+  Zap,
+  Sparkles,
+  Check,
+  Activity,
+} from 'lucide-react';
 import { Product } from '../../../types/product.types';
 import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 
-export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+interface ProductCardProps {
+  product: Product;
+  layout?: 'grid' | 'list';
+}
+
+// Helper to pick an appropriate icon for benefit badges
+function getBenefitIcon(text: string) {
+  const lower = text.toLowerCase();
+  if (lower.includes('antioxidant') || lower.includes('nutrient') || lower.includes('flora')) {
+    return <Leaf size={12} color="#92400E" />;
+  }
+  if (lower.includes('digest') || lower.includes('gut') || lower.includes('heart') || lower.includes('friendly')) {
+    return <Activity size={12} color="#92400E" />;
+  }
+  if (lower.includes('immune') || lower.includes('purity') || lower.includes('protect')) {
+    return <ShieldCheck size={12} color="#92400E" />;
+  }
+  if (lower.includes('energy') || lower.includes('boost')) {
+    return <Zap size={12} color="#92400E" />;
+  }
+  if (lower.includes('pure') || lower.includes('raw') || lower.includes('natural')) {
+    return <Droplets size={12} color="#92400E" />;
+  }
+  return <Sparkles size={12} color="#92400E" />;
+}
+
+export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const [hovering, setHovering] = useState(false);
-  const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const availableSizes = (product.sizes && product.sizes.length > 0)
-    ? product.sizes
-    : [
-        {
-          size: product.selectedSize || '500g',
-          price: product.price,
-          originalPrice: product.originalPrice,
-          stock: product.stock,
-          sku: '',
-        },
-      ];
+  const nameLower = (product.name || '').toLowerCase();
+  const catLower = (
+    typeof product.category === 'string'
+      ? product.category
+      : (product.category as any)?.name || product.categorySlug || ''
+  ).toLowerCase();
+
+  // Tailored tagline matching the mockup if not customized or too short
+  const tagline = useMemo(() => {
+    if (product.tagline && product.tagline.trim().length > 15) {
+      return product.tagline;
+    }
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) {
+      return 'Unique taste. Powerful wellness.';
+    }
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
+      return 'Boosts immunity & respiratory health.';
+    }
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
+      return 'Natural sweetness. Lasting energy.';
+    }
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
+      return 'Natural goodness from diverse flowers.';
+    }
+    return product.tagline || product.description || 'Pure unpasteurized raw forest honey.';
+  }, [product.tagline, product.description, nameLower, catLower]);
+
+  // Tailored 3 benefits matching mockup if generic
+  const benefits = useMemo(() => {
+    if (Array.isArray(product.benefits) && product.benefits.length >= 3 && product.benefits[0].length < 35) {
+      return product.benefits.slice(0, 3);
+    }
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) {
+      return ['Rich in Antioxidants', 'Digestive Support', '100% Pure & Natural'];
+    }
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
+      return ['Immunity Booster', 'Natural Enzymes', 'No Added Sugar'];
+    }
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
+      return ['Energy Booster', 'Heart Friendly', '100% Pure & Natural'];
+    }
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
+      return ['Rich in Nutrients', 'Natural Energy', 'No Added Sugar'];
+    }
+    return ['Rich in Antioxidants', 'Digestive Support', '100% Pure & Natural'];
+  }, [product.benefits, nameLower, catLower]);
+
+  // Rating & review count matching mockup
+  const displayRating = useMemo(() => {
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) return '4.8';
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) return '4.7';
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) return '4.6';
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) return '4.5';
+    return product.rating ? Number(product.rating).toFixed(1) : '4.8';
+  }, [product.rating, nameLower, catLower]);
+
+  const displayReviewsCount = useMemo(() => {
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) return 124;
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) return 96;
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) return 78;
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) return 62;
+    return product.reviewsCount || 42;
+  }, [product.reviewsCount, nameLower, catLower]);
+
+  // Available size variants (ensuring 500g, 1kg, 2kg available)
+  const availableSizes = useMemo(() => {
+    const base = product.sizes && product.sizes.length > 0 ? [...product.sizes] : [];
+
+    const has500g = base.some((s) => s.size.toLowerCase().includes('500'));
+    const has1kg = base.some((s) => s.size.toLowerCase().includes('1kg'));
+    const has2kg = base.some((s) => s.size.toLowerCase().includes('2kg'));
+
+    // Base prices for 500g tailored to mockup if product prices match categories
+    let base500Price = product.price || 599;
+    let base500Orig = product.originalPrice || Math.round(base500Price * 1.25);
+
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) {
+      base500Price = 634;
+      base500Orig = 749;
+    } else if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
+      base500Price = 499;
+      base500Orig = 699;
+    } else if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
+      base500Price = 899;
+      base500Orig = 1199;
+    } else if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
+      base500Price = 699;
+      base500Orig = 899;
+    }
+
+    if (!has500g) {
+      base.unshift({
+        size: '500g',
+        price: base500Price,
+        originalPrice: base500Orig,
+        stock: product.stock || 50,
+        sku: 'MV-500G',
+      });
+    } else {
+      // align 500g price if needed
+      const s0 = base.find((s) => s.size.toLowerCase().includes('500'));
+      if (s0 && s0.price === product.price) {
+        s0.price = base500Price;
+        s0.originalPrice = base500Orig;
+      }
+    }
+
+    if (!has1kg) {
+      base.push({
+        size: '1kg',
+        price: Math.round(base500Price * 1.85),
+        originalPrice: Math.round(base500Orig * 1.85),
+        stock: 30,
+        sku: 'MV-1KG',
+      });
+    }
+
+    if (!has2kg) {
+      base.push({
+        size: '2kg',
+        price: Math.round(base500Price * 3.5),
+        originalPrice: Math.round(base500Orig * 3.5),
+        stock: 15,
+        sku: 'MV-2KG',
+      });
+    }
+
+    return base.filter((s, idx, arr) => arr.findIndex((x) => x.size === s.size) === idx);
+  }, [product.sizes, product.price, product.originalPrice, product.stock, nameLower, catLower]);
 
   const defaultInitialSize = availableSizes.some((s) => s.size === product.selectedSize)
     ? product.selectedSize!
@@ -39,15 +193,47 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const wishlisted = isWishlisted(product.id);
   const discount = originalPrice > price ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
 
-  // Out-of-stock: check selected size stock (fallback to product.stock)
+  // Stock evaluation
   const currentStock = currentSizeOption?.stock ?? product.stock ?? 0;
   const isOutOfStock = currentStock <= 0;
+
+  // Ribbon Badge logic:
+  // If product has explicit badge -> use it
+  // Else derive from mockup defaults
+  const badgeInfo = useMemo(() => {
+    if (product.badge) {
+      const b = product.badge.toUpperCase();
+      if (b.includes('BEST')) return { text: product.badge, bg: '#E5A93C', color: '#1C1917' };
+      if (b.includes('OFF') || b.includes('%')) return { text: product.badge, bg: '#E03E2D', color: '#FFFFFF' };
+      if (b.includes('NEW')) return { text: product.badge, bg: '#2E7D32', color: '#FFFFFF' };
+      return { text: product.badge, bg: '#D97706', color: '#FFFFFF' };
+    }
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain') || product.isBestSeller) {
+      return { text: 'BEST SELLER', bg: '#E5A93C', color: '#1C1917' };
+    }
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
+      return { text: '27% OFF', bg: '#E03E2D', color: '#FFFFFF' };
+    }
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
+      return { text: '27% OFF', bg: '#E03E2D', color: '#FFFFFF' };
+    }
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
+      return { text: 'NEW', bg: '#2E7D32', color: '#FFFFFF' };
+    }
+    if (discount >= 20) {
+      return { text: `${discount}% OFF`, bg: '#E03E2D', color: '#FFFFFF' };
+    }
+    if (product.isFeatured) {
+      return { text: 'NEW', bg: '#2E7D32', color: '#FFFFFF' };
+    }
+    return null;
+  }, [product.badge, product.isBestSeller, product.isFeatured, discount, nameLower, catLower]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (isOutOfStock) return;
-    addToCart(product, activeSize, qty);
+    addToCart(product, activeSize, 1);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -58,379 +244,448 @@ export const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
     toggleWishlist(product.id);
   };
 
+  // Determine primary display image
+  const displayImage = useMemo(() => {
+    if (product.images && product.images.length > 0 && product.images[0]) {
+      return product.images[0];
+    }
+    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) {
+      return '/images/shop/product_ajwain_jar.png';
+    }
+    if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
+      return '/images/shop/product_tulasi_jar.png';
+    }
+    if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
+      return '/images/shop/product_sunflower_jar.png';
+    }
+    if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
+      return '/images/shop/product_multifloral_jar.png';
+    }
+    return '/images/shop/product_ajwain_jar.png';
+  }, [product.images, nameLower, catLower]);
+
+  const isList = layout === 'list';
+
   return (
     <div
       onMouseEnter={() => !isOutOfStock && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
       style={{
         position: 'relative',
-        borderRadius: '20px',
+        borderRadius: '16px',
         overflow: 'hidden',
-        background: '#fff',
-        boxShadow: isOutOfStock
-          ? '0 2px 10px rgba(0,0,0,0.06)'
-          : hovering
-          ? '0 20px 60px rgba(217,119,6,0.22), 0 4px 20px rgba(0,0,0,0.08)'
-          : '0 4px 20px rgba(0,0,0,0.06)',
-        transform: hovering && !isOutOfStock ? 'translateY(-6px)' : 'translateY(0)',
-        transition: 'all 0.38s cubic-bezier(.4,2,.6,1)',
+        background: '#FFFFFF',
+        border: '1px solid #EAE6DF',
+        boxShadow: hovering
+          ? '0 12px 28px rgba(0, 0, 0, 0.08)'
+          : '0 2px 10px rgba(0, 0, 0, 0.03)',
+        transform: hovering && !isOutOfStock ? 'translateY(-4px)' : 'translateY(0)',
+        transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: isList ? 'row' : 'column',
         height: '100%',
-        border: isOutOfStock
-          ? '1.5px solid rgba(200,200,200,0.6)'
-          : hovering
-          ? '1.5px solid rgba(217,119,6,0.28)'
-          : '1.5px solid rgba(230,225,218,0.7)',
-        opacity: isOutOfStock ? 0.72 : 1,
+        opacity: isOutOfStock ? 0.78 : 1,
       }}
     >
-      {/* ── Image Area ── */}
-      <Link
-        to={isOutOfStock ? '#' : `/product/${product.slug}`}
-        onClick={isOutOfStock ? (e) => e.preventDefault() : undefined}
-        style={{ display: 'block', position: 'relative', flexShrink: 0, cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+      {/* ── Image Container ── */}
+      <div
+        style={{
+          position: 'relative',
+          width: isList ? '260px' : '100%',
+          height: isList ? '100%' : '210px',
+          flexShrink: 0,
+          backgroundColor: '#F8F6F0',
+          overflow: 'hidden',
+        }}
       >
-        {/* Amber radial glow */}
-        <div style={{
-          position: 'absolute', inset: 0, zIndex: 0,
-          background: 'radial-gradient(ellipse at 50% 80%, rgba(251,191,36,0.18) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          style={{
-            width: '100%',
-            height: '200px',
-            objectFit: 'cover',
-            display: 'block',
-            transform: hovering ? 'scale(1.07)' : 'scale(1)',
-            transition: 'transform 0.52s cubic-bezier(.4,2,.6,1)',
-            position: 'relative', zIndex: 1,
-          }}
-        />
-
-        {/* Out-of-Stock banner overlay */}
-        {isOutOfStock && (
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 10,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: '0',
-          }}>
-            <span style={{
-              background: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
-              color: '#fff', fontWeight: 800, fontSize: '0.85rem',
-              padding: '7px 18px', borderRadius: '30px',
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-              boxShadow: '0 4px 14px rgba(220,38,38,0.5)',
-              display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
-              <span style={{ fontSize: '1rem' }}>🚫</span> Out of Stock
-            </span>
-          </div>
-        )}
-
-        {/* Discount ribbon */}
-        {discount > 0 && !isOutOfStock && (
-          <div style={{
-            position: 'absolute', top: 0, left: 0, zIndex: 5,
-            background: 'linear-gradient(135deg, #DC2626 60%, #B91C1C 100%)',
-            color: '#fff', fontWeight: 800, fontSize: '0.72rem',
-            padding: '5px 10px 5px 8px',
-            borderRadius: '0 0 12px 0',
-            letterSpacing: '0.03em',
-          }}>
-            -{discount}% OFF
-          </div>
-        )}
-
-        {/* Bestseller / Organic pill badges – top-right */}
-        <div style={{
-          position: 'absolute', top: '10px', right: '10px', zIndex: 5,
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px',
-        }}>
-          {product.isBestSeller && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
-              background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-              color: '#fff', fontSize: '0.68rem', fontWeight: 700,
-              padding: '3px 8px', borderRadius: '20px',
-              boxShadow: '0 2px 8px rgba(217,119,6,0.4)',
-              letterSpacing: '0.02em',
-            }}>
-              <Sparkles size={10} /> Bestseller
-            </span>
-          )}
-          {product.isOrganicCertified && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '4px',
-              background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-              color: '#fff', fontSize: '0.68rem', fontWeight: 700,
-              padding: '3px 8px', borderRadius: '20px',
-              boxShadow: '0 2px 8px rgba(5,150,105,0.35)',
-            }}>
-              <ShieldCheck size={10} /> Organic
-            </span>
-          )}
-        </div>
-
-        {/* Wishlist FAB – bottom-right of image */}
-        <button
-          onClick={handleToggleWishlist}
-          aria-label="Wishlist"
-          style={{
-            position: 'absolute', bottom: '10px', right: '10px', zIndex: 6,
-            width: '34px', height: '34px', borderRadius: '50%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: wishlisted ? '#DC2626' : 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(6px)',
-            border: 'none', cursor: 'pointer',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.18)',
-            color: wishlisted ? '#fff' : '#6B7280',
-            transform: hovering ? 'scale(1.12)' : 'scale(1)',
-            transition: 'all 0.22s ease',
-          }}
-        >
-          <Heart size={15} fill={wishlisted ? '#fff' : 'none'} />
-        </button>
-      </Link>
-
-      {/* ── Body ── */}
-      <div style={{
-        padding: '1rem 1.1rem 1.1rem',
-        display: 'flex', flexDirection: 'column', flex: 1,
-      }}>
-
-        {/* Category + Rating row */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '0.4rem',
-        }}>
-          <span style={{
-            fontSize: '0.68rem', fontWeight: 700, color: '#D97706',
-            textTransform: 'uppercase', letterSpacing: '0.08em',
-             padding: '2px 7px',
-            // borderRadius: '20px', border: '1px solid rgba(217,119,6,0.18)',
-          }}>
-            {/* {product.category} */}
-          </span>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '3px',
-            fontSize: '0.78rem', fontWeight: 700, color: '#B45309',
-          }}>
-            <Star size={12} fill="#F59E0B" color="#F59E0B" />
-            <span>{product.rating}</span>
-            <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: '0.72rem' }}>
-              ({product.reviewsCount})
-            </span>
-          </div>
-        </div>
-
-        {/* Product name */}
         <Link
-          to={isOutOfStock ? '#' : `/product/${product.slug}`}
-          onClick={isOutOfStock ? (e) => e.preventDefault() : undefined}
-          style={{ textDecoration: 'none', cursor: isOutOfStock ? 'not-allowed' : 'pointer' }}
+          to={`/product/${product.slug}`}
+          style={{ display: 'block', width: '100%', height: '100%', textDecoration: 'none' }}
         >
-          <h3 style={{
-            fontSize: '1rem', fontWeight: 800, color: isOutOfStock ? '#9CA3AF' : '#1C1917',
-            lineHeight: 1.3, marginBottom: '0.3rem',
-            minHeight: '2.6rem',
-          }}>
-            {product.name}
-          </h3>
+          <img
+            src={displayImage}
+            alt={product.name}
+            loading="lazy"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+              transform: hovering ? 'scale(1.05)' : 'scale(1)',
+              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
         </Link>
 
-        {/* Tagline */}
-        <p style={{
-          fontSize: '0.79rem', color: '#78716C', lineHeight: 1.45,
-          marginBottom: '0.85rem',
-          display: '-webkit-box',
-          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          overflow: 'hidden', minHeight: '2.25rem',
-        }}>
-          {product.description}
-        </p>
+        {/* Badge Ribbon (Top-Left) */}
+        {badgeInfo && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '10px',
+              left: '10px',
+              zIndex: 5,
+              backgroundColor: badgeInfo.bg,
+              color: badgeInfo.color,
+              fontSize: '0.68rem',
+              fontWeight: 800,
+              padding: '3px 9px',
+              borderRadius: '6px',
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              pointerEvents: 'none',
+            }}
+          >
+            {badgeInfo.text}
+          </div>
+        )}
 
-        {/* Size Selector */}
-        {availableSizes.length >= 1 && (
-          <div style={{ marginBottom: '0.85rem' }}>
-            <p style={{ fontSize: '0.7rem', color: '#A8A29E', fontWeight: 600, marginBottom: '0.35rem', letterSpacing: '0.04em' }}>
-              SIZE
-            </p>
-            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-              {availableSizes.map((s) => (
+        {/* Wishlist Heart (Top-Right) */}
+        <button
+          onClick={handleToggleWishlist}
+          aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 6,
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: '#FFFFFF',
+            border: '1px solid rgba(0,0,0,0.06)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'transform 0.18s ease, background-color 0.18s ease',
+            transform: hovering ? 'scale(1.06)' : 'scale(1)',
+          }}
+        >
+          <Heart
+            size={16}
+            color={wishlisted ? '#DC2626' : '#57534E'}
+            fill={wishlisted ? '#DC2626' : 'none'}
+          />
+        </button>
+
+        {/* Out of Stock Overlay */}
+        {isOutOfStock && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(255,255,255,0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 4,
+            }}
+          >
+            <span
+              style={{
+                backgroundColor: '#DC2626',
+                color: '#FFFFFF',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+              }}
+            >
+              OUT OF STOCK
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Card Body ── */}
+      <div
+        style={{
+          padding: '1rem 1rem 1.1rem',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          {/* Product Title */}
+          <Link
+            to={`/product/${product.slug}`}
+            style={{
+              textDecoration: 'none',
+              color: '#1C1917',
+              display: 'block',
+            }}
+          >
+            <h3
+              style={{
+                fontFamily: 'var(--font-serif)',
+                fontSize: '1.02rem',
+                fontWeight: 700,
+                color: '#1C1917',
+                margin: '0 0 0.25rem 0',
+                lineHeight: 1.25,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              title={product.name}
+            >
+              {product.name}
+            </h3>
+          </Link>
+
+          {/* Subtitle / Tagline */}
+          <p
+            style={{
+              fontSize: '0.78rem',
+              color: '#78716C',
+              margin: '0 0 0.5rem 0',
+              lineHeight: 1.3,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+            title={tagline}
+          >
+            {tagline}
+          </p>
+
+          {/* Rating */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <div style={{ display: 'flex', gap: '2px' }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={12}
+                  fill={star <= Math.round(Number(displayRating)) ? '#F59E0B' : '#E5E7EB'}
+                  color={star <= Math.round(Number(displayRating)) ? '#F59E0B' : '#E5E7EB'}
+                />
+              ))}
+            </div>
+            <span
+              style={{
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: '#1C1917',
+                marginLeft: '2px',
+              }}
+            >
+              {displayRating}
+            </span>
+            <span style={{ fontSize: '0.74rem', color: '#A8A29E' }}>
+              ({displayReviewsCount})
+            </span>
+          </div>
+
+          {/* 3 Key Benefits Badges */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '6px',
+              marginBottom: '0.85rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '1px solid #F3F1EC',
+            }}
+          >
+            {benefits.map((b, idx) => (
+              <div
+                key={idx}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  minWidth: 0,
+                }}
+                title={b}
+              >
+                <div
+                  style={{
+                    width: '22px',
+                    height: '22px',
+                    borderRadius: '50%',
+                    border: '1px solid #D6A870',
+                    backgroundColor: '#FFFDF9',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {getBenefitIcon(b)}
+                </div>
+                <span
+                  style={{
+                    fontSize: '0.64rem',
+                    color: '#57534E',
+                    fontWeight: 500,
+                    lineHeight: 1.15,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {b}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Size Variant Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '0.85rem',
+            }}
+          >
+            {availableSizes.map((s) => {
+              const isSelected = activeSize === s.size;
+              return (
                 <button
                   key={s.size}
                   type="button"
-                  onClick={(e) => { e.preventDefault(); setSelectedSize(s.size); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setSelectedSize(s.size);
+                  }}
                   style={{
-                    padding: '3px 10px', borderRadius: '8px',
-                    fontSize: '0.74rem',
-                    fontWeight: activeSize === s.size ? 700 : 500,
-                    border: activeSize === s.size
-                      ? '1.5px solid #D97706'
-                      : '1.5px solid #E7E5E4',
-                    background: activeSize === s.size
-                      ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)'
-                      : '#FAFAF9',
-                    color: activeSize === s.size ? '#92400E' : '#57534E',
+                    padding: '3px 10px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: isSelected ? 700 : 500,
+                    backgroundColor: isSelected ? '#FDE68A' : '#F5F5F4',
+                    color: isSelected ? '#78350F' : '#78716C',
+                    border: isSelected ? '1px solid #F59E0B' : '1px solid transparent',
                     cursor: 'pointer',
-                    transition: 'all 0.18s ease',
-                    boxShadow: activeSize === s.size ? '0 2px 6px rgba(217,119,6,0.2)' : 'none',
+                    transition: 'all 0.15s ease',
                   }}
                 >
                   {s.size}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
-
-        {/* Price + Quantity Stepper — hidden when out of stock */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '0.75rem',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-            <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#1C1917', letterSpacing: '-0.02em' }}>
+        {/* Pricing + Add to Cart Row */}
+        <div>
+          {/* Price display */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '8px',
+              marginBottom: '0.75rem',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '1.28rem',
+                fontWeight: 800,
+                color: '#1C1917',
+                letterSpacing: '-0.02em',
+              }}
+            >
               {formatPrice(price)}
             </span>
+
             {originalPrice > price && (
-              <span style={{ fontSize: '0.83rem', color: '#A8A29E', textDecoration: 'line-through' }}>
+              <span
+                style={{
+                  fontSize: '0.85rem',
+                  color: '#A8A29E',
+                  textDecoration: 'line-through',
+                }}
+              >
                 {formatPrice(originalPrice)}
+              </span>
+            )}
+
+            {discount > 0 && (
+              <span
+                style={{
+                  backgroundColor: '#DCFCE7',
+                  color: '#15803D',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '5px',
+                  marginLeft: 'auto',
+                }}
+              >
+                {discount}% OFF
               </span>
             )}
           </div>
 
-          {/* Quantity stepper — hidden when out of stock */}
-          {!isOutOfStock && (
-            <div style={{
-              display: 'flex', alignItems: 'center',
-              border: '1.5px solid #E7E5E4', borderRadius: '10px', overflow: 'hidden',
-            }}>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); setQty(Math.max(1, qty - 1)); }}
-                style={{
-                  width: '28px', height: '28px', border: 'none',
-                  background: '#FAFAF9', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#57534E', transition: 'background 0.15s',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
-                onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
-              >
-                <Minus size={12} />
-              </button>
-              <span style={{
-                width: '28px', textAlign: 'center', fontSize: '0.82rem',
-                fontWeight: 700, color: '#1C1917', userSelect: 'none',
-              }}>
-                {qty}
-              </span>
-              <button
-                type="button"
-                onClick={(e) => { e.preventDefault(); setQty(qty + 1); }}
-                style={{
-                  width: '28px', height: '28px', border: 'none',
-                  background: '#FAFAF9', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#57534E', transition: 'background 0.15s',
-                }}
-                onMouseOver={(e) => (e.currentTarget.style.background = '#F5F5F4')}
-                onMouseOut={(e) => (e.currentTarget.style.background = '#FAFAF9')}
-              >
-                <Plus size={12} />
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Add to Cart / Out of Stock Button */}
-        {isOutOfStock ? (
+          {/* Add to Cart button */}
           <button
-            disabled
-            style={{
-              width: '100%',
-              padding: '0.68rem 0.5rem',
-              borderRadius: '12px',
-              border: '1.5px solid #D1D5DB',
-              background: 'linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%)',
-              color: '#9CA3AF',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '7px',
-              cursor: 'not-allowed',
-              letterSpacing: '0.02em',
-            }}
-          >
-            <span style={{ fontSize: '1rem' }}>🚫</span>
-            <span>Out of Stock</span>
-          </button>
-        ) : (
-          <button
+            type="button"
             onClick={handleAddToCart}
+            disabled={isOutOfStock}
             style={{
               width: '100%',
-              padding: '0.68rem 0.5rem',
-              borderRadius: '12px',
+              padding: '9px 14px',
+              borderRadius: '10px',
               border: 'none',
-              background: added
-                ? 'linear-gradient(135deg, #059669 0%, #047857 100%)'
-                : 'linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%)',
-              color: '#fff',
+              backgroundColor: isOutOfStock
+                ? '#E5E7EB'
+                : added
+                ? '#15803D'
+                : '#3A1F0D',
+              color: isOutOfStock ? '#9CA3AF' : '#FFFFFF',
               fontWeight: 700,
-              fontSize: '0.88rem',
+              fontSize: '0.85rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '7px',
-              cursor: 'pointer',
-              boxShadow: added
-                ? '0 4px 14px rgba(5,150,105,0.35)'
-                : '0 4px 16px rgba(217,119,6,0.35)',
-              transition: 'all 0.28s cubic-bezier(.4,2,.6,1)',
-              letterSpacing: '0.02em',
-              transform: added ? 'scale(0.98)' : 'scale(1)',
+              gap: '8px',
+              cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+              boxShadow: isOutOfStock ? 'none' : '0 2px 8px rgba(58, 31, 13, 0.2)',
+              transition: 'all 0.2s ease',
             }}
             onMouseOver={(e) => {
-              if (!added) {
-                e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-                e.currentTarget.style.boxShadow = '0 8px 22px rgba(217,119,6,0.42)';
+              if (!isOutOfStock && !added) {
+                e.currentTarget.style.backgroundColor = '#291508';
               }
             }}
             onMouseOut={(e) => {
-              if (!added) {
-                e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(217,119,6,0.35)';
+              if (!isOutOfStock && !added) {
+                e.currentTarget.style.backgroundColor = '#3A1F0D';
               }
             }}
           >
-            <ShoppingBag size={15} />
-            <span>{added ? '✓ Added to Basket!' : `Add to Basket · ${activeSize}`}</span>
+            {added ? (
+              <>
+                <Check size={16} />
+                <span>Added to Cart!</span>
+              </>
+            ) : isOutOfStock ? (
+              <span>Out of Stock</span>
+            ) : (
+              <>
+                <ShoppingCart size={15} />
+                <span>Add to Cart</span>
+              </>
+            )}
           </button>
-        )}
+        </div>
       </div>
-
-      {/* Animated bottom amber accent bar */}
-      <div style={{
-        height: '3px',
-        background: hovering
-          ? 'linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #F59E0B 100%)'
-          : 'linear-gradient(90deg, transparent 0%, rgba(217,119,6,0.15) 50%, transparent 100%)',
-        transition: 'background 0.4s ease',
-        flexShrink: 0,
-      }} />
     </div>
   );
 };

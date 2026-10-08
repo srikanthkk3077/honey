@@ -65,6 +65,7 @@ export interface StoreSettings {
   paymentConfig?: PaymentConfig;
   deliveryConfig?: DeliveryConfig;
   heroConfig?: HeroConfig;
+  shopConfig?: ShopConfig;
 }
 
 export interface HeroBadge {
@@ -138,4 +139,68 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   isActive: true,
   heroBannerSlides: [],
   heroDisplayMode: 'hero',
+};
+
+// ─── Shop Page Customizer Types ─────────────────────────────────────────────
+export interface ShopTrustBadge {
+  title: string;
+  subtitle: string;
+  icon?: string;
+}
+
+export interface ShopSidebarPromo {
+  title: string;
+  buttonText: string;
+  linkUrl: string;
+  imageUrl: string;
+  isActive: boolean;
+}
+
+export interface ShopBottomTrustItem {
+  title: string;
+  subtitle: string;
+  icon?: string;
+}
+
+export interface ShopConfig {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  heroGraphicUrl: string;
+  heroBackgroundImageUrl?: string;
+  heroBannerMode?: 'dynamic' | 'static';
+  heroBgPosition?: 'right' | 'center' | 'left';
+  heroScriptText: string;
+  trustBadges: ShopTrustBadge[];
+  sidebarPromo: ShopSidebarPromo;
+  bottomTrustItems: ShopBottomTrustItem[];
+}
+
+export const DEFAULT_SHOP_CONFIG: ShopConfig = {
+  eyebrow: 'PURE • NATURAL • RAW',
+  title: 'Our Honey Collection',
+  subtitle: "Nature's finest. Straight from the forest to your home.",
+  heroGraphicUrl: '/images/shop/shop_hero_bg_jar_forest.jpg',
+  heroBackgroundImageUrl: '/images/shop/shop_hero_bg_jar_forest.jpg',
+  heroBannerMode: 'dynamic',
+  heroBgPosition: 'right',
+  heroScriptText: 'Pure Honey Pure Life',
+  trustBadges: [
+    { title: '100% Natural', subtitle: 'No Additives', icon: 'leaf' },
+    { title: 'Lab Tested', subtitle: 'for Purity', icon: 'shield' },
+    { title: 'Supports', subtitle: 'Immunity', icon: 'bee' },
+  ],
+  sidebarPromo: {
+    title: 'Pure Honey Better Health',
+    buttonText: 'Learn More →',
+    linkUrl: '/about',
+    imageUrl: '/images/shop/sidebar_promo.png',
+    isActive: true,
+  },
+  bottomTrustItems: [
+    { title: '100% Natural', subtitle: 'No Preservatives', icon: 'leaf' },
+    { title: 'Lab Tested', subtitle: 'for Purity', icon: 'flask' },
+    { title: 'Fast & Safe', subtitle: 'Delivery', icon: 'truck' },
+    { title: 'Trusted by', subtitle: 'Thousands of Families', icon: 'shield' },
+  ],
 };
