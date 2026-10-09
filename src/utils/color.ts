@@ -77,26 +77,29 @@ export const isDarkColor = (color: string): boolean => {
 };
 
 /**
- * Generate a dynamic left-to-right gradient blend mask derived entirely from the given background color.
- * The left edge perfectly matches the solid background, feathering gracefully into transparency over the cover image.
+ * Generate a dynamic localized gradient mask derived from the slide background color.
+ * Focuses soft, readable contrast behind the left text area while feathering out gracefully
+ * to transparent at the top (preserving leaves/sunlight), bottom (preserving table/flowers),
+ * and right (revealing mountains, bee, and honey jar).
  */
 export const getSlideGradientMask = (bgColor: string): string => {
-  const c100 = colorWithAlpha(bgColor, 1.0);
-  const c96 = colorWithAlpha(bgColor, 0.96);
-  const c84 = colorWithAlpha(bgColor, 0.84);
-  const c55 = colorWithAlpha(bgColor, 0.55);
-  const c24 = colorWithAlpha(bgColor, 0.24);
-  const c06 = colorWithAlpha(bgColor, 0.06);
+  const isDark = isDarkColor(bgColor);
+  const c96 = colorWithAlpha(bgColor, isDark ? 0.94 : 0.95);
+  const c90 = colorWithAlpha(bgColor, isDark ? 0.88 : 0.90);
+  const c78 = colorWithAlpha(bgColor, isDark ? 0.74 : 0.78);
+  const c50 = colorWithAlpha(bgColor, isDark ? 0.44 : 0.50);
+  const c20 = colorWithAlpha(bgColor, isDark ? 0.16 : 0.20);
+  const c05 = colorWithAlpha(bgColor, isDark ? 0.04 : 0.05);
 
   return `
-    linear-gradient(to right,
-      ${c100} 0%,
-      ${c96} 14%,
-      ${c84} 28%,
-      ${c55} 46%,
-      ${c24} 66%,
-      ${c06} 82%,
-      transparent 94%
+    radial-gradient(ellipse 78% 84% at 16% 50%,
+      ${c96} 0%,
+      ${c90} 25%,
+      ${c78} 45%,
+      ${c50} 65%,
+      ${c20} 82%,
+      ${c05} 92%,
+      transparent 100%
     )
   `.trim();
 };

@@ -472,14 +472,12 @@ export const HeroEditor: React.FC = () => {
             alignItems: 'center',
           }}
         >
-          {/* Right-Side Full Bleed Cover Preview */}
+          {/* Full-Bleed Cover Preview */}
           <div
             style={{
               position: 'absolute',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '58%',
+              inset: 0,
+              width: '100%',
               height: '100%',
               overflow: 'hidden',
               pointerEvents: 'none',

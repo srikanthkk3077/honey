@@ -21,8 +21,8 @@ export const AnnouncementBar: React.FC = () => {
         className="container flex items-center justify-center flex-wrap gap-4"
         style={{ padding: 0, fontSize: 'clamp(0.72rem, 1.8vw, 0.82rem)' }}
       >
-        <span>Up to 24% OFF All Honey + Up to 10% Off on Prepaid</span>
-        <span style={{ color: '#F59E0B' }}>✦</span>
+        {/* <span>Up to 24% OFF All Honey + Up to 10% Off on Prepaid</span> */}
+        {/* <span style={{ color: '#F59E0B' }}>✦</span> */}
         <span>First order? Get Flat 10% OFF</span>
         <span style={{ color: '#F59E0B' }}>✦</span>
         <span>Free Delivery on orders above ₹{FREE_SHIPPING_THRESHOLD}</span>

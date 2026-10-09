@@ -229,22 +229,20 @@ export const Hero: React.FC = () => {
               }}
             />
 
-            {/* Right-Side Full Bleed Cover Image (NO scale effect, crystal clear display) */}
+            {/* Full-Bleed Cover Image (spanning 100% width and height) */}
             <div
               className="hero-right-cover-wrapper"
               style={{
                 position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                width: 'clamp(50%, 58vw, 66%)',
+                inset: 0,
+                width: '100%',
                 height: '100%',
                 overflow: 'hidden',
               }}
             >
               <img
                 src={sImg}
-                alt={s.titleLine1 || 'Madhuvan Raw Forest Honey'}
+                alt={s.titleLine1 || 'Madhuvan Raw Honey'}
                 style={{
                   width: '100%',
                   height: '100%',
@@ -255,7 +253,7 @@ export const Hero: React.FC = () => {
                 loading="eager"
               />
 
-              {/* Dynamic Gradient Mask (Completely derived from this slide's background color) */}
+              {/* Dynamic Text-Backdrop Gradient Mask (localized behind left text area, preserving top/bottom corners) */}
               <div
                 className="hero-cover-gradient-mask"
                 style={{
@@ -269,39 +267,7 @@ export const Hero: React.FC = () => {
           </div>
         );
       })}
-
-      {/* ── Bottom-Left Botanical Floral Ornament ── */}
-      {hero.showBotanicalAccent !== false && (
-        <div
-          className="hero-botanical-accent"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            height: 'clamp(110px, 18vh, 160px)',
-            width: 'auto',
-            pointerEvents: 'none',
-            zIndex: 4,
-            opacity: 0.95,
-            filter: isDark ? 'brightness(0.95) drop-shadow(0 4px 14px rgba(0,0,0,0.5))' : 'none',
-            transition: 'filter 0.8s ease',
-          }}
-        >
-          <img
-            src="/images/brand/botanical_corner_clean.png"
-            alt="Botanical Wildflower Ornament"
-            style={{
-              height: '100%',
-              width: 'auto',
-              display: 'block',
-              objectFit: 'contain',
-              objectPosition: 'bottom left',
-            }}
-            loading="eager"
-          />
-        </div>
-      )}
-
+      
       <div
         className="container"
         style={{
@@ -372,7 +338,7 @@ export const Hero: React.FC = () => {
                 {titleLine1}
               </span>
               {titleLine2 && (
-                <span style={{ display: 'block', color: isDark ? '#FFFBEB' : '#2C150A' }}>
+                <span style={{ display: 'block', color: isDark ? '#FFFBEB' : '#955C0D' }}>
                   {titleLine2}
                 </span>
               )}
@@ -763,9 +729,8 @@ export const Hero: React.FC = () => {
         }
 
         @media (max-width: 960px) {
-          .hero-right-cover-wrapper {
-            width: 100% !important;
-            opacity: 0.38 !important;
+          .hero-full-cover-wrapper img {
+            opacity: 0.35 !important;
           }
           .hero-visual {
             display: none !important;

@@ -99,7 +99,7 @@ export const Footer: React.FC = () => {
               fontSize: '0.84rem', color: '#78716C', lineHeight: 1.7,
               marginBottom: '1.4rem', maxWidth: '260px',
             }}>
-              Pure, unheated nectar harvested by tribal Mowals from the forests of Jim Corbett &amp; Sunderbans.
+              H No 3408, New MIG Vidyut Nagar, BHEL RC Puram, Tellapur, Sangareddy 502032, Sangareddy (Urban) &amp; Sangareddy, Telangana - 502032.
             </p>
 
             {/* Contact micro-list */}
@@ -116,7 +116,7 @@ export const Footer: React.FC = () => {
               </a>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#78716C', fontSize: '0.82rem' }}>
                 <MapPin size={13} color="#D97706" />
-                Jim Corbett &amp; Sunderbans, India
+                BHEL RC Puram, Tellapur, Sangareddy 502032, Telangana
               </div>
             </div>
 
