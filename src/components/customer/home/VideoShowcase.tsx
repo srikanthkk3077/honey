@@ -1,534 +1,401 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useStore } from '../../../store/store';
 import { VideoModal } from '../video/VideoModal';
 import { VideoItem } from '../../../types/video.types';
-import { Film, ChevronLeft, ChevronRight, Volume2, Sparkles, Check, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { VideoCardShimmer } from '../../common/Shimmer';
 
-interface ReelCardProps {
+// Fallback metadata matching Image 2 exactly
+const FALLBACK_METADATA = [
+  {
+    title: 'Forest Honey Collection',
+    duration: '', // No duration badge on tall card in Image 2
+    fallbackPoster:
+      'https://images.unsplash.com/photo-1473081556163-2a17de81fc97?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    title: 'Beehive Care',
+    duration: '1:12',
+    fallbackPoster:
+      'https://images.unsplash.com/photo-1582794543139-8ac9cb0f7b11?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    title: 'Apiary Life',
+    duration: '1:08',
+    fallbackPoster:
+      'https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    title: 'Honey Extraction',
+    duration: '0:52',
+    fallbackPoster:
+      'https://images.unsplash.com/photo-1587049352851-8d4e8913390a?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    title: 'Packaging',
+    duration: '0:46',
+    fallbackPoster:
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=800&q=80',
+  },
+];
+
+const getDisplayTitle = (video: VideoItem, index: number): string => {
+  const isGeneric =
+    !video.title ||
+    video.title.startsWith('WhatsApp Video') ||
+    video.title.startsWith('f171e230') ||
+    /^[0-9a-f-]{8,}/i.test(video.title);
+
+  if (!isGeneric && video.title.trim().length > 0) {
+    return video.title;
+  }
+  return FALLBACK_METADATA[index % FALLBACK_METADATA.length].title;
+};
+
+const getDisplayDuration = (video: VideoItem, index: number, isTall: boolean): string => {
+  if (isTall) return ''; // Tall card in Image 2 has no duration badge
+  if (video.duration && video.duration !== '0:45' && video.duration !== '0:00') {
+    return video.duration;
+  }
+  return FALLBACK_METADATA[index % FALLBACK_METADATA.length].duration;
+};
+
+// Cute cartoon bumblebee vector icon matching Image 2
+const ApiaryBeeIcon: React.FC<{ size?: number }> = ({ size = 46 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 54 54"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ flexShrink: 0 }}
+    aria-hidden="true"
+  >
+    {/* Back Wing */}
+    <ellipse
+      cx="21"
+      cy="13"
+      rx="7"
+      ry="12"
+      transform="rotate(-25 21 13)"
+      fill="#EBF8FF"
+      stroke="#1C1917"
+      strokeWidth="2.2"
+    />
+    {/* Front Wing */}
+    <ellipse
+      cx="29"
+      cy="11"
+      rx="7"
+      ry="12"
+      transform="rotate(15 29 11)"
+      fill="#FFFFFF"
+      stroke="#1C1917"
+      strokeWidth="2.2"
+    />
+    {/* Honey Bee Body */}
+    <ellipse
+      cx="27"
+      cy="31"
+      rx="17"
+      ry="13"
+      fill="#F59E0B"
+      stroke="#1C1917"
+      strokeWidth="2.2"
+    />
+    {/* Body Stripes */}
+    <path
+      d="M21 18.5 C21 18.5 19.5 31 21 43.5 C23 43.8 25 43.8 26.5 43.5 C25 31 26.5 18.5 26.5 18.5 Z"
+      fill="#1C1917"
+    />
+    <path
+      d="M32 19 C32 19 30.5 31 32 43 C33.8 42.5 35.5 41.5 37 40 C35.5 30 37 20 37 20 Z"
+      fill="#1C1917"
+    />
+    {/* Stinger */}
+    <path d="M43 31 L48 30 L43 33 Z" fill="#1C1917" />
+    {/* Bee Head */}
+    <circle
+      cx="14"
+      cy="30"
+      r="8.5"
+      fill="#F59E0B"
+      stroke="#1C1917"
+      strokeWidth="2.2"
+    />
+    {/* Bee Eye */}
+    <circle cx="11.5" cy="28" r="2.2" fill="#1C1917" />
+    <circle cx="10.8" cy="27.3" r="0.7" fill="#FFFFFF" />
+    {/* Bee Smile */}
+    <path
+      d="M10 33 Q13 36 15 33"
+      stroke="#1C1917"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      fill="none"
+    />
+    {/* Antenna Left */}
+    <path
+      d="M12 22 Q10 16 6 17"
+      stroke="#1C1917"
+      strokeWidth="2"
+      strokeLinecap="round"
+      fill="none"
+    />
+    <circle cx="6" cy="17" r="1.8" fill="#1C1917" />
+    {/* Antenna Right */}
+    <path
+      d="M16 22 Q16 15 13 14"
+      stroke="#1C1917"
+      strokeWidth="2"
+      strokeLinecap="round"
+      fill="none"
+    />
+    <circle cx="13" cy="14" r="1.8" fill="#1C1917" />
+  </svg>
+);
+
+interface ApiaryVideoCardProps {
   video: VideoItem;
-  onSelectVideo: (video: VideoItem) => void;
+  index: number;
+  isTall: boolean;
+  onSelect: (video: VideoItem) => void;
 }
 
-const ReelCard: React.FC<ReelCardProps> = ({ video, onSelectVideo }) => {
-  const { products, addToCart, setCartDrawerOpen } = useStore();
+const ApiaryVideoCard: React.FC<ApiaryVideoCardProps> = ({
+  video,
+  index,
+  isTall,
+  onSelect,
+}) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const title = getDisplayTitle(video, index);
+  const duration = getDisplayDuration(video, index, isTall);
+  const fallbackPoster = FALLBACK_METADATA[index % FALLBACK_METADATA.length].fallbackPoster;
 
-  const matchedProd = video.taggedProductId
-    ? products.find((p) => p.id === video.taggedProductId || (p as any)._id === video.taggedProductId)
-    : video.taggedProductSlug
-      ? products.find((p) => p.slug === video.taggedProductSlug)
-      : undefined;
-
-  const prodName = matchedProd?.name || video.taggedProductName || 'Wild Forest Raw Honey';
-  const prodPrice = matchedProd?.price || video.taggedProductPrice || 498;
-  const prodOrigPrice = matchedProd?.originalPrice || video.taggedProductOriginalPrice || 650;
-  const prodImage = matchedProd?.images?.[0] || video.taggedProductImage || video.thumbnailUrl;
-
-  const availableSizes = matchedProd?.sizes && matchedProd.sizes.length > 0
-    ? matchedProd.sizes
-    : [{ size: video.taggedProductSize || '500g', price: prodPrice, originalPrice: prodOrigPrice, stock: matchedProd?.stock ?? 15 }];
-
-  const [selectedSize, setSelectedSize] = useState<string>(
-    availableSizes[0]?.size || '500g'
-  );
-  const [isAdded, setIsAdded] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const activeSizeOption = availableSizes.find((s) => s.size === selectedSize) || availableSizes[0];
-  const currentPrice = activeSizeOption?.price || prodPrice;
-  const currentOrigPrice = activeSizeOption?.originalPrice || prodOrigPrice;
-
-  const isOutOfStock = matchedProd
-    ? (matchedProd.stock <= 0 || (activeSizeOption && activeSizeOption.stock !== undefined && activeSizeOption.stock <= 0))
-    : false;
-
-  const discountPercent = currentOrigPrice > currentPrice
-    ? Math.round(((currentOrigPrice - currentPrice) / currentOrigPrice) * 100)
-    : (matchedProd?.discountPercent || 0);
-
+  // Autoplay videos automatically on mount and whenever videoUrl changes
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    if (isDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+    const vid = videoRef.current;
+    if (vid) {
+      vid.defaultMuted = true;
+      vid.muted = true;
+      vid.play().catch(() => {
+        // Browsers permit muted autoplay
+      });
     }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+  }, [video.videoUrl]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOutOfStock) return;
-
-    const targetProd = matchedProd || ({
-      id: video.taggedProductId || video.id,
-      name: prodName,
-      slug: video.taggedProductSlug || 'wild-forest-raw-honey',
-      price: currentPrice,
-      originalPrice: currentOrigPrice,
-      stock: 15,
-      images: [prodImage],
-      sizes: availableSizes,
-      selectedSize,
-    } as any);
-
-    addToCart(targetProd, selectedSize, 1);
-    setCartDrawerOpen(true);
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 1600);
+  const handleMouseEnter = () => {
+    if (cardRef.current) {
+      cardRef.current.style.transform = 'translateY(-4px)';
+      cardRef.current.style.boxShadow = '0 16px 36px rgba(0, 0, 0, 0.24)';
+    }
+    const playBtn = cardRef.current?.querySelector('.play-btn-circle') as HTMLElement | null;
+    if (playBtn) {
+      playBtn.style.transform = 'scale(1.12)';
+      playBtn.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.45)';
+    }
+    if (videoRef.current && videoRef.current.paused) {
+      videoRef.current.play().catch(() => {});
+    }
   };
 
-  const handleToggleDropdown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDropdownOpen((prev) => !prev);
+  const handleMouseLeave = () => {
+    if (cardRef.current) {
+      cardRef.current.style.transform = 'translateY(0)';
+      cardRef.current.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.1)';
+    }
+    const playBtn = cardRef.current?.querySelector('.play-btn-circle') as HTMLElement | null;
+    if (playBtn) {
+      playBtn.style.transform = 'scale(1)';
+      playBtn.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.35)';
+    }
   };
 
   return (
     <div
-      className="niyamaya-reel-card"
+      ref={cardRef}
+      className={`apiary-video-card ${isTall ? 'apiary-card-tall' : 'apiary-card-landscape'}`}
+      onClick={() => onSelect(video)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
-        flex: '0 0 245px',
-        width: '245px',
-        borderRadius: '14px',
-        overflow: 'hidden',
-        backgroundColor: '#FFFFFF',
-        boxShadow: '0 4px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)',
-        border: '1px solid #E5E7EB',
-        display: 'flex',
-        flexDirection: 'column',
-        scrollSnapAlign: 'start',
         position: 'relative',
-        transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease',
+        width: '100%',
+        height: '100%',
+        minHeight: 0,
+        borderRadius: isTall ? '20px' : '18px',
+        overflow: 'hidden',
+        backgroundColor: '#1C1917',
         cursor: 'pointer',
+        boxShadow: '0 4px 18px rgba(0, 0, 0, 0.1)',
+        transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease',
+        userSelect: 'none',
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-6px)';
-        e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.12)';
-        const vid = e.currentTarget.querySelector('video');
-        if (vid && vid.paused) vid.play().catch(() => { });
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04)';
-      }}
-      onClick={() => onSelectVideo(video)}
     >
-      {/* Video Frame & Overlapping Thumbnail */}
-      <div style={{ position: 'relative', width: '100%' }}>
-        <div
-          style={{
-            width: '100%',
-            aspectRatio: '9/13.5',
-            backgroundColor: '#1C1917',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          <video
-            src={video.videoUrl}
-            poster={video.thumbnailUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-          />
+      {/* Video Element with Autoplay, Muted, Loop */}
+      <video
+        ref={videoRef}
+        src={video.videoUrl}
+        poster={video.thumbnailUrl || fallbackPoster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="auto"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          transition: 'transform 0.4s ease',
+        }}
+      />
 
-          {/* Top-Left Red Ribbon Discount Badge (Matches Image 1) */}
-          {discountPercent > 0 && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '10px',
-                left: '10px',
-                backgroundColor: '#C5221F',
-                color: '#FFFFFF',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.04em',
-                padding: '3px 10px 3px 7px',
-                clipPath: 'polygon(0 0, calc(100% - 6px) 0, 100% 50%, calc(100% - 6px) 100%, 0 100%)',
-                zIndex: 6,
-                textTransform: 'uppercase',
-                boxShadow: '0 2px 6px rgba(197, 34, 31, 0.4)',
-              }}
-            >
-              {discountPercent}% OFF
-            </div>
-          )}
-
-          {/* Top-Right Frosted Sound Icon */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
-              backdropFilter: 'blur(4px)',
-              color: '#FFFFFF',
-              width: '26px',
-              height: '26px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 6,
-            }}
-          >
-            <Volume2 size={12} />
-          </div>
-
-          {/* Subtle bottom vignette */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '35px',
-              background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.25) 100%)',
-              pointerEvents: 'none',
-            }}
-          />
-        </div>
-
-        {/* Overlapping Product Thumbnail (Junction between Video & Details, like Image 1) */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelectVideo(video);
-          }}
-          title={prodName}
-          style={{
-            position: 'absolute',
-            bottom: '-18px',
-            left: '12px',
-            width: '44px',
-            height: '44px',
-            borderRadius: '8px',
-            backgroundColor: '#FFFFFF',
-            border: '2px solid #FFFFFF',
-            boxShadow: '0 3px 8px rgba(0, 0, 0, 0.14)',
-            overflow: 'hidden',
-            zIndex: 10,
-            cursor: 'pointer',
-          }}
-        >
-          <img
-            src={prodImage}
-            alt={prodName}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        </div>
-      </div>
-
-      {/* Product Information & Split Action Button */}
+      {/* Dark Vignette Overlay for Crisp Legibility */}
       <div
         style={{
-          backgroundColor: '#FFFFFF',
-          padding: '24px 12px 12px 12px',
-          display: 'flex',
-          flexDirection: 'column',
-          flex: 1,
+          position: 'absolute',
+          inset: 0,
+          background: isTall
+            ? 'linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 45%, rgba(0, 0, 0, 0.05) 100%)'
+            : 'linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.05) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Centered Circular White Play Button with Solid Black Play Icon */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          pointerEvents: 'none',
+          zIndex: 2,
         }}
       >
-        {/* Product Title */}
-        <h4
-          title={prodName}
-          style={{
-            fontSize: '0.86rem',
-            fontWeight: 600,
-            color: '#111827',
-            margin: '0 0 4px 0',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            lineHeight: 1.3,
-          }}
-        >
-          {prodName}
-        </h4>
-
-        {/* Price Row (Selling price in Red Bold, strikethrough in grey, format: Rs. X,XXX.00) */}
         <div
+          className="play-btn-circle"
           style={{
+            width: isTall ? '52px' : '46px',
+            height: isTall ? '52px' : '46px',
+            borderRadius: '50%',
+            backgroundColor: '#FFFFFF',
             display: 'flex',
-            alignItems: 'baseline',
-            gap: '8px',
-            marginBottom: '12px',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
+            transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
           }}
         >
-          <span
-            style={{
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              color: '#C5221F',
-            }}
-          >
-            Rs. {Number(currentPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
-          {currentOrigPrice > currentPrice && (
-            <span
-              style={{
-                fontSize: '0.76rem',
-                color: '#9CA3AF',
-                textDecoration: 'line-through',
-                fontWeight: 400,
-              }}
-            >
-              Rs. {Number(currentOrigPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          )}
-        </div>
-
-        {/* Split Action Button Area */}
-        <div style={{ marginTop: 'auto', position: 'relative' }} ref={dropdownRef}>
-          {/* Size Selector Popover */}
-          {isDropdownOpen && (
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '44px',
-                left: 0,
-                right: 0,
-                backgroundColor: '#FFFFFF',
-                borderRadius: '8px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.16)',
-                border: '1px solid #E5E7EB',
-                padding: '8px',
-                zIndex: 30,
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div
-                style={{
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  color: '#6B7280',
-                  textTransform: 'uppercase',
-                  padding: '2px 4px 6px 4px',
-                  borderBottom: '1px solid #F3F4F6',
-                  marginBottom: '4px',
-                }}
-              >
-                Select Size
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {availableSizes.map((s) => {
-                  const isSelected = s.size === selectedSize;
-                  const isSizeOOS = s.stock !== undefined && s.stock <= 0;
-                  return (
-                    <button
-                      key={s.size}
-                      type="button"
-                      disabled={isSizeOOS}
-                      onClick={() => {
-                        setSelectedSize(s.size);
-                        setIsDropdownOpen(false);
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 8px',
-                        borderRadius: '6px',
-                        border: isSelected ? '1.5px solid #111827' : '1px solid #E5E7EB',
-                        backgroundColor: isSelected ? '#F9FAFB' : '#FFFFFF',
-                        cursor: isSizeOOS ? 'not-allowed' : 'pointer',
-                        opacity: isSizeOOS ? 0.5 : 1,
-                        fontSize: '0.78rem',
-                        fontWeight: isSelected ? 700 : 500,
-                        color: '#111827',
-                      }}
-                    >
-                      <span>{s.size}</span>
-                      <span style={{ color: isSizeOOS ? '#DC2626' : '#C5221F', fontWeight: 600 }}>
-                        {isSizeOOS ? 'Out of stock' : `Rs. ${Number(s.price).toLocaleString('en-IN')}`}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {isOutOfStock ? (
-            /* Sold Out State (Grey Split Button - matches Card 3 & 5 in Image 1) */
-            <div
-              style={{
-                width: '100%',
-                height: '38px',
-                backgroundColor: '#D1D5DB',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                overflow: 'hidden',
-                cursor: 'not-allowed',
-              }}
-            >
-              <button
-                type="button"
-                disabled
-                style={{
-                  flex: 1,
-                  height: '100%',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#6B7280',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
-                  cursor: 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                Sold out
-              </button>
-              <div
-                style={{
-                  width: '1px',
-                  height: '60%',
-                  backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                }}
-              />
-              <button
-                type="button"
-                disabled
-                style={{
-                  width: '36px',
-                  height: '100%',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#6B7280',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'not-allowed',
-                }}
-              >
-                <ChevronDown size={14} />
-              </button>
-            </div>
-          ) : (
-            /* In Stock State (Black Split Button - matches Card 1, 2, 4 in Image 1) */
-            <div
-              style={{
-                width: '100%',
-                height: '38px',
-                backgroundColor: '#000000',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                overflow: 'hidden',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              }}
-            >
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                style={{
-                  flex: 1,
-                  height: '100%',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#FFFFFF',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1F2937';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                {isAdded ? (
-                  <>
-                    <Check size={14} color="#10B981" />
-                    <span style={{ color: '#10B981' }}>Added!</span>
-                  </>
-                ) : (
-                  'Add to Cart'
-                )}
-              </button>
-
-              <div
-                style={{
-                  width: '1px',
-                  height: '60%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                }}
-              />
-
-              <button
-                type="button"
-                onClick={handleToggleDropdown}
-                title="Select size"
-                style={{
-                  width: '36px',
-                  height: '100%',
-                  border: 'none',
-                  backgroundColor: 'transparent',
-                  color: '#FFFFFF',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'background-color 0.2s',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1F2937';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                <ChevronDown size={14} />
-              </button>
-            </div>
-          )}
+          <Play
+            size={isTall ? 20 : 18}
+            fill="#1C1917"
+            stroke="none"
+            style={{ transform: 'translateX(1.5px)' }}
+          />
         </div>
       </div>
+
+      {/* Bottom Left Title */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: isTall ? '18px' : '14px',
+          left: isTall ? '18px' : '14px',
+          right: duration ? '68px' : '16px',
+          zIndex: 3,
+          pointerEvents: 'none',
+        }}
+      >
+        <h3
+          style={{
+            color: '#FFFFFF',
+            margin: 0,
+            fontSize: isTall ? '1.12rem' : '0.96rem',
+            fontWeight: 700,
+            lineHeight: 1.25,
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.9)',
+            fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: isTall ? 'normal' : 'nowrap',
+            display: isTall ? '-webkit-box' : 'block',
+            WebkitLineClamp: isTall ? 2 : undefined,
+            WebkitBoxOrient: isTall ? 'vertical' : undefined,
+          }}
+        >
+          {title}
+        </h3>
+      </div>
+
+      {/* Bottom Right Duration Badge (shown on landscape cards) */}
+      {duration && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: isTall ? '18px' : '14px',
+            right: isTall ? '18px' : '14px',
+            zIndex: 3,
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.72)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              color: '#FFFFFF',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              padding: '3px 8px',
+              borderRadius: '6px',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              letterSpacing: '0.02em',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {duration}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+// Chunk helper to divide videos into 5-video bento grid pages
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const result: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    result.push(items.slice(i, i + size));
+  }
+  return result;
+}
 
 export const VideoShowcase: React.FC = () => {
   const { videos, isVideosLoading } = useStore();
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const featuredVideos = videos.filter((v) => v.featuredOnHome !== false);
   const displayVideos = featuredVideos.length > 0 ? featuredVideos : videos;
 
-  // Track scroll position to update arrow states
-  const checkScroll = () => {
+  // Group videos into 5-video bento batches
+  const pages = chunkArray(displayVideos, 5);
+
+  const checkScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setCanScrollLeft(scrollLeft > 15);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 15);
-  };
+    setCanScrollLeft(scrollLeft > 20);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 20);
+  }, []);
 
   useEffect(() => {
     checkScroll();
@@ -541,27 +408,31 @@ export const VideoShowcase: React.FC = () => {
       if (scroller) scroller.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
     };
-  }, [displayVideos.length]);
+  }, [pages.length, checkScroll]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    const scrollAmount = 270;
+    const scrollAmount = scrollRef.current.clientWidth || 600;
     scrollRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
     });
   };
 
-  // If not loading and no videos are present, gracefully hide section
+  const handleCardClick = (video: VideoItem) => {
+    setSelectedVideo(video);
+  };
+
   if (!isVideosLoading && displayVideos.length === 0) {
     return null;
   }
 
   return (
     <section
+      className="apiary-videos-section"
       style={{
         padding: '5rem 0',
-        backgroundColor: '#FAF8F5',
+        backgroundColor: '#FAF7F2',
         position: 'relative',
         overflow: 'hidden',
         borderTop: '1px solid #ECE7DE',
@@ -569,178 +440,161 @@ export const VideoShowcase: React.FC = () => {
       }}
     >
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-        {/* Header with Title and Scroll Arrows */}
+        {/* Header: Bee Icon + Title + Subtitle + Action Button + Scroll Controls */}
         <div
-          className="flex items-end justify-between flex-wrap gap-4"
+          className="flex items-center justify-between flex-wrap gap-4"
           style={{ marginBottom: '2.5rem' }}
         >
-          <div>
-            {/* Unique Eyebrow Badge */}
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                marginBottom: '0.75rem',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid #FDE68A',
-                padding: '5px 12px',
-                borderRadius: '20px',
-                boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
-              }}
-            >
-              <Sparkles size={14} color="#D97706" />
-              <span
+          {/* Left Title Area */}
+          <div className="flex items-center gap-3.5">
+            <ApiaryBeeIcon size={48} />
+            <div>
+              <h2
                 style={{
-                  fontSize: '0.75rem',
+                  fontSize: 'clamp(1.75rem, 2.7vw, 2.45rem)',
+                  color: '#1C1917',
+                  fontFamily: "'Playfair Display', Georgia, serif",
                   fontWeight: 800,
-                  color: '#92400E',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
+                  margin: '0 0 0.25rem 0',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.15,
                 }}
               >
-                Madhuvan Apiary In Motion
-              </span>
-              <span
+                Moments from Our Apiaries
+              </h2>
+              <p
                 style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  backgroundColor: '#D97706',
-                  animation: 'reelDotPulse 1.5s infinite',
+                  margin: 0,
+                  color: '#57534E',
+                  fontSize: 'clamp(0.88rem, 1.15vw, 1rem)',
+                  fontWeight: 400,
                 }}
-              />
+              >
+                A glimpse of our forests, bees and the pure honey we collect.
+              </p>
             </div>
-
-            <h2
-              style={{
-                fontSize: 'clamp(2rem, 3.2vw, 2.6rem)',
-                color: '#1C1917',
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontWeight: 700,
-                margin: '0 0 0.5rem 0',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Live Harvest Stories & Purity Reels
-            </h2>
           </div>
 
-          {/* Action Links & Navigation Arrows */}
+          {/* Right Action Button & Scroll Controls */}
           <div className="flex items-center gap-3">
             <Link
               to="/videos"
+              className="view-all-videos-pill"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                color: '#92400E',
-                backgroundColor: '#FFFFFF',
-                border: '1.5px solid #FDE68A',
-                padding: '0.55rem 1.15rem',
-                borderRadius: '14px',
+                backgroundColor: '#F97316',
+                color: '#FFFFFF',
+                padding: '0.65rem 1.35rem',
+                borderRadius: '9999px',
                 fontWeight: 700,
-                fontSize: '0.88rem',
+                fontSize: '0.92rem',
                 textDecoration: 'none',
-                boxShadow: '0 2px 8px rgba(217, 119, 6, 0.08)',
-                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 14px rgba(249, 115, 22, 0.32)',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#FEF3C7';
-                e.currentTarget.style.borderColor = '#D97706';
+                e.currentTarget.style.backgroundColor = '#EA580C';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(234, 88, 12, 0.42)';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = '#FDE68A';
+                e.currentTarget.style.backgroundColor = '#F97316';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(249, 115, 22, 0.32)';
               }}
             >
-              <Film size={16} color="#D97706" />
-              <span>Watch All Stories ({videos.length})</span>
+              <span>View All Videos ({displayVideos.length})</span>
+              <ArrowRight size={17} strokeWidth={2.4} />
             </Link>
 
-            {/* Previous Reel Button */}
-            <button
-              type="button"
-              onClick={() => handleScroll('left')}
-              disabled={!canScrollLeft}
-              style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                backgroundColor: canScrollLeft ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
-                border: canScrollLeft ? '2px solid #FDE68A' : '2px solid #E7E5E4',
-                color: canScrollLeft ? '#92400E' : '#A8A29E',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: canScrollLeft ? 'pointer' : 'default',
-                boxShadow: canScrollLeft ? '0 4px 14px rgba(217, 119, 6, 0.12)' : 'none',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={(e) => {
-                if (canScrollLeft) {
-                  e.currentTarget.style.backgroundColor = '#D97706';
-                  e.currentTarget.style.color = '#FFFFFF';
-                  e.currentTarget.style.borderColor = '#D97706';
-                  e.currentTarget.style.transform = 'scale(1.06)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (canScrollLeft) {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                  e.currentTarget.style.color = '#92400E';
-                  e.currentTarget.style.borderColor = '#FDE68A';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }
-              }}
-              aria-label="Scroll Left"
-            >
-              <ChevronLeft size={22} />
-            </button>
+            {/* Scroll Navigation Arrows (Enable smooth horizontal browsing) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleScroll('left')}
+                disabled={!canScrollLeft}
+                aria-label="Scroll left"
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  backgroundColor: canScrollLeft ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                  border: canScrollLeft ? '1.5px solid #FDBA74' : '1.5px solid #E7E5E4',
+                  color: canScrollLeft ? '#EA580C' : '#A8A29E',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: canScrollLeft ? 'pointer' : 'default',
+                  boxShadow: canScrollLeft ? '0 3px 10px rgba(234, 88, 12, 0.12)' : 'none',
+                  transition: 'all 0.2s ease',
+                  opacity: canScrollLeft || pages.length > 1 ? 1 : 0.6,
+                }}
+                onMouseOver={(e) => {
+                  if (canScrollLeft) {
+                    e.currentTarget.style.backgroundColor = '#EA580C';
+                    e.currentTarget.style.color = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#EA580C';
+                    e.currentTarget.style.transform = 'scale(1.06)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (canScrollLeft) {
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.color = '#EA580C';
+                    e.currentTarget.style.borderColor = '#FDBA74';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+              >
+                <ChevronLeft size={20} strokeWidth={2.4} />
+              </button>
 
-            {/* Next Reel Button */}
-            <button
-              type="button"
-              onClick={() => handleScroll('right')}
-              disabled={!canScrollRight}
-              style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                backgroundColor: canScrollRight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
-                border: canScrollRight ? '2px solid #FDE68A' : '2px solid #E7E5E4',
-                color: canScrollRight ? '#92400E' : '#A8A29E',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: canScrollRight ? 'pointer' : 'default',
-                boxShadow: canScrollRight ? '0 4px 14px rgba(217, 119, 6, 0.12)' : 'none',
-                transition: 'all 0.2s',
-              }}
-              onMouseOver={(e) => {
-                if (canScrollRight) {
-                  e.currentTarget.style.backgroundColor = '#D97706';
-                  e.currentTarget.style.color = '#FFFFFF';
-                  e.currentTarget.style.borderColor = '#D97706';
-                  e.currentTarget.style.transform = 'scale(1.06)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (canScrollRight) {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                  e.currentTarget.style.color = '#92400E';
-                  e.currentTarget.style.borderColor = '#FDE68A';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }
-              }}
-              aria-label="Scroll Right"
-            >
-              <ChevronRight size={22} />
-            </button>
+              <button
+                type="button"
+                onClick={() => handleScroll('right')}
+                disabled={!canScrollRight}
+                aria-label="Scroll right"
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  backgroundColor: canScrollRight ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)',
+                  border: canScrollRight ? '1.5px solid #FDBA74' : '1.5px solid #E7E5E4',
+                  color: canScrollRight ? '#EA580C' : '#A8A29E',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: canScrollRight ? 'pointer' : 'default',
+                  boxShadow: canScrollRight ? '0 3px 10px rgba(234, 88, 12, 0.12)' : 'none',
+                  transition: 'all 0.2s ease',
+                  opacity: canScrollRight || pages.length > 1 ? 1 : 0.6,
+                }}
+                onMouseOver={(e) => {
+                  if (canScrollRight) {
+                    e.currentTarget.style.backgroundColor = '#EA580C';
+                    e.currentTarget.style.color = '#FFFFFF';
+                    e.currentTarget.style.borderColor = '#EA580C';
+                    e.currentTarget.style.transform = 'scale(1.06)';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (canScrollRight) {
+                    e.currentTarget.style.backgroundColor = '#FFFFFF';
+                    e.currentTarget.style.color = '#EA580C';
+                    e.currentTarget.style.borderColor = '#FDBA74';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+              >
+                <ChevronRight size={20} strokeWidth={2.4} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Horizontal Scrollable Video Reels Row */}
+        {/* Bento Grid Container - Absolutely NO Vertical Scroll */}
         {isVideosLoading && displayVideos.length === 0 ? (
           <div className="flex gap-5" style={{ overflowX: 'hidden' }}>
             <VideoCardShimmer count={4} />
@@ -748,30 +602,178 @@ export const VideoShowcase: React.FC = () => {
         ) : (
           <div
             ref={scrollRef}
-            className="video-reels-scroll-track"
+            className="apiary-horizontal-scroll-container"
             style={{
               display: 'flex',
-              gap: '1.25rem',
-              overflowX: 'auto',
+              overflowX: pages.length > 1 ? 'auto' : 'hidden',
+              overflowY: 'hidden',
               scrollSnapType: 'x mandatory',
-              padding: '0.75rem 0.25rem 1.5rem 0.25rem',
+              gap: '24px',
+              width: '100%',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch',
+              padding: '0.25rem 0.1rem 1rem 0.1rem',
             }}
           >
-            {displayVideos.map((video) => (
-              <ReelCard
-                key={video.id}
-                video={video}
-                onSelectVideo={(v) => setSelectedVideo(v)}
-              />
-            ))}
+            {pages.map((pageVideos, pageIdx) => {
+              const baseIdx = pageIdx * 5;
+              const card0 = pageVideos[0];
+              const card1 = pageVideos[1];
+              const card2 = pageVideos[2];
+              const card3 = pageVideos[3];
+              const card4 = pageVideos[4];
+
+              return (
+                <div
+                  key={`bento-page-${pageIdx}`}
+                  className="apiary-bento-grid-page"
+                  style={{
+                    flex: '0 0 100%',
+                    minWidth: '100%',
+                    width: '100%',
+                    scrollSnapAlign: 'start',
+                    boxSizing: 'border-box',
+                    overflowY: 'hidden',
+                  }}
+                >
+                  {/* Exactly Matches Image 2: 3 Columns, 2 Rows Grid */}
+                  <div
+                    className="apiary-bento-grid"
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1.18fr 1fr 1fr',
+                      gridTemplateRows: 'repeat(2, 210px)',
+                      gap: '16px',
+                      height: '436px',
+                      width: '100%',
+                      overflowY: 'hidden',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {/* Card 0 (Left Column: Full Height Tall Card Spanning 2 Rows) */}
+                    {card0 && (
+                      <div
+                        className="apiary-card-wrapper apiary-card-tall-wrapper"
+                        style={{
+                          gridColumn: '1',
+                          gridRow: '1 / span 2',
+                          height: '100%',
+                          width: '100%',
+                          minHeight: 0,
+                          minWidth: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <ApiaryVideoCard
+                          video={card0}
+                          index={baseIdx}
+                          isTall={true}
+                          onSelect={handleCardClick}
+                        />
+                      </div>
+                    )}
+
+                    {/* Card 1 (Middle Column: Row 1 Landscape Card) */}
+                    {card1 && (
+                      <div
+                        className="apiary-card-wrapper"
+                        style={{
+                          gridColumn: '2',
+                          gridRow: '1 / span 1',
+                          height: '100%',
+                          width: '100%',
+                          minHeight: 0,
+                          minWidth: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <ApiaryVideoCard
+                          video={card1}
+                          index={baseIdx + 1}
+                          isTall={false}
+                          onSelect={handleCardClick}
+                        />
+                      </div>
+                    )}
+
+                    {/* Card 2 (Middle Column: Row 2 Landscape Card) */}
+                    {card2 && (
+                      <div
+                        className="apiary-card-wrapper"
+                        style={{
+                          gridColumn: '2',
+                          gridRow: '2 / span 1',
+                          height: '100%',
+                          width: '100%',
+                          minHeight: 0,
+                          minWidth: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <ApiaryVideoCard
+                          video={card2}
+                          index={baseIdx + 2}
+                          isTall={false}
+                          onSelect={handleCardClick}
+                        />
+                      </div>
+                    )}
+
+                    {/* Card 3 (Right Column: Row 1 Landscape Card) */}
+                    {card3 && (
+                      <div
+                        className="apiary-card-wrapper"
+                        style={{
+                          gridColumn: '3',
+                          gridRow: '1 / span 1',
+                          height: '100%',
+                          width: '100%',
+                          minHeight: 0,
+                          minWidth: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <ApiaryVideoCard
+                          video={card3}
+                          index={baseIdx + 3}
+                          isTall={false}
+                          onSelect={handleCardClick}
+                        />
+                      </div>
+                    )}
+
+                    {/* Card 4 (Right Column: Row 2 Landscape Card) */}
+                    {card4 && (
+                      <div
+                        className="apiary-card-wrapper"
+                        style={{
+                          gridColumn: '3',
+                          gridRow: '2 / span 1',
+                          height: '100%',
+                          width: '100%',
+                          minHeight: 0,
+                          minWidth: 0,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <ApiaryVideoCard
+                          video={card4}
+                          index={baseIdx + 4}
+                          isTall={false}
+                          onSelect={handleCardClick}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Shoppable Video Reel Modal */}
+      {/* Shoppable Video Reel Modal when any card is clicked */}
       <VideoModal
         video={selectedVideo}
         videoList={displayVideos}
@@ -780,12 +782,40 @@ export const VideoShowcase: React.FC = () => {
       />
 
       <style>{`
-        .video-reels-scroll-track::-webkit-scrollbar {
+        .apiary-horizontal-scroll-container::-webkit-scrollbar {
           display: none;
         }
-        @keyframes reelDotPulse {
-          0%, 100% { transform: scale(0.9); opacity: 0.6; }
-          50% { transform: scale(1.3); opacity: 1; }
+        /* Mobile horizontal scroll support: Cards scroll horizontally with ZERO vertical overflow */
+        @media (max-width: 860px) {
+          .apiary-bento-grid {
+            display: flex !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            scroll-snap-type: x mandatory !important;
+            height: 380px !important;
+            gap: 14px !important;
+            scrollbar-width: none !important;
+          }
+          .apiary-bento-grid::-webkit-scrollbar {
+            display: none !important;
+          }
+          .apiary-card-wrapper {
+            flex: 0 0 280px !important;
+            min-width: 280px !important;
+            width: 280px !important;
+            height: 100% !important;
+            scroll-snap-align: start !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .apiary-bento-grid {
+            height: 340px !important;
+          }
+          .apiary-card-wrapper {
+            flex: 0 0 250px !important;
+            min-width: 250px !important;
+            width: 250px !important;
+          }
         }
       `}</style>
     </section>
@@ -793,4 +823,3 @@ export const VideoShowcase: React.FC = () => {
 };
 
 export default VideoShowcase;
-

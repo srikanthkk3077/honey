@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ProductReview } from '../../../types/product.types';
 import { Star, CheckCircle, MessageSquarePlus, Loader } from 'lucide-react';
 import { Button } from '../../common/Button';
 import { useStore } from '../../../store/store';
-import productApi from '../../../services/productApi';
 
 interface ProductReviewsProps {
   productId: string;
@@ -13,13 +12,17 @@ interface ProductReviewsProps {
 
 export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, reviews, rating }) => {
   const { showToast, submitReview } = useStore();
-  const [localReviews, setLocalReviews] = useState<ProductReview[]>(reviews);
+  const [localReviews, setLocalReviews] = useState<ProductReview[]>(reviews || []);
   const [showAddForm, setShowAddForm] = useState(false);
   const [name, setName] = useState('');
   const [comment, setComment] = useState('');
   const [location, setLocation] = useState('');
   const [formRating, setFormRating] = useState(5);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setLocalReviews(reviews || []);
+  }, [reviews]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,31 +118,53 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '1.25rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
-                Your Name
-              </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Dr. Priyanshu Sen"
-                style={{
-                  width: '100%',
-                  boxSizing: 'border-box',
-                  padding: '0.65rem 0.95rem',
-                  borderRadius: '10px',
-                  border: '1px solid #D6D3D1',
-                  outline: 'none',
-                }}
-              />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
+                  Your Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Dr. Priyanshu Sen"
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.65rem 0.95rem',
+                    borderRadius: '10px',
+                    border: '1px solid #D6D3D1',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
+                  Your City / Region (optional)
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Dehradun, Uttarakhand"
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '0.65rem 0.95rem',
+                    borderRadius: '10px',
+                    border: '1px solid #D6D3D1',
+                    outline: 'none',
+                  }}
+                />
+              </div>
             </div>
 
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.35rem' }}>
-                Your Feedback & Taste Notes
+                Your Feedback & Taste Notes *
               </label>
               <textarea
                 required
@@ -160,8 +185,8 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
             </div>
           </div>
 
-          <Button type="submit" size="md">
-            Publish Review
+          <Button type="submit" size="md" disabled={isSubmitting} leftIcon={isSubmitting ? <Loader size={15} className="animate-spin" /> : undefined}>
+            {isSubmitting ? 'Submitting...' : 'Publish Review'}
           </Button>
         </form>
       )}
@@ -181,6 +206,9 @@ export const ProductReviews: React.FC<ProductReviewsProps> = ({ productId, revie
             <div className="flex items-center justify-between flex-wrap gap-2" style={{ marginBottom: '0.6rem' }}>
               <div className="flex items-center gap-2 flex-wrap">
                 <span style={{ fontWeight: 700, color: '#1C1917' }}>{rev.userName}</span>
+                {rev.location && (
+                  <span style={{ fontSize: '0.8rem', color: '#78716C' }}>• {rev.location}</span>
+                )}
                 {rev.verified && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '0.75rem', color: '#059669', background: '#ECFDF5', padding: '2px 6px', borderRadius: '4px' }}>
                     <CheckCircle size={12} /> Verified Purchaser

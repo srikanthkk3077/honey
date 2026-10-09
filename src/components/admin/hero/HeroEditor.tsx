@@ -225,28 +225,33 @@ export const HeroEditor: React.FC = () => {
       let heroImage = form.heroImageUrl;
       if (heroImage && heroImage.startsWith('data:image/')) {
         try {
-          heroImage = await uploadBase64Image(heroImage);
-        } catch (e) {
+          const cdnUrl = await uploadBase64Image(heroImage);
+          if (cdnUrl && !cdnUrl.startsWith('data:')) {
+            heroImage = cdnUrl;
+          }
+        } catch (e: any) {
           console.warn('Could not upload hero image base64:', e);
+          throw new Error(`Hero artwork upload failed: ${e?.message || 'Invalid image file'}`);
         }
       }
 
       let updatedSlides = form.heroBannerSlides ? [...form.heroBannerSlides] : [];
       if (updatedSlides.length > 0) {
-        updatedSlides = await Promise.all(
-          updatedSlides.map(async (slide) => {
-            if (slide.imageUrl && slide.imageUrl.startsWith('data:image/')) {
-              try {
-                const cdnUrl = await uploadBase64Image(slide.imageUrl);
-                return { ...slide, imageUrl: cdnUrl };
-              } catch (e) {
-                console.warn('Could not upload slide image base64:', e);
-                return slide;
+        for (let i = 0; i < updatedSlides.length; i++) {
+          const slide = updatedSlides[i];
+          if (slide.imageUrl && slide.imageUrl.startsWith('data:image/')) {
+            try {
+              const cdnUrl = await uploadBase64Image(slide.imageUrl);
+              if (cdnUrl && !cdnUrl.startsWith('data:')) {
+                updatedSlides[i] = { ...slide, imageUrl: cdnUrl };
+              } else {
+                throw new Error(`Cloud storage upload failed for Slide #${i + 1}. Please click "Upload Image" to re-upload.`);
               }
+            } catch (err: any) {
+              throw new Error(`Slide #${i + 1} upload failed: ${err?.message || 'Invalid or corrupted image data'}`);
             }
-            return slide;
-          })
-        );
+          }
+        }
       }
 
       const finalForm: HeroConfig = {
@@ -260,7 +265,7 @@ export const HeroEditor: React.FC = () => {
       showToast('Hero page settings saved and published successfully!', 'success');
     } catch (err: any) {
       console.error('Hero update error:', err);
-      showToast(`Failed to save Hero settings: ${err?.message || 'Server error'}`, 'error');
+      showToast(err?.message || 'Failed to save Hero settings', 'error');
     } finally {
       setIsSaving(false);
     }

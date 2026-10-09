@@ -88,10 +88,11 @@ export const Shop: React.FC = () => {
         // Search match
         if (searchQuery.trim()) {
           const query = searchQuery.toLowerCase();
+          const catStr = typeof prod.category === 'string' ? prod.category : (prod.category as any)?.name || '';
           if (
             !prod.name.toLowerCase().includes(query) &&
             !prod.description.toLowerCase().includes(query) &&
-            !prod.category.toLowerCase().includes(query)
+            !catStr.toLowerCase().includes(query)
           ) {
             return false;
           }

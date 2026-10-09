@@ -15,6 +15,14 @@ export const RelatedProducts: React.FC<RelatedProductsProps> = ({
 }) => {
   const related = allProducts
     .filter((p) => p.id !== currentProductId)
+    .sort((a, b) => {
+      // Prioritise same category
+      const aMatch = (typeof a.category === 'string' ? a.category : (a.category as any)?.name || '').toLowerCase() === (typeof category === 'string' ? category : '').toLowerCase() || a.categorySlug === category;
+      const bMatch = (typeof b.category === 'string' ? b.category : (b.category as any)?.name || '').toLowerCase() === (typeof category === 'string' ? category : '').toLowerCase() || b.categorySlug === category;
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    })
     .slice(0, 3);
 
   if (related.length === 0) return null;

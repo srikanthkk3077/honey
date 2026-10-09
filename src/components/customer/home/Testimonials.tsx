@@ -1,16 +1,114 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import {
   Star,
-  Quote,
   ChevronLeft,
   ChevronRight,
-  CheckCircle,
-  Sparkles,
+  Check,
+  ChefHat,
 } from 'lucide-react';
-import { Testimonial } from '../../../data/testimonials';
+import { Testimonial, INITIAL_TESTIMONIALS } from '../../../data/testimonials';
 import { TestimonialCardShimmer } from '../../common/Shimmer';
+
+// Helper to determine if an avatar string is a real customer portrait photo
+const isRealCustomerAvatar = (avatar?: string): boolean => {
+  if (!avatar || typeof avatar !== 'string') return false;
+  const trimmed = avatar.trim();
+  if (trimmed.length === 0) return false;
+  // Filter out any product pictures that were mistakenly saved in the avatar field
+  if (
+    trimmed.includes('Honey-Jar') ||
+    trimmed.includes('Honey-Stil') ||
+    trimmed.includes('products/') ||
+    trimmed.includes('Rustic-Ajwain') ||
+    trimmed.includes('Sunflower-Honey') ||
+    trimmed.includes('Raw-Forest-Honey') ||
+    trimmed.includes('IMG-6672')
+  ) {
+    return false;
+  }
+  return true;
+};
+
+// Decorative vignette image on the bottom right of each card matching Image 1
+const CardVignette: React.FC<{ index: number; item: Testimonial }> = ({ index, item }) => {
+  const isChef =
+    (item.role && item.role.toLowerCase().includes('chef')) ||
+    (item.name && item.name.toLowerCase().includes('chef'));
+
+  const isKidsOrToast =
+    (item.comment &&
+      (item.comment.toLowerCase().includes('toast') ||
+        item.comment.toLowerCase().includes('kids') ||
+        item.comment.toLowerCase().includes('butter'))) ||
+    index % 3 === 2;
+
+  // Chef Card Vignette (Chef Hat Icon + Gourmet Dish)
+  if (isChef || index % 3 === 1) {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ marginBottom: '-6px', zIndex: 2, marginRight: '4px' }}>
+          <ChefHat size={22} color="#D97706" strokeWidth={1.8} />
+        </div>
+        <img
+          src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=140&q=80"
+          alt="Chef gourmet honey dish"
+          style={{
+            width: '64px',
+            height: '52px',
+            borderRadius: '12px',
+            objectFit: 'cover',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Kids / Toast Card Vignette (Honey Bowl with Wooden Dipper)
+  if (isKidsOrToast) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'flex-end', flexShrink: 0 }}>
+        <img
+          src="https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=140&q=80"
+          alt="Honey dipper and bowl"
+          style={{
+            width: '68px',
+            height: '54px',
+            borderRadius: '12px',
+            objectFit: 'cover',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Standard Honey Jar Vignette
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', flexShrink: 0 }}>
+      <img
+        src="https://images.unsplash.com/photo-1587049352851-8d4e8913390a?auto=format&fit=crop&w=140&q=80"
+        alt="Madhuvan honey jar"
+        style={{
+          width: '64px',
+          height: '54px',
+          borderRadius: '12px',
+          objectFit: 'cover',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        }}
+      />
+    </div>
+  );
+};
 
 export const Testimonials: React.FC = () => {
   const { homeReviews, isHomeReviewsLoading } = useStore();
@@ -26,9 +124,10 @@ export const Testimonials: React.FC = () => {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
-  // Pure live data from database/admin curation - zero mock data
-  const rawReviews: Testimonial[] = homeReviews || [];
-  const totalReviews = rawReviews.length;
+  // Use database reviews, or fall back to default testimonials matching Image 1
+  const displayReviews: Testimonial[] =
+    homeReviews && homeReviews.length > 0 ? homeReviews : INITIAL_TESTIMONIALS;
+  const totalReviews = displayReviews.length;
 
   // Responsive cardsToShow detection
   const updateCardsToShow = useCallback(() => {
@@ -48,10 +147,9 @@ export const Testimonials: React.FC = () => {
     return () => window.removeEventListener('resize', updateCardsToShow);
   }, [updateCardsToShow]);
 
-  // Max index calculation for smooth card-by-card sliding
+  // Max index calculation for card-by-card sliding
   const maxIndex = Math.max(0, totalReviews - cardsToShow);
 
-  // Ensure currentIndex stays within bounds if reviews or cardsToShow change
   useEffect(() => {
     if (currentIndex > maxIndex) {
       setCurrentIndex(Math.max(0, maxIndex));
@@ -96,7 +194,6 @@ export const Testimonials: React.FC = () => {
     }
   };
 
-  // If not loading and no admin-approved reviews are set, don't show an empty or dummy section
   if (!isHomeReviewsLoading && totalReviews === 0) {
     return null;
   }
@@ -106,41 +203,16 @@ export const Testimonials: React.FC = () => {
       id="testimonials-section"
       style={{
         position: 'relative',
-        padding: '6rem 0',
-        backgroundColor: '#FCFAF6',
+        padding: '5rem 0',
+        backgroundColor: '#FAF7F2',
         overflow: 'hidden',
+        borderTop: '1px solid #ECE7DE',
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Ambient warm golden glows in background */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-10%',
-          left: '15%',
-          width: '500px',
-          height: '500px',
-          background: 'radial-gradient(circle, rgba(251, 191, 36, 0.12) 0%, transparent 70%)',
-          filter: 'blur(50px)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '-10%',
-          right: '10%',
-          width: '600px',
-          height: '600px',
-          background: 'radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
-        }}
-      />
-
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
-        {/* Section Header */}
+        {/* Section Header matching Image 1: TESTIMONIALS eyebrow, What Our Customers Say heading, subtitle, arrows */}
         <div
           style={{
             display: 'flex',
@@ -151,148 +223,119 @@ export const Testimonials: React.FC = () => {
             marginBottom: '2.5rem',
           }}
         >
-          {/* Title & Badge */}
-          <div style={{ maxWidth: '640px' }}>
+          {/* Title Area */}
+          <div>
             <div
               style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 14px',
-                borderRadius: '9999px',
-                backgroundColor: '#FEF3C7',
-                border: '1px solid rgba(245, 158, 11, 0.35)',
-                color: '#92400E',
-                fontSize: '0.78rem',
-                fontWeight: 700,
+                color: '#EA580C',
+                fontSize: '0.82rem',
+                fontWeight: 800,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                marginBottom: '1rem',
-                boxShadow: '0 2px 10px rgba(217, 119, 6, 0.1)',
+                marginBottom: '0.4rem',
               }}
             >
-              <Sparkles size={13} color="#D97706" />
-              <span>100% Real Community Reviews {totalReviews > 0 ? `(${totalReviews} Stories)` : ''}</span>
+              TESTIMONIALS
             </div>
 
             <h2
               style={{
-                fontFamily: 'Playfair Display, Georgia, serif',
-                fontSize: 'clamp(2rem, 3.8vw, 2.85rem)',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: 'clamp(2rem, 3.4vw, 2.75rem)',
                 fontWeight: 800,
                 color: '#1C1917',
                 lineHeight: 1.15,
-                margin: '0 0 0.85rem 0',
+                margin: '0 0 0.5rem 0',
                 letterSpacing: '-0.02em',
               }}
             >
-              Loved by Doctors, Chefs & Families
+              What Our Customers Say
             </h2>
 
-            <p style={{ color: '#57534E', fontSize: '1.05rem', lineHeight: 1.6, margin: 0 }}>
-              Hear what patrons and certified nutritionists across India experience with unheated, unfiltered raw honey.
+            <p
+              style={{
+                color: '#57534E',
+                fontSize: '1rem',
+                lineHeight: 1.5,
+                margin: 0,
+              }}
+            >
+              Real stories from families, health enthusiasts and professionals across India.
             </p>
           </div>
 
-          {/* Right Header: Slider Navigation Arrows & Progress */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Quick Trust Pill */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '8px 16px',
-                borderRadius: '16px',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E7E5E4',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-              }}
-              className="hidden sm:flex"
-            >
-              <div style={{ display: 'flex', alignItems: 'center', color: '#F59E0B' }}>
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} fill="#F59E0B" />
-                ))}
-              </div>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1C1917' }}>
-                4.95 / 5.0 Rating
-              </div>
+          {/* Slider Arrow Controls */}
+          {totalReviews > cardsToShow && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={handlePrev}
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FFFFFF',
+                  border: '1.5px solid #E7E5E4',
+                  color: '#44403C',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#EA580C';
+                  e.currentTarget.style.color = '#EA580C';
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#E7E5E4';
+                  e.currentTarget.style.color = '#44403C';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                aria-label="Previous Stories"
+              >
+                <ChevronLeft size={20} strokeWidth={2.4} />
+              </button>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '50%',
+                  backgroundColor: '#FFFFFF',
+                  border: '1.5px solid #E7E5E4',
+                  color: '#44403C',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#EA580C';
+                  e.currentTarget.style.color = '#EA580C';
+                  e.currentTarget.style.transform = 'scale(1.06)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFFFFF';
+                  e.currentTarget.style.borderColor = '#E7E5E4';
+                  e.currentTarget.style.color = '#44403C';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                aria-label="Next Stories"
+              >
+                <ChevronRight size={20} strokeWidth={2.4} />
+              </button>
             </div>
-
-            {/* Slider Arrow Controls */}
-            {totalReviews > cardsToShow && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1.5px solid #E7E5E4',
-                    color: '#44403C',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
-                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FEF3C7';
-                    e.currentTarget.style.borderColor = '#D97706';
-                    e.currentTarget.style.color = '#B45309';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.borderColor = '#E7E5E4';
-                    e.currentTarget.style.color = '#44403C';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                  aria-label="Previous Stories"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '50%',
-                    backgroundColor: '#FFFFFF',
-                    border: '1.5px solid #E7E5E4',
-                    color: '#44403C',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(0,0,0,0.05)',
-                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FEF3C7';
-                    e.currentTarget.style.borderColor = '#D97706';
-                    e.currentTarget.style.color = '#B45309';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.borderColor = '#E7E5E4';
-                    e.currentTarget.style.color = '#44403C';
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }}
-                  aria-label="Next Stories"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Carousel Viewport Container */}
@@ -304,13 +347,12 @@ export const Testimonials: React.FC = () => {
           style={{
             overflow: 'hidden',
             width: '100%',
-            padding: '12px 0 24px 0',
+            padding: '8px 0 16px 0',
           }}
         >
           {isHomeReviewsLoading ? (
             <TestimonialCardShimmer count={cardsToShow} />
           ) : (
-            /* Animated Carousel Track: 100% exact width math without pixel/percent mixing */
             <div
               style={{
                 display: 'flex',
@@ -319,256 +361,204 @@ export const Testimonials: React.FC = () => {
                 transform: `translate3d(-${currentIndex * (100 / cardsToShow)}%, 0, 0)`,
               }}
             >
-              {rawReviews.map((item, idx) => {
-              const cardKey = item.id || `rev-${idx}`;
-              const hasAvatar =
-                !!item.avatar &&
-                item.avatar.trim().length > 0 &&
-                !avatarErrors[cardKey];
-              const initials = item.name
-                ? item.name
-                    .split(' ')
-                    .map((w) => w[0])
-                    .slice(0, 2)
-                    .join('')
-                    .toUpperCase()
-                : 'MV';
+              {displayReviews.map((item, idx) => {
+                const cardKey = item.id || `rev-${idx}`;
+                // Only treat as customer avatar if it's a real user image (NOT a product bottle image)
+                const hasCustomerPhoto =
+                  isRealCustomerAvatar(item.avatar) && !avatarErrors[cardKey];
 
-              return (
-                <div
-                  key={cardKey}
-                  style={{
-                    flex: `0 0 ${100 / cardsToShow}%`,
-                    padding: '0 12px',
-                    boxSizing: 'border-box',
-                    minWidth: 0,
-                  }}
-                >
-                  {/* Luxury Testimonial Card */}
+                return (
                   <div
+                    key={cardKey}
                     style={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      backgroundColor: '#FFFFFF',
-                      borderRadius: '24px',
-                      padding: '2rem',
-                      border: '1.5px solid rgba(245, 158, 11, 0.22)',
-                      boxShadow: '0 10px 30px -5px rgba(217, 119, 6, 0.08), 0 2px 8px rgba(0,0,0,0.03)',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-6px)';
-                      e.currentTarget.style.borderColor = '#D97706';
-                      e.currentTarget.style.boxShadow =
-                        '0 20px 40px -10px rgba(217, 119, 6, 0.18), 0 4px 12px rgba(0,0,0,0.05)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.22)';
-                      e.currentTarget.style.boxShadow =
-                        '0 10px 30px -5px rgba(217, 119, 6, 0.08), 0 2px 8px rgba(0,0,0,0.03)';
+                      flex: `0 0 ${100 / cardsToShow}%`,
+                      padding: '0 12px',
+                      boxSizing: 'border-box',
+                      minWidth: 0,
                     }}
                   >
-                    {/* Subtle warm amber top accent bar */}
+                    {/* Testimonial Card matching Image 1 */}
                     <div
                       style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        height: '4px',
-                        background: 'linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #B45309 100%)',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '20px',
+                        padding: '1.75rem',
+                        border: '1px solid #ECE7DE',
+                        boxShadow: '0 4px 18px rgba(0, 0, 0, 0.05)',
+                        transition: 'all 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                        position: 'relative',
+                        overflow: 'hidden',
                       }}
-                    />
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.boxShadow =
+                          '0 14px 30px rgba(217, 119, 6, 0.12)';
+                        e.currentTarget.style.borderColor = '#FDBA74';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.05)';
+                        e.currentTarget.style.borderColor = '#ECE7DE';
+                      }}
+                    >
+                      <div>
+                        {/* Top Row: Stars + Large Golden Double Quote Icon */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            marginBottom: '1rem',
+                          }}
+                        >
+                          {/* 5 Solid Orange Stars */}
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            {[...Array(item.rating || 5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={18}
+                                fill="#F59E0B"
+                                stroke="#F59E0B"
+                              />
+                            ))}
+                          </div>
 
-                    <div>
-                      {/* Top Row: Stars + Verified Badge + Quote Icon */}
+                          {/* Decorative Soft Golden Quotation Symbol */}
+                          <span
+                            style={{
+                              fontFamily: "'Playfair Display', Georgia, serif",
+                              fontSize: '2.4rem',
+                              lineHeight: 0.8,
+                              color: '#FDE68A',
+                              fontWeight: 900,
+                              userSelect: 'none',
+                              marginRight: '-4px',
+                            }}
+                          >
+                            “
+                          </span>
+                        </div>
+
+                        {/* Review Comment Quote */}
+                        <p
+                          style={{
+                            fontSize: '0.98rem',
+                            color: '#292524',
+                            lineHeight: 1.65,
+                            fontStyle: 'italic',
+                            margin: '0 0 1.5rem 0',
+                            minHeight: '4.8rem',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 4,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          “{item.comment}”
+                        </p>
+                      </div>
+
+                      {/* Card Footer: Left (Customer Info) & Right (Decorative Vignette) */}
                       <div
                         style={{
                           display: 'flex',
-                          alignItems: 'center',
+                          alignItems: 'flex-end',
                           justifyContent: 'space-between',
-                          marginBottom: '1.25rem',
+                          gap: '12px',
+                          borderTop: '1px solid #F5F5F4',
+                          paddingTop: '1.25rem',
                         }}
                       >
-                        {/* Rating Stars & Badge */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ display: 'flex', gap: '2px', color: '#F59E0B' }}>
-                            {[...Array(item.rating || 5)].map((_, i) => (
-                              <Star key={i} size={16} fill="#F59E0B" />
-                            ))}
-                          </div>
-                          <span
-                            style={{
-                              fontSize: '0.72rem',
-                              fontWeight: 700,
-                              color: '#059669',
-                              backgroundColor: '#ECFDF5',
-                              padding: '2px 8px',
-                              borderRadius: '9999px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                            }}
-                          >
-                            <CheckCircle size={11} /> Verified
-                          </span>
-                        </div>
+                        {/* Customer Profile Details */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+                          {/* If customer image exists, render it. IF NOT, DO NOT RENDER ANY IMAGE! */}
+                          {hasCustomerPhoto && (
+                            <img
+                              src={item.avatar}
+                              alt={item.name}
+                              onError={() =>
+                                setAvatarErrors((prev) => ({ ...prev, [cardKey]: true }))
+                              }
+                              style={{
+                                width: '44px',
+                                height: '44px',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                border: '1.5px solid #FDE68A',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                                flexShrink: 0,
+                              }}
+                            />
+                          )}
 
-                        {/* Large translucent quote symbol */}
-                        <Quote size={28} color="#FDE68A" style={{ opacity: 0.8 }} />
-                      </div>
-
-                      {/* Review Comment Quote */}
-                      <p
-                        style={{
-                          fontSize: '1rem',
-                          color: '#292524',
-                          lineHeight: 1.68,
-                          fontStyle: 'italic',
-                          marginBottom: '1.75rem',
-                          minHeight: '4.8rem',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 4,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        "{item.comment}"
-                      </p>
-                    </div>
-
-                    {/* Card Footer: Product Bought & Customer Profile */}
-                    <div style={{ borderTop: '1px solid #F5F5F4', paddingTop: '1.25rem' }}>
-                      {/* Interactive Product Mention Capsule */}
-                      {item.productMentioned && (
-                        <div style={{ marginBottom: '1rem' }}>
-                          <span
-                            style={{
-                              fontSize: '0.68rem',
-                              color: '#A8A29E',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.06em',
-                              display: 'block',
-                              marginBottom: '2px',
-                            }}
-                          >
-                            BOUGHT BY CUSTOMER
-                          </span>
-                          {item.productSlug ? (
-                            <Link
-                              to={`/product/${item.productSlug}`}
+                          <div style={{ minWidth: 0 }}>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: '0.96rem',
+                                color: '#1C1917',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {item.name}
+                            </div>
+                            <div
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '6px',
-                                fontSize: '0.82rem',
-                                color: '#B45309',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                                transition: 'color 0.15s ease',
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.color = '#D97706')}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = '#B45309')}
-                            >
-                              <span>🍯 {item.productMentioned}</span>
-                              <span style={{ fontSize: '0.85rem' }}>→</span>
-                            </Link>
-                          ) : (
-                            <span
-                              style={{
-                                fontSize: '0.82rem',
-                                color: '#B45309',
-                                fontWeight: 700,
+                                gap: '5px',
+                                marginTop: '2px',
                               }}
                             >
-                              🍯 {item.productMentioned}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Customer Profile Details */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {hasAvatar ? (
-                          <img
-                            src={item.avatar}
-                            alt={item.name}
-                            onError={() =>
-                              setAvatarErrors((prev) => ({ ...prev, [cardKey]: true }))
-                            }
-                            style={{
-                              width: '46px',
-                              height: '46px',
-                              borderRadius: '50%',
-                              objectFit: 'cover',
-                              border: '2px solid #FDE68A',
-                              boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2)',
-                              flexShrink: 0,
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: '46px',
-                              height: '46px',
-                              borderRadius: '50%',
-                              background: 'linear-gradient(135deg, #FDE68A 0%, #D97706 100%)',
-                              color: '#78350F',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 800,
-                              fontSize: '0.95rem',
-                              boxShadow: '0 4px 12px rgba(217, 119, 6, 0.22)',
-                              flexShrink: 0,
-                            }}
-                          >
-                            {initials}
-                          </div>
-                        )}
-
-                        <div style={{ minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontWeight: 700,
-                              fontSize: '0.95rem',
-                              color: '#1C1917',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {item.name}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: '0.78rem',
-                              color: '#78716C',
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                            }}
-                          >
-                            {item.role || 'Verified Patron'} {item.location ? `• ${item.location}` : ''}
+                              <span
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#10B981',
+                                  color: '#FFFFFF',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0,
+                                }}
+                              >
+                                <Check size={9} strokeWidth={3.5} />
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  color: '#4B5563',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {item.role?.toLowerCase().includes('patron')
+                                  ? 'Verified Patron'
+                                  : 'Verified Buyer'}
+                              </span>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Right Decorative Vignette matching Image 1 */}
+                        <CardVignette index={idx} item={item} />
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Bottom Pagination Dots */}
+        {/* Bottom Pagination Dots matching Image 1 */}
         {maxIndex > 0 && (
           <div
             style={{
@@ -587,15 +577,14 @@ export const Testimonials: React.FC = () => {
                   type="button"
                   onClick={() => setCurrentIndex(dotIdx)}
                   style={{
-                    width: isActive ? '28px' : '9px',
-                    height: '9px',
+                    width: isActive ? '24px' : '8px',
+                    height: '8px',
                     borderRadius: '9999px',
-                    backgroundColor: isActive ? '#D97706' : '#D6D3D1',
+                    backgroundColor: isActive ? '#F97316' : '#D1D5DB',
                     border: 'none',
                     cursor: 'pointer',
                     padding: 0,
                     transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                    boxShadow: isActive ? '0 2px 8px rgba(217, 119, 6, 0.35)' : 'none',
                   }}
                   aria-label={`Go to slide ${dotIdx + 1}`}
                 />
@@ -607,3 +596,5 @@ export const Testimonials: React.FC = () => {
     </section>
   );
 };
+
+export default Testimonials;

@@ -38,7 +38,7 @@ import {
 import { DEFAULT_DELIVERY_CONFIG } from '../utils/delivery';
 
 // ─── Types & Models ───────────────────────────────────────────────────────────
-import { Testimonial } from '../data/testimonials';
+import { Testimonial, INITIAL_TESTIMONIALS } from '../data/testimonials';
 
 // ─── Token helper ─────────────────────────────────────────────────────────────
 import { getToken, removeToken } from '../services/api';
@@ -1046,8 +1046,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const data = await productApi.getHomeReviews();
       if (data && data.length > 0) {
-        // Ensure newest admin-handled reviews appear front and center
-        const sorted = [...data].sort(
+        // Strip out any product images erroneously stored in avatar
+        const cleaned = data.map((item) => {
+          const isProductPic =
+            item.avatar &&
+            (item.avatar.includes('Honey-Jar') ||
+              item.avatar.includes('Honey-Stil') ||
+              item.avatar.includes('products/') ||
+              item.avatar.includes('Rustic-Ajwain') ||
+              item.avatar.includes('Sunflower-Honey') ||
+              item.avatar.includes('Raw-Forest-Honey') ||
+              item.avatar.includes('IMG-6672'));
+          return {
+            ...item,
+            avatar: isProductPic ? '' : (item.avatar || ''),
+            productImage: isProductPic ? item.avatar : (item.productImage || ''),
+          };
+        });
+        const sorted = [...cleaned].sort(
           (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
         );
         setHomeReviews(sorted);
@@ -1063,12 +1079,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                   name: r.userName,
                   role: r.userRole || 'Verified Patron',
                   location: r.location || 'Verified Buyer',
-                  avatar: r.avatar || (p.images?.[0] || ''),
+                  avatar: r.avatar || '',
                   comment: r.comment,
                   rating: r.rating,
                   productMentioned: p.name,
                   productSlug: p.slug,
                   productId: p.id,
+                  productImage: p.images?.[0] || '',
                   date: r.date,
                 });
               }
@@ -1076,10 +1093,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           }
         });
         fromProducts.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
-        setHomeReviews(fromProducts);
+        setHomeReviews(fromProducts.length > 0 ? fromProducts : INITIAL_TESTIMONIALS);
       }
     } catch {
-      setHomeReviews([]);
+      setHomeReviews(INITIAL_TESTIMONIALS);
     } finally {
       setIsHomeReviewsLoading(false);
     }

@@ -43,8 +43,14 @@ function normaliseProduct(raw: any): Product {
       : raw.image
       ? [raw.image]
       : [],
-    sizes: Array.isArray(raw.sizes)
-      ? raw.sizes
+    sizes: Array.isArray(raw.sizes) && raw.sizes.length > 0
+      ? raw.sizes.map((s: any) => ({
+          size: s.size || '500g',
+          price: Number(s.price) || 0,
+          originalPrice: Number(s.originalPrice) || Number(s.price) || 0,
+          stock: Number(s.stock) || 0,
+          sku: s.sku || '',
+        }))
       : [
           {
             size: '500g',
@@ -159,7 +165,26 @@ export const productApi = {
       `/products/${productId}/reviews`,
       review
     );
-    return data.data;
+    // Backend returns the full product after adding review; extract the newly added review (last one)
+    const raw = data.data;
+    if (raw && Array.isArray(raw.reviews) && raw.reviews.length > 0) {
+      const lastReview = raw.reviews[raw.reviews.length - 1];
+      return {
+        id: lastReview._id?.toString() || lastReview.id || 'rev-' + Date.now(),
+        userName: lastReview.userName || review.userName,
+        rating: lastReview.rating || review.rating,
+        comment: lastReview.comment || review.comment,
+        date: lastReview.date || new Date().toISOString().split('T')[0],
+        verified: lastReview.verified ?? false,
+        showOnHome: lastReview.showOnHome ?? false,
+        userRole: lastReview.userRole || review.userRole || 'Verified Patron',
+        location: lastReview.location || review.location || 'Verified Buyer',
+        avatar: lastReview.avatar || review.avatar || '',
+        productId,
+      };
+    }
+    // Fallback: if backend returned just the review object
+    return raw;
   },
 
   /** GET /api/products/reviews/all (admin/public) */

@@ -13,10 +13,15 @@ export const Products: React.FC = () => {
   const navigate = useNavigate();
 
   const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.origin.toLowerCase().includes(searchTerm.toLowerCase())
+    (p) => {
+      const catStr = typeof p.category === 'string' ? p.category : (p.category as any)?.name || '';
+      const originStr = p.origin || '';
+      return (
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        catStr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        originStr.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
   );
 
   const handleEdit = (p: Product) => {

@@ -13,7 +13,7 @@ export const ADMIN_CREDENTIALS = {
 export const CONTACT_INFO = {
   phone: "+91 7780514383",
   whatsapp: "+91 7780514383",
-  email: "support@madhuvanhoney.com",
+  email: "madhuvanhoney.in@gmail.com",
   salesEmail: "orders@madhuvanhoney.com",
   address: "Madhuvan Apiaries, Foothills of Jim Corbett & Sunderbans, Uttarakhand 244715, India",
   hours: "Mon - Sat: 9:00 AM - 7:00 PM IST"

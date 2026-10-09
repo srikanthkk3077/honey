@@ -6,11 +6,11 @@ export interface Testimonial {
   avatar: string;
   comment: string;
   rating: number;
-  productMentioned: string;
+  productMentioned?: string;
   productId?: string;
   productSlug?: string;
+  productImage?: string;
   date?: string;
 }
 
-// Clean empty array - all reviews are dynamically loaded from live database/admin curation
 export const INITIAL_TESTIMONIALS: Testimonial[] = [];

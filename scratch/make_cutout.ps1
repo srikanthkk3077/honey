@@ -86,3 +86,5 @@ $src = (Resolve-Path "public/images/brand/vineeta_honey_bg.jpg").Path
 $dst = (Resolve-Path "public/images/brand/vineeta_cutout.png").Path
 [ImageProcessor]::MakeCutout($src, $dst)
 Write-Host "Success updated $dst"
+
+.

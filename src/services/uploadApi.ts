@@ -65,10 +65,12 @@ export const uploadBase64Image = async (base64: string): Promise<string> => {
     if (rawUrl) {
       return normalizeImageUrl(rawUrl);
     }
-  } catch (error) {
-    console.warn('[uploadBase64Image] Cloudinary base64 upload failed:', error);
+    throw new Error(response.data?.message || 'No URL returned from server');
+  } catch (error: any) {
+    const errMsg = error?.response?.data?.message || error?.message || 'Base64 image upload failed';
+    console.warn('[uploadBase64Image] Cloudinary base64 upload failed:', errMsg);
+    throw new Error(errMsg);
   }
-  return base64;
 };
 
 /**
@@ -78,7 +80,6 @@ export const uploadImage = async (file: File): Promise<string> => {
   try {
     const formData = new FormData();
     formData.append('image', file);
-    formData.append('file', file);
 
     const response = await api.post<UploadResponse>('/upload', formData, {
       timeout: 60000,

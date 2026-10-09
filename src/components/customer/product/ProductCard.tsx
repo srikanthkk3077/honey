@@ -94,98 +94,56 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
     return ['Rich in Antioxidants', 'Digestive Support', '100% Pure & Natural'];
   }, [product.benefits, nameLower, catLower]);
 
-  // Rating & review count matching mockup
+  // Rating & review count matching product data
   const displayRating = useMemo(() => {
+    if (product.rating !== undefined && product.rating !== null && Number(product.rating) > 0) {
+      return Number(product.rating).toFixed(1);
+    }
     if (nameLower.includes('ajwain') || catLower.includes('ajwain')) return '4.8';
     if (nameLower.includes('tulasi') || catLower.includes('tulasi')) return '4.7';
     if (nameLower.includes('sunflower') || catLower.includes('sunflower')) return '4.6';
     if (nameLower.includes('multifloral') || catLower.includes('multifloral')) return '4.5';
-    return product.rating ? Number(product.rating).toFixed(1) : '4.8';
+    return '4.8';
   }, [product.rating, nameLower, catLower]);
 
   const displayReviewsCount = useMemo(() => {
+    if (product.reviewsCount !== undefined && product.reviewsCount !== null && product.reviewsCount > 0) {
+      return product.reviewsCount;
+    }
     if (nameLower.includes('ajwain') || catLower.includes('ajwain')) return 124;
     if (nameLower.includes('tulasi') || catLower.includes('tulasi')) return 96;
     if (nameLower.includes('sunflower') || catLower.includes('sunflower')) return 78;
     if (nameLower.includes('multifloral') || catLower.includes('multifloral')) return 62;
-    return product.reviewsCount || 42;
+    return 42;
   }, [product.reviewsCount, nameLower, catLower]);
 
-  // Available size variants (ensuring 500g, 1kg, 2kg available)
+  // Available size variants (directly use admin-configured sizes from product.sizes)
   const availableSizes = useMemo(() => {
-    const base = product.sizes && product.sizes.length > 0 ? [...product.sizes] : [];
-
-    const has500g = base.some((s) => s.size.toLowerCase().includes('500'));
-    const has1kg = base.some((s) => s.size.toLowerCase().includes('1kg'));
-    const has2kg = base.some((s) => s.size.toLowerCase().includes('2kg'));
-
-    // Base prices for 500g tailored to mockup if product prices match categories
-    let base500Price = product.price || 599;
-    let base500Orig = product.originalPrice || Math.round(base500Price * 1.25);
-
-    if (nameLower.includes('ajwain') || catLower.includes('ajwain')) {
-      base500Price = 634;
-      base500Orig = 749;
-    } else if (nameLower.includes('tulasi') || catLower.includes('tulasi')) {
-      base500Price = 499;
-      base500Orig = 699;
-    } else if (nameLower.includes('sunflower') || catLower.includes('sunflower')) {
-      base500Price = 899;
-      base500Orig = 1199;
-    } else if (nameLower.includes('multifloral') || catLower.includes('multifloral')) {
-      base500Price = 699;
-      base500Orig = 899;
+    if (product.sizes && product.sizes.length > 0) {
+      return product.sizes;
     }
 
-    if (!has500g) {
-      base.unshift({
-        size: '500g',
-        price: base500Price,
-        originalPrice: base500Orig,
-        stock: product.stock || 50,
-        sku: 'MV-500G',
-      });
-    } else {
-      // align 500g price if needed
-      const s0 = base.find((s) => s.size.toLowerCase().includes('500'));
-      if (s0 && s0.price === product.price) {
-        s0.price = base500Price;
-        s0.originalPrice = base500Orig;
-      }
-    }
-
-    if (!has1kg) {
-      base.push({
-        size: '1kg',
-        price: Math.round(base500Price * 1.85),
-        originalPrice: Math.round(base500Orig * 1.85),
-        stock: 30,
-        sku: 'MV-1KG',
-      });
-    }
-
-    if (!has2kg) {
-      base.push({
-        size: '2kg',
-        price: Math.round(base500Price * 3.5),
-        originalPrice: Math.round(base500Orig * 3.5),
-        stock: 15,
-        sku: 'MV-2KG',
-      });
-    }
-
-    return base.filter((s, idx, arr) => arr.findIndex((x) => x.size === s.size) === idx);
-  }, [product.sizes, product.price, product.originalPrice, product.stock, nameLower, catLower]);
+    const defaultSize = product.selectedSize || '500g';
+    return [
+      {
+        size: defaultSize,
+        price: product.price || 599,
+        originalPrice: product.originalPrice || Math.round((product.price || 599) * 1.25),
+        stock: product.stock ?? 50,
+        sku: '',
+      },
+    ];
+  }, [product.sizes, product.price, product.originalPrice, product.stock, product.selectedSize]);
 
   const defaultInitialSize = availableSizes.some((s) => s.size === product.selectedSize)
     ? product.selectedSize!
-    : availableSizes[0].size;
+    : availableSizes[0]?.size || '500g';
 
   const [selectedSize, setSelectedSize] = useState(defaultInitialSize);
 
   const activeSize = availableSizes.some((s) => s.size === selectedSize)
     ? selectedSize
-    : availableSizes[0].size;
+    : availableSizes[0]?.size || '500g';
 
   const currentSizeOption = availableSizes.find((s) => s.size === activeSize) || availableSizes[0];
   const price = currentSizeOption ? currentSizeOption.price : product.price;
