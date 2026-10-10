@@ -179,7 +179,7 @@ export interface ShopConfig {
 export const DEFAULT_SHOP_CONFIG: ShopConfig = {
   eyebrow: 'PURE • NATURAL • RAW',
   title: 'Our Honey Collection',
-  subtitle: "Nature's finest. Straight from the forest to your home.",
+  subtitle: "Nature’s Finest. Pure Honey, Straight to Your Home.",
   heroGraphicUrl: '/images/shop/shop_hero_bg_jar_forest.jpg',
   heroBackgroundImageUrl: '/images/shop/shop_hero_bg_jar_forest.jpg',
   heroBannerMode: 'dynamic',

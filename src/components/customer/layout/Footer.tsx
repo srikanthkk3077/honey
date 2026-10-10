@@ -168,7 +168,7 @@ export const Footer: React.FC = () => {
           <NavCol title="Company">
             <NavItem to="/about">About Purity</NavItem>
             <NavItem to="/story">Our Story</NavItem>
-            <NavItem to="/blog">Journal</NavItem>
+            {/* <NavItem to="/blog">Journal</NavItem> */}
             <NavItem to="/videos">Apiary Videos</NavItem>
             <NavItem to="/contact">Contact Us</NavItem>
           </NavCol>

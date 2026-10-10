@@ -42,12 +42,12 @@ export const ShopHeroEditor: React.FC = () => {
   const [eyebrow, setEyebrow] = useState(currentConfig.eyebrow || 'PURE • NATURAL • RAW');
   const [title, setTitle] = useState(currentConfig.title || 'Our Honey Collection');
   const [subtitle, setSubtitle] = useState(
-    currentConfig.subtitle || "Nature's finest. Straight from the forest to your home."
+    currentConfig.subtitle || "Nature’s Finest. Pure Honey, Straight to Your Home."
   );
   const [heroBackgroundImageUrl, setHeroBackgroundImageUrl] = useState(
     currentConfig.heroBackgroundImageUrl ||
-      currentConfig.heroGraphicUrl ||
-      '/images/shop/shop_hero_bg_jar_forest.jpg'
+    currentConfig.heroGraphicUrl ||
+    '/images/shop/shop_hero_bg_jar_forest.jpg'
   );
   const [heroBannerMode, setHeroBannerMode] = useState<'dynamic' | 'static'>(
     currentConfig.heroBannerMode || 'dynamic'
@@ -86,9 +86,9 @@ export const ShopHeroEditor: React.FC = () => {
       setSubtitle(c.subtitle || DEFAULT_SHOP_CONFIG.subtitle);
       setHeroBackgroundImageUrl(
         c.heroBackgroundImageUrl ||
-          c.heroGraphicUrl ||
-          DEFAULT_SHOP_CONFIG.heroBackgroundImageUrl ||
-          '/images/shop/shop_hero_bg_jar_forest.jpg'
+        c.heroGraphicUrl ||
+        DEFAULT_SHOP_CONFIG.heroBackgroundImageUrl ||
+        '/images/shop/shop_hero_bg_jar_forest.jpg'
       );
       setHeroBannerMode(c.heroBannerMode || 'dynamic');
       setHeroBgPosition(c.heroBgPosition || 'right');
@@ -630,7 +630,7 @@ export const ShopHeroEditor: React.FC = () => {
 
       {/* ── Form Inputs ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
-        
+
         {/* ── Card 1: Hero Banner Background Image & Upload ── */}
         <div
           style={{
@@ -853,12 +853,12 @@ export const ShopHeroEditor: React.FC = () => {
                     borderRadius: '8px',
                     border:
                       heroBackgroundImageUrl.includes('shop_hero_banner_clean') &&
-                      heroBannerMode === 'static'
+                        heroBannerMode === 'static'
                         ? '1.5px solid #D97706'
                         : '1px solid #D6D3D1',
                     backgroundColor:
                       heroBackgroundImageUrl.includes('shop_hero_banner_clean') &&
-                      heroBannerMode === 'static'
+                        heroBannerMode === 'static'
                         ? '#FEF3C7'
                         : '#FAF7F2',
                     cursor: 'pointer',
@@ -1078,7 +1078,7 @@ export const ShopHeroEditor: React.FC = () => {
                   fontSize: '0.85rem',
                   resize: 'vertical',
                 }}
-                placeholder="Nature's finest. Straight from the forest to your home."
+                placeholder="Nature’s Finest. Pure Honey, Straight to Your Home."
               />
             </div>
 

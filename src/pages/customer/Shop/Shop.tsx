@@ -711,16 +711,30 @@ export const Shop: React.FC = () => {
                     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                   }}
                 >
+                  {/* Gradient overlay to ensure text is crystal clear */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background:
+                        'linear-gradient(105deg, rgba(20, 10, 4, 0.85) 0%, rgba(28, 14, 6, 0.58) 45%, rgba(20, 10, 4, 0.05) 80%)',
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  />
+
                   <p
                     style={{
+                      position: 'relative',
+                      zIndex: 2,
                       fontFamily: "'Playfair Display', Georgia, serif",
-                      fontSize: '0.88rem',
+                      fontSize: '0.9rem',
                       fontWeight: 700,
                       color: '#FFFFFF',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.6)',
-                      lineHeight: 1.2,
+                      textShadow: '0 2px 6px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.9)',
+                      lineHeight: 1.25,
                       margin: 0,
-                      maxWidth: '120px',
+                      maxWidth: '125px',
                     }}
                   >
                     {shopConfig.sidebarPromo?.title || 'Pure Honey\nBetter Health'}
@@ -729,10 +743,12 @@ export const Shop: React.FC = () => {
                   <Link
                     to={shopConfig.sidebarPromo?.linkUrl || '/about'}
                     style={{
+                      position: 'relative',
+                      zIndex: 2,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '4px',
-                      backgroundColor: 'rgba(45, 24, 16, 0.85)',
+                      backgroundColor: 'rgba(45, 24, 16, 0.9)',
                       backdropFilter: 'blur(4px)',
                       color: '#FFFFFF',
                       fontSize: '0.68rem',
@@ -741,7 +757,7 @@ export const Shop: React.FC = () => {
                       borderRadius: '20px',
                       textDecoration: 'none',
                       width: 'fit-content',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
                       transition: 'background-color 0.2s',
                     }}
                   >

@@ -88,7 +88,7 @@ export const OurStory: React.FC = () => {
             </p>
 
             <p style={{ fontSize: '0.95rem', color: '#78716C', lineHeight: 1.7, marginBottom: '2rem' }}>
-              We work directly with traditional tribal forest harvesters and nomadic Himalayan beekeepers. We pay over 40% above market rates to ensure that forest trees remain standing, wild hives flourish without smoke harm, and you receive uncompromised golden nectar.
+              We source pure, natural honey with care and dedication, bringing you authentic golden sweetness straight from nature. Our commitment to quality ensures every drop delivers rich flavor, natural goodness, and purity you can trust.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
