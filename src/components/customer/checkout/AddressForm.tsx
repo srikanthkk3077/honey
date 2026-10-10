@@ -158,7 +158,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
         // Reverse geocoding via OpenStreetMap Nominatim
         try {
           const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`
           );
           if (res.ok) {
             const data = await res.json();
@@ -175,17 +175,55 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
               detectedStreet = data.display_name.split(',').slice(0, 2).map((s: string) => s.trim()).join(', ');
             }
 
-            // 2. City
-            detectedCity = addr.city || addr.town || addr.district || addr.county || addr.village || addr.city_district || '';
+            // 2. City — try multiple Nominatim fields in priority order
+            detectedCity =
+              addr.city ||
+              addr.city_district ||
+              addr.town ||
+              addr.municipality ||
+              addr.district ||
+              addr.county ||
+              addr.village ||
+              '';
 
             // 3. State
             detectedState = addr.state || '';
 
-            // 4. PIN Code
+            // 4. PIN Code — CROSS-VALIDATED against GPS-detected state
+            // Nominatim sometimes returns wrong postcodes for Indian locations
+            // (e.g. returns 800081/Patna for Hyderabad Madhapur — GPS coords are correct but postcode data is wrong)
             if (addr.postcode) {
               const clean = addr.postcode.replace(/\D/g, '').slice(0, 6);
               if (clean.length === 6) {
-                detectedPin = clean;
+                let pinIsValid = true;
+
+                if (detectedState) {
+                  try {
+                    const pinDetails = await fetchPincodeDetails(clean);
+                    if (pinDetails) {
+                      const gpuState = detectedState.trim().toLowerCase();
+                      const pinState = pinDetails.state.trim().toLowerCase();
+                      // Reject pin if the state from pin-lookup clearly doesn't match GPS-detected state
+                      if (
+                        pinState !== gpuState &&
+                        !pinState.includes(gpuState) &&
+                        !gpuState.includes(pinState)
+                      ) {
+                        pinIsValid = false;
+                        console.warn(
+                          `[GPS AutoDetect] Nominatim postcode ${clean} belongs to "${pinDetails.state}" ` +
+                          `but GPS detected state is "${detectedState}". Discarding incorrect postcode.`
+                        );
+                      }
+                    }
+                  } catch {
+                    // Validation lookup failed — keep pin, don't block the user
+                  }
+                }
+
+                if (pinIsValid) {
+                  detectedPin = clean;
+                }
               }
             }
 
@@ -198,7 +236,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
             }
           }
         } catch {
-          // reverse geocoding fallback
+          // reverse geocoding fallback — GPS coords still saved for Maps navigation
         }
 
         onChange(updates);
@@ -280,10 +318,16 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
       try {
         const details = await fetchPincodeDetails(clean);
         if (details) {
-          const updates: Partial<ShippingAddress> = { pincode: clean };
-          if (!address.city || res.city) updates.city = details.city;
-          if (!address.state || res.state) updates.state = details.state;
+          // Always update city & state when a new 6-digit PIN is entered
+          // so changing PIN from e.g. 500001 → 800081 correctly switches Hyderabad → Patna
+          const updates: Partial<ShippingAddress> = {
+            pincode: clean,
+            city: details.city,
+            state: details.state,
+          };
           onChange(updates);
+          // Keep touched/error state in sync for city & state
+          setErrors((prev) => ({ ...prev, city: '', state: '' }));
         }
       } finally {
         setIsLookingUpPin(false);
@@ -330,7 +374,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
   const prog = FIELDS.filter((f) => !validators[f]((address as any)[f] ?? '')).length;
   const currentMapsUrl = generateGoogleMapsLink(address, { forceRefresh: !address.isCustomMapLink });
   const hasGps = typeof address.latitude === 'number' && typeof address.longitude === 'number';
-  const isAddressReadyForMap = hasGps || !!(address.addressLine1 && (address.city || address.pincode));
+  // Show Google Maps link if we have GPS OR enough text address info (street OR area + city/pincode)
+  const isAddressReadyForMap =
+    hasGps ||
+    !!((address.addressLine1 || address.addressLine2) && (address.city || address.pincode));
 
   return (
     <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>

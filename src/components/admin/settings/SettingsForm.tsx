@@ -120,8 +120,9 @@ export const SettingsForm: React.FC = () => {
       try {
         const details = await fetchPincodeDetails(clean);
         if (details) {
-          if (!newCity) setNewCity(details.city);
-          if (!newState) setNewState(details.state);
+          // Always auto-fill city & state so changing PIN updates the fields correctly
+          setNewCity(details.city);
+          setNewState(details.state);
         }
       } finally {
         setIsLookingUpPin(false);

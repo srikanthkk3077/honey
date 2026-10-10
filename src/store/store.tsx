@@ -320,12 +320,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSettings((prev) => {
           const cached = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
           const cachedHero: Partial<HeroConfig> = cached?.heroConfig || {};
-          const loaded: StoreSettings = {
+        const loaded: StoreSettings = {
             ...prev,
             ...data,
             paymentConfig: {
               ...prev.paymentConfig,
               ...(data.paymentConfig || {}),
+            },
+            // Deep-merge deliveryConfig so serviceablePincodes & serviceabilityMode are never lost
+            deliveryConfig: {
+              ...DEFAULT_DELIVERY_CONFIG,
+              ...(prev.deliveryConfig || {}),
+              ...(data.deliveryConfig || {}),
+              serviceablePincodes:
+                Array.isArray(data.deliveryConfig?.serviceablePincodes) && data.deliveryConfig.serviceablePincodes.length > 0
+                  ? data.deliveryConfig.serviceablePincodes
+                  : (Array.isArray(prev.deliveryConfig?.serviceablePincodes) && prev.deliveryConfig.serviceablePincodes.length > 0
+                      ? prev.deliveryConfig.serviceablePincodes
+                      : DEFAULT_DELIVERY_CONFIG.serviceablePincodes),
             },
             heroConfig: {
               ...DEFAULT_HERO_CONFIG,
@@ -405,6 +417,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             paymentConfig: {
               ...prev.paymentConfig,
               ...(result.paymentConfig || {}),
+            },
+            // Deep-merge deliveryConfig so admin's zones & mode survive the backend round-trip
+            deliveryConfig: {
+              ...DEFAULT_DELIVERY_CONFIG,
+              ...(prev.deliveryConfig || {}),
+              ...(result.deliveryConfig || {}),
+              // Explicit client updates always take precedence over backend response
+              ...(updates.deliveryConfig || {}),
+              serviceablePincodes:
+                Array.isArray(updates.deliveryConfig?.serviceablePincodes)
+                  ? updates.deliveryConfig.serviceablePincodes
+                  : (Array.isArray(result.deliveryConfig?.serviceablePincodes) && result.deliveryConfig.serviceablePincodes.length > 0
+                      ? result.deliveryConfig.serviceablePincodes
+                      : (Array.isArray(prev.deliveryConfig?.serviceablePincodes) && prev.deliveryConfig.serviceablePincodes.length > 0
+                          ? prev.deliveryConfig.serviceablePincodes
+                          : DEFAULT_DELIVERY_CONFIG.serviceablePincodes)),
             },
             heroConfig: {
               ...DEFAULT_HERO_CONFIG,
