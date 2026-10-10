@@ -56,15 +56,21 @@ export const HeroEditor: React.FC = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingMobileImage, setIsUploadingMobileImage] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isUploadingBannerImage, setIsUploadingBannerImage] = useState<number | null>(null);
+  const [isUploadingBannerMobileImage, setIsUploadingBannerMobileImage] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'content' | 'actions' | 'media' | 'badges' | 'style' | 'banners'>('banners');
   const [previewSlideIdx, setPreviewSlideIdx] = useState(0);
+  const [previewDeviceMode, setPreviewDeviceMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const mobileImageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const bannerSlideImageRef = useRef<HTMLInputElement>(null);
+  const bannerSlideMobileImageRef = useRef<HTMLInputElement>(null);
   const uploadingSlideIndexRef = useRef<number>(-1);
+  const uploadingSlideMobileIndexRef = useRef<number>(-1);
 
   // Sync state when settings change
   useEffect(() => {
@@ -111,6 +117,29 @@ export const HeroEditor: React.FC = () => {
     }
   };
 
+  const handleMobileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error');
+      return;
+    }
+
+    setIsUploadingMobileImage(true);
+    try {
+      const url = await uploadImage(file);
+      handleChange('heroMobileImageUrl', url);
+      showToast('Mobile hero artwork uploaded!', 'success');
+    } catch (err: any) {
+      console.error('Mobile image upload failed:', err);
+      showToast(err.message || 'Mobile image upload failed', 'error');
+    } finally {
+      setIsUploadingMobileImage(false);
+      if (mobileImageInputRef.current) mobileImageInputRef.current.value = '';
+    }
+  };
+
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -151,7 +180,7 @@ export const HeroEditor: React.FC = () => {
         slides[idx] = { ...slides[idx], imageUrl: url };
         return { ...prev, heroBannerSlides: slides };
       });
-      showToast('Banner image uploaded!', 'success');
+      showToast('Desktop banner image uploaded!', 'success');
     } catch (err: any) {
       showToast(err.message || 'Upload failed', 'error');
     } finally {
@@ -161,11 +190,38 @@ export const HeroEditor: React.FC = () => {
     }
   };
 
+  const handleBannerSlideMobileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const idx = uploadingSlideMobileIndexRef.current;
+    if (!file || idx < 0) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file', 'error');
+      return;
+    }
+    setIsUploadingBannerMobileImage(idx);
+    try {
+      const url = await uploadImage(file);
+      setForm((prev) => {
+        const slides = [...(prev.heroBannerSlides || [])];
+        slides[idx] = { ...slides[idx], mobileImageUrl: url };
+        return { ...prev, heroBannerSlides: slides };
+      });
+      showToast(`Slide #${idx + 1} Mobile image uploaded!`, 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Upload failed', 'error');
+    } finally {
+      setIsUploadingBannerMobileImage(null);
+      uploadingSlideMobileIndexRef.current = -1;
+      if (bannerSlideMobileImageRef.current) bannerSlideMobileImageRef.current.value = '';
+    }
+  };
+
   const addBannerSlide = () => {
     const slides = form.heroBannerSlides || [];
     const newSlide: HeroBannerSlide = {
       id: `slide-${Date.now()}`,
       imageUrl: form.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
+      mobileImageUrl: '',
       titleLine1: '',
       titleLine2: '',
       subtitle: '',
@@ -235,28 +291,53 @@ export const HeroEditor: React.FC = () => {
         }
       }
 
+      let heroMobileImage = form.heroMobileImageUrl || '';
+      if (heroMobileImage && heroMobileImage.startsWith('data:image/')) {
+        try {
+          const cdnUrl = await uploadBase64Image(heroMobileImage);
+          if (cdnUrl && !cdnUrl.startsWith('data:')) {
+            heroMobileImage = cdnUrl;
+          }
+        } catch (e: any) {
+          console.warn('Could not upload hero mobile image base64:', e);
+        }
+      }
+
       let updatedSlides = form.heroBannerSlides ? [...form.heroBannerSlides] : [];
       if (updatedSlides.length > 0) {
         for (let i = 0; i < updatedSlides.length; i++) {
           const slide = updatedSlides[i];
+          let updatedSlide = { ...slide };
           if (slide.imageUrl && slide.imageUrl.startsWith('data:image/')) {
             try {
               const cdnUrl = await uploadBase64Image(slide.imageUrl);
               if (cdnUrl && !cdnUrl.startsWith('data:')) {
-                updatedSlides[i] = { ...slide, imageUrl: cdnUrl };
+                updatedSlide.imageUrl = cdnUrl;
               } else {
-                throw new Error(`Cloud storage upload failed for Slide #${i + 1}. Please click "Upload Image" to re-upload.`);
+                throw new Error(`Cloud storage upload failed for Slide #${i + 1}. Please click "Upload Desktop Image" to re-upload.`);
               }
             } catch (err: any) {
               throw new Error(`Slide #${i + 1} upload failed: ${err?.message || 'Invalid or corrupted image data'}`);
             }
           }
+          if (slide.mobileImageUrl && slide.mobileImageUrl.startsWith('data:image/')) {
+            try {
+              const cdnUrl = await uploadBase64Image(slide.mobileImageUrl);
+              if (cdnUrl && !cdnUrl.startsWith('data:')) {
+                updatedSlide.mobileImageUrl = cdnUrl;
+              }
+            } catch (err: any) {
+              console.warn(`Slide #${i + 1} mobile image upload failed:`, err);
+            }
+          }
+          updatedSlides[i] = updatedSlide;
         }
       }
 
       const finalForm: HeroConfig = {
         ...form,
         heroImageUrl: heroImage,
+        heroMobileImageUrl: heroMobileImage,
         heroBannerSlides: updatedSlides,
       };
 
@@ -276,7 +357,18 @@ export const HeroEditor: React.FC = () => {
   const totalBannerSlides = allBannerSlides.length;
   const currentPreviewSlide = totalBannerSlides > 0 ? allBannerSlides[previewSlideIdx % totalBannerSlides] : null;
 
-  const previewImage = currentPreviewSlide?.imageUrl || form.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+  const hasCustomMobileImage = Boolean(
+    (currentPreviewSlide?.mobileImageUrl && currentPreviewSlide.mobileImageUrl.trim()) ||
+    (form.heroMobileImageUrl && form.heroMobileImageUrl.trim())
+  );
+
+  const previewImage = previewDeviceMode === 'mobile'
+    ? ((currentPreviewSlide?.mobileImageUrl && currentPreviewSlide.mobileImageUrl.trim())
+        || (form.heroMobileImageUrl && form.heroMobileImageUrl.trim())
+        || currentPreviewSlide?.imageUrl
+        || form.heroImageUrl
+        || '/images/brand/hero_illustration_feathered.png')
+    : (currentPreviewSlide?.imageUrl || form.heroImageUrl || '/images/brand/hero_illustration_feathered.png');
   const previewEyebrow = (currentPreviewSlide?.eyebrow && currentPreviewSlide.eyebrow.trim())
     ? currentPreviewSlide.eyebrow
     : (form.eyebrow || 'PURE HONEY, NATURE’S GENUINE GIFT');
@@ -299,7 +391,9 @@ export const HeroEditor: React.FC = () => {
     ? currentPreviewSlide.backgroundColor
     : (form.backgroundColor || '#FDDCC3');
   const isPreviewDark = isDarkColor(previewBgColor);
-  const previewGradientMask = getSlideGradientMask(previewBgColor);
+  const previewGradientMask = previewDeviceMode === 'mobile'
+    ? 'linear-gradient(180deg, rgba(14, 7, 2, 0.38) 0%, rgba(14, 7, 2, 0.65) 18%, rgba(14, 7, 2, 0.80) 42%, rgba(14, 7, 2, 0.82) 70%, rgba(14, 7, 2, 0.90) 88%, rgba(14, 7, 2, 0.97) 100%)'
+    : getSlideGradientMask(previewBgColor);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -429,272 +523,385 @@ export const HeroEditor: React.FC = () => {
                 Previewing Slide #{((previewSlideIdx % totalBannerSlides) + 1)} of {totalBannerSlides}
               </span>
             )}
+            {previewDeviceMode === 'mobile' && (
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  backgroundColor: hasCustomMobileImage ? '#065F46' : '#78350F',
+                  color: '#FFFFFF',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  fontWeight: 700,
+                }}
+              >
+                {hasCustomMobileImage ? '📱 Custom Mobile Image' : '📱 Mobile Fallback'}
+              </span>
+            )}
           </div>
 
-          {/* Quick slide switcher in preview header */}
-          {totalBannerSlides > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ fontSize: '0.74rem', color: '#A8A29E' }}>Switch Slide:</span>
-              {allBannerSlides.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setPreviewSlideIdx(i)}
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: '0.74rem',
-                    fontWeight: 700,
-                    borderRadius: '4px',
-                    border: '1px solid',
-                    borderColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#44403C',
-                    backgroundColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#292524',
-                    color: (previewSlideIdx % totalBannerSlides) === i ? '#1C1917' : '#D6D3D1',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Slide #{i + 1}
-                </button>
-              ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Device View Mode Switcher: Desktop vs Mobile */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#292524', padding: '3px 4px', borderRadius: '8px', border: '1px solid #44403C' }}>
+              <button
+                type="button"
+                onClick={() => setPreviewDeviceMode('desktop')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '3px 9px',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: previewDeviceMode === 'desktop' ? '#F59E0B' : 'transparent',
+                  color: previewDeviceMode === 'desktop' ? '#181511' : '#D6D3D1',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                💻 Laptop View
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewDeviceMode('mobile')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '3px 9px',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: previewDeviceMode === 'mobile' ? '#F59E0B' : 'transparent',
+                  color: previewDeviceMode === 'mobile' ? '#181511' : '#D6D3D1',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                📱 Mobile View
+              </button>
             </div>
-          )}
+
+            {/* Quick slide switcher in preview header */}
+            {totalBannerSlides > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '0.74rem', color: '#A8A29E' }}>Slide:</span>
+                {allBannerSlides.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setPreviewSlideIdx(i)}
+                    style={{
+                      padding: '2px 8px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      borderRadius: '4px',
+                      border: '1px solid',
+                      borderColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#44403C',
+                      backgroundColor: (previewSlideIdx % totalBannerSlides) === i ? '#F59E0B' : '#292524',
+                      color: (previewSlideIdx % totalBannerSlides) === i ? '#1C1917' : '#D6D3D1',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    #{i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Scaled Preview Frame */}
         <div
           style={{
-            position: 'relative',
-            backgroundColor: previewBgColor,
-            transition: 'background-color 0.4s ease',
-            padding: '2.5rem 2rem',
-            overflow: 'hidden',
-            minHeight: '380px',
-            display: 'flex',
-            alignItems: 'center',
+            backgroundColor: previewDeviceMode === 'mobile' ? '#14120E' : 'transparent',
+            padding: previewDeviceMode === 'mobile' ? '1.5rem 1rem' : '0',
+            transition: 'background-color 0.3s ease',
           }}
         >
-          {/* Full-Bleed Cover Preview */}
           <div
             style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
+              position: 'relative',
+              backgroundColor: previewBgColor,
+              transition: 'background-color 0.4s ease',
+              padding: previewDeviceMode === 'mobile' ? '2.5rem 1.25rem' : '2.5rem 2rem',
               overflow: 'hidden',
-              pointerEvents: 'none',
-              zIndex: 1,
+              minHeight: previewDeviceMode === 'mobile' ? '490px' : '380px',
+              maxWidth: previewDeviceMode === 'mobile' ? '390px' : '100%',
+              margin: previewDeviceMode === 'mobile' ? '0 auto' : '0',
+              borderRadius: previewDeviceMode === 'mobile' ? '32px' : '0',
+              boxShadow: previewDeviceMode === 'mobile' ? '0 16px 40px rgba(0,0,0,0.5), 0 0 0 7px #292524' : 'none',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
-            <img
-              key={`preview-img-${previewSlideIdx}`}
-              src={previewImage}
-              alt="Preview Cover"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center center',
-                display: 'block',
-              }}
-            />
-            {/* Dynamic Color-Matched Gradient Blend Overlay */}
+            {/* Full-Bleed Cover Preview */}
             <div
               style={{
                 position: 'absolute',
                 inset: 0,
-                background: previewGradientMask,
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
                 pointerEvents: 'none',
+                zIndex: 1,
               }}
-            />
-          </div>
+            >
+              <img
+                key={`preview-img-${previewSlideIdx}-${previewDeviceMode}`}
+                src={previewImage}
+                alt="Preview Cover"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center center',
+                  display: 'block',
+                }}
+              />
+              {/* Dynamic Color-Matched Gradient Blend Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: previewGradientMask,
+                  pointerEvents: 'none',
+                }}
+              />
+            </div>
 
-          {/* Botanical Accent Preview */}
-          {form.showBotanicalAccent && (
-            <img
-              src="/images/brand/botanical_corner_clean.png"
-              alt=""
+            {/* Botanical Accent Preview (hidden on mobile) */}
+            {form.showBotanicalAccent && previewDeviceMode === 'desktop' && (
+              <img
+                src="/images/brand/botanical_corner_clean.png"
+                alt=""
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  height: '140px',
+                  width: 'auto',
+                  pointerEvents: 'none',
+                  opacity: 0.9,
+                  filter: isPreviewDark ? 'brightness(0.95) drop-shadow(0 4px 12px rgba(0,0,0,0.5))' : 'none',
+                  objectFit: 'contain',
+                  objectPosition: 'bottom left',
+                  zIndex: 2,
+                }}
+              />
+            )}
+
+            <div
               style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                height: '140px',
-                width: 'auto',
-                pointerEvents: 'none',
-                opacity: 0.9,
-                filter: isPreviewDark ? 'brightness(0.95) drop-shadow(0 4px 12px rgba(0,0,0,0.5))' : 'none',
-                objectFit: 'contain',
-                objectPosition: 'bottom left',
-                zIndex: 2,
+                position: 'relative',
+                zIndex: 3,
+                display: 'grid',
+                gridTemplateColumns: previewDeviceMode === 'mobile' ? '1fr' : '1fr 1fr',
+                alignItems: 'center',
+                gap: previewDeviceMode === 'mobile' ? '1.5rem' : '2rem',
+                maxWidth: previewDeviceMode === 'mobile' ? '100%' : '1100px',
+                width: '100%',
+                margin: '0 auto',
+                textAlign: previewDeviceMode === 'mobile' ? 'center' : 'left',
               }}
-            />
-          )}
-
-          <div
-            style={{
-              position: 'relative',
-              zIndex: 3,
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              alignItems: 'center',
-              gap: '2rem',
-              maxWidth: '1100px',
-              width: '100%',
-              margin: '0 auto',
-            }}
-          >
-            {/* Left Content */}
-            <div style={{ maxWidth: '480px' }}>
+            >
+              {/* Content Column */}
               <div
                 style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: isPreviewDark ? '#F59E0B' : '#9E4616',
-                  marginBottom: '0.5rem',
-                  transition: 'color 0.3s ease',
+                  maxWidth: previewDeviceMode === 'mobile' ? '100%' : '480px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: previewDeviceMode === 'mobile' ? 'center' : 'flex-start',
                 }}
               >
-                {previewEyebrow}
-              </div>
-
-              <div
-                style={{
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                  fontSize: '2.1rem',
-                  fontWeight: 700,
-                  lineHeight: 1.15,
-                  color: isPreviewDark ? '#FFFFFF' : '#2C150A',
-                  marginBottom: '0.75rem',
-                  textShadow: isPreviewDark ? '0 2px 12px rgba(0,0,0,0.4)' : 'none',
-                  transition: 'color 0.3s ease',
-                }}
-              >
-                <div>{previewTitle1}</div>
-                <div style={{ color: isPreviewDark ? '#FFFBEB' : '#2C150A' }}>{previewTitle2}</div>
-              </div>
-
-              <div
-                style={{
-                  fontSize: '0.92rem',
-                  color: isPreviewDark ? '#F5EBE1' : '#553725',
-                  lineHeight: 1.5,
-                  marginBottom: '1.5rem',
-                  maxWidth: '440px',
-                  transition: 'color 0.3s ease',
-                }}
-              >
-                {previewSubtitle}
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.75rem' }}>
-                <span
+                <div
                   style={{
-                    backgroundColor: isPreviewDark ? '#F59E0B' : '#4A1F0A',
-                    color: isPreviewDark ? '#1C1917' : '#FFFFFF',
-                    fontWeight: 700,
-                    fontSize: '0.8rem',
-                    letterSpacing: '0.05em',
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.16em',
                     textTransform: 'uppercase',
-                    padding: '8px 18px',
+                    color: previewDeviceMode === 'mobile' ? '#FBBF24' : (isPreviewDark ? '#F59E0B' : '#9E4616'),
+                    marginBottom: '0.65rem',
+                    backgroundColor: previewDeviceMode === 'mobile' ? 'rgba(14, 7, 2, 0.72)' : 'transparent',
+                    border: previewDeviceMode === 'mobile' ? '1px solid rgba(245, 158, 11, 0.55)' : 'none',
+                    padding: previewDeviceMode === 'mobile' ? '4px 14px' : '0',
                     borderRadius: '9999px',
+                    boxShadow: previewDeviceMode === 'mobile' ? '0 4px 14px rgba(0, 0, 0, 0.45)' : 'none',
                     display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: isPreviewDark ? '0 4px 14px rgba(245, 158, 11, 0.35)' : 'none',
+                    transition: 'color 0.3s ease',
                   }}
                 >
-                  {previewPrimaryCta} <ArrowRight size={13} />
-                </span>
+                  {previewEyebrow}
+                </div>
 
-                {previewSecondaryCta && (
+                <div
+                  style={{
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                    fontSize: previewDeviceMode === 'mobile' ? '1.75rem' : '2.1rem',
+                    fontWeight: 700,
+                    lineHeight: 1.15,
+                    color: previewDeviceMode === 'mobile' ? '#FFFFFF' : (isPreviewDark ? '#FFFFFF' : '#2C150A'),
+                    marginBottom: '0.75rem',
+                    textShadow: previewDeviceMode === 'mobile' ? '0 3px 18px rgba(0,0,0,0.95), 0 1px 4px rgba(0,0,0,0.95)' : (isPreviewDark ? '0 2px 12px rgba(0,0,0,0.4)' : 'none'),
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  <div>{previewTitle1}</div>
+                  <div style={{ color: previewDeviceMode === 'mobile' ? '#FEF3C7' : (isPreviewDark ? '#FFFBEB' : '#2C150A') }}>{previewTitle2}</div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: previewDeviceMode === 'mobile' ? '0.85rem' : '0.92rem',
+                    color: previewDeviceMode === 'mobile' ? '#F5EBE1' : (isPreviewDark ? '#F5EBE1' : '#553725'),
+                    lineHeight: 1.5,
+                    marginBottom: '1.25rem',
+                    maxWidth: '440px',
+                    textShadow: previewDeviceMode === 'mobile' ? '0 2px 10px rgba(0,0,0,0.9), 0 1px 3px rgba(0,0,0,0.95)' : 'none',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  {previewSubtitle}
+                </div>
+
+                {/* Action Buttons */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: previewDeviceMode === 'mobile' ? 'center' : 'flex-start',
+                    gap: '10px',
+                    marginBottom: '1.5rem',
+                    flexWrap: 'wrap',
+                  }}
+                >
                   <span
                     style={{
-                      backgroundColor: isPreviewDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.45)',
-                      border: isPreviewDark ? '1.5px solid rgba(255, 255, 255, 0.4)' : '1.5px solid rgba(138, 70, 32, 0.35)',
-                      color: isPreviewDark ? '#FFFFFF' : '#381B0E',
-                      fontWeight: 600,
+                      background: previewDeviceMode === 'mobile' ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : (isPreviewDark ? '#F59E0B' : '#4A1F0A'),
+                      color: '#1C1917',
+                      fontWeight: 800,
                       fontSize: '0.8rem',
-                      padding: '8px 16px',
+                      letterSpacing: '0.05em',
+                      textTransform: 'uppercase',
+                      padding: '8px 18px',
                       borderRadius: '9999px',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: '6px',
+                      boxShadow: '0 6px 20px rgba(245, 158, 11, 0.45)',
                     }}
                   >
+                    {previewPrimaryCta} <ArrowRight size={13} />
+                  </span>
+
+                  {previewSecondaryCta && (
                     <span
                       style={{
-                        width: '16px',
-                        height: '16px',
-                        borderRadius: '50%',
-                        backgroundColor: isPreviewDark ? '#F59E0B' : '#381B0E',
-                        display: 'flex',
+                        backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                        border: '1.5px solid rgba(255, 255, 255, 0.45)',
+                        color: '#FFFFFF',
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        padding: '8px 16px',
+                        borderRadius: '9999px',
+                        display: 'inline-flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        color: isPreviewDark ? '#1C1917' : '#FDDCC3',
+                        gap: '6px',
+                        backdropFilter: 'blur(10px)',
                       }}
                     >
-                      <Play size={8} fill={isPreviewDark ? '#1C1917' : '#FDDCC3'} />
-                    </span>
-                    {previewSecondaryCta}
-                  </span>
-                )}
-              </div>
-
-              {/* Trust Badges */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                {(form.trustBadges || DEFAULT_HERO_CONFIG.trustBadges)
-                  .filter((b) => b.isActive)
-                  .map((badge) => (
-                    <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '4px' }}>
-                      <div
+                      <span
                         style={{
-                          width: '32px',
-                          height: '32px',
+                          width: '16px',
+                          height: '16px',
                           borderRadius: '50%',
-                          border: isPreviewDark ? '1px solid rgba(255, 255, 255, 0.3)' : '1px solid rgba(154, 70, 22, 0.4)',
-                          backgroundColor: isPreviewDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.42)',
+                          backgroundColor: '#F59E0B',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          color: isPreviewDark ? '#FBBF24' : '#8A3E15',
+                          color: '#1C1917',
                         }}
                       >
-                        <Wheat size={14} />
-                      </div>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 600, color: isPreviewDark ? '#FAF4EC' : '#462717', maxWidth: '70px', lineHeight: 1.2 }}>
-                        {badge.label}
+                        <Play size={8} fill="#1C1917" />
                       </span>
-                    </div>
-                  ))}
-              </div>
-            </div>
+                      {previewSecondaryCta}
+                    </span>
+                  )}
+                </div>
 
-            {/* Right Visual Floating Callout */}
-            <div style={{ position: 'relative', textAlign: 'right', minHeight: '260px' }}>
-              {form.showCalloutBadge && (
+                {/* Trust Badges */}
                 <div
                   style={{
-                    display: 'inline-block',
-                    backgroundColor: isPreviewDark ? 'rgba(28, 14, 8, 0.92)' : 'rgba(253, 237, 219, 0.95)',
-                    border: isPreviewDark ? '1px solid #F59E0B' : '1px solid #C47942',
-                    borderRadius: '50px',
-                    padding: '6px 14px',
-                    transform: 'rotate(-4deg)',
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontStyle: 'italic',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    color: isPreviewDark ? '#FBBF24' : '#8C4318',
-                    whiteSpace: 'pre-line',
-                    boxShadow: '0 8px 18px rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: previewDeviceMode === 'mobile' ? 'center' : 'flex-start',
+                    gap: previewDeviceMode === 'mobile' ? '0.75rem' : '1rem',
+                    flexWrap: 'wrap',
+                    backgroundColor: previewDeviceMode === 'mobile' ? 'rgba(14, 7, 2, 0.68)' : 'transparent',
+                    border: previewDeviceMode === 'mobile' ? '1px solid rgba(255, 255, 255, 0.14)' : 'none',
+                    borderRadius: previewDeviceMode === 'mobile' ? '18px' : '0',
+                    padding: previewDeviceMode === 'mobile' ? '0.65rem 1rem' : '0',
+                    backdropFilter: previewDeviceMode === 'mobile' ? 'blur(10px)' : 'none',
                   }}
                 >
-                  {form.calloutBadgeText || 'Pure Honey\nStronger Communities'}
+                  {(form.trustBadges || DEFAULT_HERO_CONFIG.trustBadges)
+                    .filter((b) => b.isActive)
+                    .map((badge) => (
+                      <div key={badge.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '4px' }}>
+                        <div
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            border: '1.5px solid rgba(245, 158, 11, 0.6)',
+                            backgroundColor: 'rgba(245, 158, 11, 0.22)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#FBBF24',
+                          }}
+                        >
+                          <Wheat size={14} />
+                        </div>
+                        <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#FAF4EC', maxWidth: '70px', lineHeight: 1.2, textShadow: '0 1px 4px rgba(0,0,0,0.85)' }}>
+                          {badge.label}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Right Visual Floating Callout (hidden on mobile) */}
+              {previewDeviceMode === 'desktop' && (
+                <div style={{ position: 'relative', textAlign: 'right', minHeight: '260px' }}>
+                  {form.showCalloutBadge && (
+                    <div
+                      style={{
+                        display: 'inline-block',
+                        backgroundColor: isPreviewDark ? 'rgba(28, 14, 8, 0.92)' : 'rgba(253, 237, 219, 0.95)',
+                        border: isPreviewDark ? '1px solid #F59E0B' : '1px solid #C47942',
+                        borderRadius: '50px',
+                        padding: '6px 14px',
+                        transform: 'rotate(-4deg)',
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        fontStyle: 'italic',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: isPreviewDark ? '#FBBF24' : '#8C4318',
+                        whiteSpace: 'pre-line',
+                        boxShadow: '0 8px 18px rgba(0, 0, 0, 0.2)',
+                      }}
+                    >
+                      {form.calloutBadgeText || 'Pure Honey\nStronger Communities'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          </div>
 
           {/* Multi-Image Preview Dots (if multiple banner slides exist) */}
           {totalBannerSlides > 1 && (
@@ -735,6 +942,7 @@ export const HeroEditor: React.FC = () => {
           )}
         </div>
       </div>
+    </div>
 
       {/* ── Editor Tabs Navigation ── */}
       <div
@@ -780,13 +988,21 @@ export const HeroEditor: React.FC = () => {
         })}
       </div>
 
-      {/* Hidden banner slide image input */}
+      {/* Hidden banner slide desktop image input */}
       <input
         type="file"
         ref={bannerSlideImageRef}
         accept="image/*"
         style={{ display: 'none' }}
         onChange={handleBannerSlideImageUpload}
+      />
+      {/* Hidden banner slide mobile image input */}
+      <input
+        type="file"
+        ref={bannerSlideMobileImageRef}
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleBannerSlideMobileImageUpload}
       />
 
       {/* ── Tab 0: Multi-Image Banner Slides ── */}
@@ -1066,106 +1282,295 @@ export const HeroEditor: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Image Preview & URL / Upload */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '1.25rem', alignItems: 'start' }}>
+                  {/* Dual Image Controls: Laptop / Desktop Image + Mobile Phone Image */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                      gap: '1rem',
+                      backgroundColor: '#F7F6F5',
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      border: '1px solid #E7E5E4',
+                    }}
+                  >
+                    {/* 1. Laptop / Desktop Image Card */}
                     <div
                       style={{
-                        width: '160px',
-                        height: '110px',
+                        backgroundColor: '#FFFFFF',
                         borderRadius: '10px',
-                        backgroundColor: '#FDDCC3',
                         border: '1px solid #E7E5E4',
-                        overflow: 'hidden',
-                        position: 'relative',
+                        padding: '1rem',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        gap: '0.75rem',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.02)',
                       }}
                     >
-                      {slide.imageUrl ? (
-                        <img
-                          src={slide.imageUrl}
-                          alt={`Slide ${idx + 1}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <ImageIcon size={24} color="#9E4616" />
-                      )}
-                      {isUploadingBannerImage === idx && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '1rem' }}>💻</span>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1C1917' }}>
+                            Laptop / Desktop View Image
+                          </span>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            color: '#92400E',
+                            backgroundColor: '#FEF3C7',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                          }}
+                        >
+                          Landscape / 16:9
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        {/* 16:9 Thumbnail Preview */}
                         <div
                           style={{
-                            position: 'absolute',
-                            inset: 0,
-                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            width: '120px',
+                            height: '75px',
+                            borderRadius: '8px',
+                            backgroundColor: '#FDDCC3',
+                            border: '1px solid #E7E5E4',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            flexShrink: 0,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#FFFFFF',
-                            fontSize: '0.75rem',
                           }}
                         >
-                          <Loader2 size={18} className="animate-spin" />
+                          {slide.imageUrl ? (
+                            <img
+                              src={slide.imageUrl}
+                              alt={`Desktop Slide ${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <ImageIcon size={20} color="#9E4616" />
+                          )}
+                          {isUploadingBannerImage === idx && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: 0,
+                                backgroundColor: 'rgba(0,0,0,0.55)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              <Loader2 size={16} className="animate-spin" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#44403C' }}>
-                        Banner Slide Image
-                      </label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <div style={{ flex: 1 }}>
+                        {/* Input & Action */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: 0 }}>
                           <Input
                             value={slide.imageUrl}
                             onChange={(e) => updateBannerSlide(idx, { imageUrl: e.target.value })}
-                            placeholder="Enter image URL or upload below"
+                            placeholder="Enter desktop image URL"
                           />
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              leftIcon={isUploadingBannerImage === idx ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                              onClick={() => {
+                                uploadingSlideIndexRef.current = idx;
+                                bannerSlideImageRef.current?.click();
+                              }}
+                              disabled={isUploadingBannerImage !== null}
+                            >
+                              {isUploadingBannerImage === idx ? 'Uploading...' : 'Upload Laptop Image'}
+                            </Button>
+                          </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          leftIcon={isUploadingBannerImage === idx ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                          onClick={() => {
-                            uploadingSlideIndexRef.current = idx;
-                            bannerSlideImageRef.current?.click();
-                          }}
-                          disabled={isUploadingBannerImage !== null}
-                        >
-                          {isUploadingBannerImage === idx ? 'Uploading...' : 'Upload Image'}
-                        </Button>
                       </div>
 
-                      {/* Quick preset images */}
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.74rem', color: '#78716C' }}>Quick pick:</span>
+                      {/* Quick Presets */}
+                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '4px', borderTop: '1px dashed #F5F5F4' }}>
+                        <span style={{ fontSize: '0.72rem', color: '#78716C' }}>Quick pick:</span>
                         <button
                           type="button"
                           onClick={() => updateBannerSlide(idx, { imageUrl: '/images/brand/hero_illustration_feathered.png' })}
                           style={{
-                            fontSize: '0.74rem',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
+                            fontSize: '0.72rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
                             border: '1px solid #E7E5E4',
-                            backgroundColor: '#F5F5F4',
+                            backgroundColor: '#FAFAF9',
                             cursor: 'pointer',
                           }}
                         >
-                          Feathered Forest Artwork
+                          🎨 Feathered Forest
                         </button>
                         <button
                           type="button"
                           onClick={() => updateBannerSlide(idx, { imageUrl: '/images/brand/hero_sunflower_cover.png' })}
                           style={{
-                            fontSize: '0.74rem',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
+                            fontSize: '0.72rem',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
                             border: '1px solid #E7E5E4',
-                            backgroundColor: '#F5F5F4',
+                            backgroundColor: '#FAFAF9',
                             cursor: 'pointer',
                           }}
                         >
-                          Sunflower Honey Harvest
+                          🌻 Sunflower Harvest
                         </button>
+                      </div>
+                    </div>
+
+                    {/* 2. Mobile Phone Image Card */}
+                    <div
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '10px',
+                        border: slide.mobileImageUrl ? '1.5px solid #F59E0B' : '1px solid #E7E5E4',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.75rem',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.02)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '1rem' }}>📱</span>
+                          <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1C1917' }}>
+                            Mobile Phone View Image
+                          </span>
+                        </div>
+                        {slide.mobileImageUrl ? (
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              color: '#047857',
+                              backgroundColor: '#D1FAE5',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            ✓ Custom Mobile Active
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 600,
+                              color: '#6B7280',
+                              backgroundColor: '#F3F4F6',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            Uses Laptop (Fallback)
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        {/* Portrait 9:16 Thumbnail Preview */}
+                        <div
+                          style={{
+                            width: '55px',
+                            height: '75px',
+                            borderRadius: '8px',
+                            backgroundColor: '#FDDCC3',
+                            border: '1px solid #E7E5E4',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            flexShrink: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {slide.mobileImageUrl ? (
+                            <img
+                              src={slide.mobileImageUrl}
+                              alt={`Mobile Slide ${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : slide.imageUrl ? (
+                            <img
+                              src={slide.imageUrl}
+                              alt={`Desktop Fallback Slide ${idx + 1}`}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }}
+                            />
+                          ) : (
+                            <ImageIcon size={18} color="#9E4616" />
+                          )}
+                          {isUploadingBannerMobileImage === idx && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: 0,
+                                backgroundColor: 'rgba(0,0,0,0.55)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#FFFFFF',
+                              }}
+                            >
+                              <Loader2 size={16} className="animate-spin" />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Input & Action */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, minWidth: 0 }}>
+                          <Input
+                            value={slide.mobileImageUrl || ''}
+                            onChange={(e) => updateBannerSlide(idx, { mobileImageUrl: e.target.value })}
+                            placeholder="Optional: Enter mobile image URL (portrait/square)"
+                          />
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              leftIcon={isUploadingBannerMobileImage === idx ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                              onClick={() => {
+                                uploadingSlideMobileIndexRef.current = idx;
+                                bannerSlideMobileImageRef.current?.click();
+                              }}
+                              disabled={isUploadingBannerMobileImage !== null}
+                            >
+                              {isUploadingBannerMobileImage === idx ? 'Uploading...' : 'Upload Mobile Image'}
+                            </Button>
+                            {slide.mobileImageUrl && (
+                              <button
+                                type="button"
+                                onClick={() => updateBannerSlide(idx, { mobileImageUrl: '' })}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '0.74rem',
+                                  borderRadius: '6px',
+                                  border: '1px solid #FEE2E2',
+                                  backgroundColor: '#FEF2F2',
+                                  color: '#DC2626',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                Clear Mobile Image
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '0.72rem', color: '#78716C', lineHeight: 1.3 }}>
+                        💡 Tip: Upload a portrait or square image optimized for phone screens. If left blank, the hero automatically displays your Laptop image on phones.
                       </div>
                     </div>
                   </div>
@@ -1582,78 +1987,111 @@ export const HeroEditor: React.FC = () => {
             gap: '1.75rem',
           }}
         >
-          {/* Illustration Image */}
-          <div>
-            <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: 700, color: '#44403C', marginBottom: '8px' }}>
-              Hero Forest & Apiary Illustration Image
+          {/* Dual Illustration / Artwork Manager */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <label style={{ display: 'block', fontSize: '0.95rem', fontWeight: 800, color: '#1C1917', margin: 0 }}>
+              Hero Forest & Apiary Artwork (Fallback / Single Layout)
             </label>
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '1.25rem',
+              }}
+            >
+              {/* 1. Laptop / Desktop Artwork */}
               <div
                 style={{
-                  width: '180px',
-                  height: '120px',
+                  backgroundColor: '#FAFAF9',
                   borderRadius: '12px',
                   border: '1px solid #E7E5E4',
-                  backgroundColor: '#FDDCC3',
-                  overflow: 'hidden',
+                  padding: '1.25rem',
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  flexDirection: 'column',
+                  gap: '10px',
                 }}
               >
-                <img
-                  src={form.heroImageUrl || '/images/brand/hero_illustration_feathered.png'}
-                  alt="Artwork Preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, minWidth: '260px' }}>
-                <Input
-                  value={form.heroImageUrl}
-                  onChange={(e) => handleChange('heroImageUrl', e.target.value)}
-                  placeholder="/images/brand/... or Cloudinary URL"
-                />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <input
-                    type="file"
-                    ref={imageInputRef}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageUpload}
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    leftIcon={isUploadingImage ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                    onClick={() => imageInputRef.current?.click()}
-                    disabled={isUploadingImage}
-                  >
-                    {isUploadingImage ? 'Uploading...' : 'Upload New Illustration'}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => handleChange('heroImageUrl', '/images/brand/hero_sunflower_cover.png')}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>💻</span>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1C1917' }}>
+                      Laptop / Desktop Artwork
+                    </span>
+                  </div>
+                  <span
                     style={{
-                      padding: '0.45rem 0.85rem',
-                      fontSize: '0.82rem',
-                      borderRadius: '8px',
-                      border: '1px solid #E7E5E4',
-                      background: form.heroImageUrl?.includes('hero_sunflower') ? '#FEF3C7' : '#FFFFFF',
-                      color: form.heroImageUrl?.includes('hero_sunflower') ? '#92400E' : '#57534E',
-                      fontWeight: 600,
-                      cursor: 'pointer',
+                      fontSize: '0.7rem',
+                      fontWeight: 700,
+                      color: '#92400E',
+                      backgroundColor: '#FEF3C7',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
                     }}
                   >
-                    🌻 Sunflower Harvest Cover
-                  </button>
+                    16:9 Landscape
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      width: '130px',
+                      height: '85px',
+                      borderRadius: '10px',
+                      border: '1px solid #E7E5E4',
+                      backgroundColor: '#FDDCC3',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={form.heroImageUrl || '/images/brand/hero_illustration_feathered.png'}
+                      alt="Desktop Artwork"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
+                    <Input
+                      value={form.heroImageUrl}
+                      onChange={(e) => handleChange('heroImageUrl', e.target.value)}
+                      placeholder="Desktop image URL"
+                    />
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <input
+                        type="file"
+                        ref={imageInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleImageUpload}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        leftIcon={isUploadingImage ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                        onClick={() => imageInputRef.current?.click()}
+                        disabled={isUploadingImage}
+                      >
+                        {isUploadingImage ? 'Uploading...' : 'Upload Laptop Image'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Presets */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', paddingTop: '6px', borderTop: '1px dashed #E7E5E4' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#78716C' }}>Quick pick:</span>
                   <button
                     type="button"
                     onClick={() => handleChange('heroImageUrl', '/images/brand/hero_illustration_feathered.png')}
                     style={{
-                      padding: '0.45rem 0.85rem',
-                      fontSize: '0.82rem',
-                      borderRadius: '8px',
+                      fontSize: '0.72rem',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
                       border: '1px solid #E7E5E4',
                       background: form.heroImageUrl?.includes('hero_illustration') ? '#FEF3C7' : '#FFFFFF',
                       color: form.heroImageUrl?.includes('hero_illustration') ? '#92400E' : '#57534E',
@@ -1661,8 +2099,154 @@ export const HeroEditor: React.FC = () => {
                       cursor: 'pointer',
                     }}
                   >
-                    🎨 Forest Apiary Illustration
+                    🎨 Forest Apiary
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('heroImageUrl', '/images/brand/hero_sunflower_cover.png')}
+                    style={{
+                      fontSize: '0.72rem',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      border: '1px solid #E7E5E4',
+                      background: form.heroImageUrl?.includes('hero_sunflower') ? '#FEF3C7' : '#FFFFFF',
+                      color: form.heroImageUrl?.includes('hero_sunflower') ? '#92400E' : '#57534E',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    🌻 Sunflower Harvest
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Mobile Phone Artwork */}
+              <div
+                style={{
+                  backgroundColor: '#FAFAF9',
+                  borderRadius: '12px',
+                  border: form.heroMobileImageUrl ? '1.5px solid #F59E0B' : '1px solid #E7E5E4',
+                  padding: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '1rem' }}>📱</span>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#1C1917' }}>
+                      Mobile Phone Artwork
+                    </span>
+                  </div>
+                  {form.heroMobileImageUrl ? (
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        color: '#047857',
+                        backgroundColor: '#D1FAE5',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      ✓ Custom Mobile Active
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        color: '#6B7280',
+                        backgroundColor: '#F3F4F6',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      Uses Laptop (Fallback)
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div
+                    style={{
+                      width: '60px',
+                      height: '85px',
+                      borderRadius: '10px',
+                      border: '1px solid #E7E5E4',
+                      backgroundColor: '#FDDCC3',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {form.heroMobileImageUrl ? (
+                      <img
+                        src={form.heroMobileImageUrl}
+                        alt="Mobile Artwork"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : form.heroImageUrl ? (
+                      <img
+                        src={form.heroImageUrl}
+                        alt="Desktop Fallback"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.55 }}
+                      />
+                    ) : (
+                      <ImageIcon size={18} color="#9E4616" />
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: 0 }}>
+                    <Input
+                      value={form.heroMobileImageUrl || ''}
+                      onChange={(e) => handleChange('heroMobileImageUrl', e.target.value)}
+                      placeholder="Optional: Mobile image URL"
+                    />
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <input
+                        type="file"
+                        ref={mobileImageInputRef}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={handleMobileImageUpload}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        leftIcon={isUploadingMobileImage ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                        onClick={() => mobileImageInputRef.current?.click()}
+                        disabled={isUploadingMobileImage}
+                      >
+                        {isUploadingMobileImage ? 'Uploading...' : 'Upload Mobile Image'}
+                      </Button>
+                      {form.heroMobileImageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleChange('heroMobileImageUrl', '')}
+                          style={{
+                            padding: '4px 8px',
+                            fontSize: '0.74rem',
+                            borderRadius: '6px',
+                            border: '1px solid #FEE2E2',
+                            backgroundColor: '#FEF2F2',
+                            color: '#DC2626',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: '0.72rem', color: '#78716C', lineHeight: 1.3 }}>
+                  💡 Upload a portrait or smartphone-optimized crop. If left blank, the hero will automatically use the desktop artwork on phones.
                 </div>
               </div>
             </div>

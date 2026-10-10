@@ -83,7 +83,7 @@ export const CartSummary: React.FC = () => {
 
         {cartDiscount > 0 && (
           <div className="flex items-center justify-between">
-            <span style={{ color: '#059669' }}>Total Savings</span>
+            <span style={{ color: '#059669' }}>Discount</span>
             <span style={{ fontWeight: 600, color: '#059669' }}>- {formatPrice(cartDiscount)}</span>
           </div>
         )}
@@ -96,7 +96,7 @@ export const CartSummary: React.FC = () => {
         )}
 
         <div className="flex items-center justify-between">
-          <span style={{ color: '#78716C' }}>Shipping</span>
+          <span style={{ color: '#78716C' }}>Delivery Fee</span>
           <span style={{ fontWeight: 600, color: cartShippingFee === 0 ? '#059669' : '#1C1917' }}>
             {cartShippingFee === 0 ? 'FREE' : formatPrice(cartShippingFee)}
           </span>

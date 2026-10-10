@@ -57,6 +57,7 @@ export const Hero: React.FC = () => {
     : [{
       id: 'default',
       imageUrl: hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
+      mobileImageUrl: hero.heroMobileImageUrl || '',
       titleLine1: hero.titleLine1,
       titleLine2: hero.titleLine2,
       subtitle: hero.subtitle,
@@ -194,6 +195,9 @@ export const Hero: React.FC = () => {
           : (hero.backgroundColor || '#FDDCC3');
         const sDark = isDarkColor(sBg);
         const sImg = s.imageUrl || hero.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
+        const sMobileImg = (s.mobileImageUrl && s.mobileImageUrl.trim())
+          || (hero.heroMobileImageUrl && hero.heroMobileImageUrl.trim())
+          || null;
         const mask = getSlideGradientMask(sBg);
 
         return (
@@ -240,18 +244,26 @@ export const Hero: React.FC = () => {
                 overflow: 'hidden',
               }}
             >
-              <img
-                src={sImg}
-                alt={s.titleLine1 || 'Madhuvan Raw Honey'}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center center',
-                  display: 'block',
-                }}
-                loading="eager"
-              />
+              <picture
+                key={`hero-pic-${s.id || idx}-${sMobileImg || 'none'}`}
+                style={{ width: '100%', height: '100%', display: 'block' }}
+              >
+                {sMobileImg && (
+                  <source media="(max-width: 960px)" srcSet={sMobileImg} />
+                )}
+                <img
+                  src={sImg}
+                  alt={s.titleLine1 || 'Madhuvan Raw Honey'}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center center',
+                    display: 'block',
+                  }}
+                  loading="eager"
+                />
+              </picture>
 
               {/* Dynamic Text-Backdrop Gradient Mask (localized behind left text area, preserving top/bottom corners) */}
               <div
@@ -304,6 +316,7 @@ export const Hero: React.FC = () => {
           >
             {/* 1. Eyebrow Tagline */}
             <div
+              className="hero-eyebrow"
               style={{
                 fontSize: 'clamp(0.76rem, 1.3vw, 0.88rem)',
                 fontWeight: 800,
@@ -322,6 +335,7 @@ export const Hero: React.FC = () => {
 
             {/* 2. Main Headline (Serif Elegant Typography) */}
             <h1
+              className="hero-headline"
               style={{
                 fontFamily: "var(--font-serif, 'Playfair Display', Georgia, serif)",
                 fontSize: 'clamp(2.1rem, 4.2vw, 3.4rem)',
@@ -334,18 +348,25 @@ export const Hero: React.FC = () => {
                 transition: 'color 0.4s ease',
               }}
             >
-              <span style={{ display: 'block' }}>
-                {titleLine1}
-              </span>
-              {titleLine2 && (
-                <span style={{ display: 'block', color: isDark ? '#FFFBEB' : '#955C0D' }}>
-                  {titleLine2}
+              <Link
+                to={primaryCtaLink}
+                className="hero-headline-link"
+                style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+              >
+                <span className="hero-title-line-1" style={{ display: 'block' }}>
+                  {titleLine1}
                 </span>
-              )}
+                {titleLine2 && (
+                  <span className="hero-title-line-2" style={{ display: 'block', color: isDark ? '#FFFBEB' : '#955C0D' }}>
+                    {titleLine2}
+                  </span>
+                )}
+              </Link>
             </h1>
 
             {/* 3. Description / Subtitle */}
             <p
+              className="hero-subtitle"
               style={{
                 fontSize: 'clamp(0.92rem, 1.5vw, 1.05rem)',
                 lineHeight: 1.56,
@@ -729,48 +750,115 @@ export const Hero: React.FC = () => {
         }
 
         @media (max-width: 960px) {
-          .hero-full-cover-wrapper img {
-            opacity: 0.35 !important;
+          #madhuvan-hero-section {
+            min-height: clamp(520px, 84vh, 650px) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-end !important;
+            align-items: stretch !important;
+            padding-top: 1rem !important;
+            padding-bottom: clamp(3.2rem, 8vw, 4.2rem) !important;
           }
-          .hero-visual {
-            display: none !important;
+
+          #madhuvan-hero-section .container {
+            margin-top: auto !important;
+            margin-bottom: 0 !important;
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+            width: 100% !important;
           }
+
           .hero-grid {
+            display: block !important;
             grid-template-columns: 1fr !important;
-            gap: 2rem !important;
-            text-align: center;
+            gap: 0 !important;
+            text-align: center !important;
+            width: 100% !important;
+            margin: 0 !important;
           }
+
           .hero-content {
             max-width: 100% !important;
+            width: 100% !important;
             align-items: center !important;
+            text-align: center !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            z-index: 5 !important;
+            animation: none !important;
           }
-          .hero-actions {
-            justify-content: center !important;
-          }
-          .hero-trust-badges {
-            justify-content: center !important;
-            margin: 0 auto;
-          }
-          .hero-botanical-accent {
-            display: none;
-          }
-        }
 
-        @media (max-width: 640px) {
-          .hero-trust-badges {
-            gap: 0.5rem !important;
-            flex-wrap: wrap !important;
+          /* Hide descriptions, buttons, eyebrow, badges, and callouts on mobile view */
+          .hero-eyebrow,
+          .hero-subtitle,
+          .hero-actions,
+          .hero-trust-badges,
+          .hero-visual,
+          .hero-callout-badge,
+          .hero-botanical-accent {
+            display: none !important;
           }
-          .trust-badge-item {
-            min-width: 60px !important;
+
+          /* Keep only simple Title 1 and Title 2 at the bottom of the jar */
+          .hero-headline {
+            margin: 0 !important;
+            text-align: center !important;
+            line-height: 1.18 !important;
+            padding: 0 0.5rem !important;
           }
-          .trust-badge-item > div {
-            width: 36px !important;
-            height: 36px !important;
+
+          .hero-headline-link {
+            text-decoration: none !important;
+            color: inherit !important;
+            display: block !important;
           }
-          .hero-nav-btn {
-            width: 36px !important;
-            height: 36px !important;
+
+          .hero-headline .hero-title-line-1 {
+            display: block !important;
+            font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+            font-size: clamp(1.45rem, 5.6vw, 2.05rem) !important;
+            font-weight: 700 !important;
+            color: #FFFFFF !important;
+            letter-spacing: -0.01em !important;
+            line-height: 1.2 !important;
+            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+          }
+
+          .hero-headline .hero-title-line-2 {
+            display: block !important;
+            font-family: var(--font-serif, 'Playfair Display', Georgia, serif) !important;
+            font-size: clamp(1.15rem, 4.4vw, 1.48rem) !important;
+            font-weight: 600 !important;
+            color: #FDE68A !important;
+            letter-spacing: -0.01em !important;
+            margin-top: 4px !important;
+            line-height: 1.2 !important;
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95), 0 1px 4px rgba(0, 0, 0, 0.9) !important;
+          }
+
+          /* Bottom dark gradient: crystal clear over upper 50% so jar is 100% visible,
+             smoothly darkening at the bottom behind Title 1 and Title 2 */
+          .hero-cover-gradient-mask {
+            opacity: 1 !important;
+            background: linear-gradient(
+              180deg,
+              transparent 0%,
+              transparent 45%,
+              rgba(10, 5, 2, 0.15) 58%,
+              rgba(10, 5, 2, 0.55) 72%,
+              rgba(10, 5, 2, 0.85) 86%,
+              rgba(10, 5, 2, 0.96) 100%
+            ) !important;
+          }
+
+          .hero-right-cover-wrapper img {
+            opacity: 1 !important;
+            object-fit: cover !important;
+            object-position: center center !important;
+          }
+
+          .hero-pagination-dots {
+            bottom: clamp(0.75rem, 2.2vw, 1.15rem) !important;
           }
         }
 
@@ -788,17 +876,12 @@ export const Hero: React.FC = () => {
           from { width: 0%; }
           to   { width: 100%; }
         }
-
-        .hero-nav-btn:hover {
-          background-color: rgba(74,31,10,0.18) !important;
-          border-color: rgba(138,62,21,0.6) !important;
-          transform: translateY(-50%) scale(1.1) !important;
-        }
       `}</style>
 
       {/* ── Pill dot indicators ── */}
       {total > 1 && (
         <div
+          className="hero-pagination-dots"
           style={{
             position: 'absolute',
             bottom: 'clamp(1rem, 2vw, 1.75rem)',

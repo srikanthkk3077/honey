@@ -79,6 +79,7 @@ export interface HeroBadge {
 export interface HeroBannerSlide {
   id: string;
   imageUrl: string;
+  mobileImageUrl?: string;
   titleLine1?: string;
   titleLine2?: string;
   subtitle?: string;
@@ -103,6 +104,7 @@ export interface HeroConfig {
   secondaryCtaLink: string;
   storyVideoUrl?: string;
   heroImageUrl: string;
+  heroMobileImageUrl?: string;
   calloutBadgeText: string;
   showCalloutBadge: boolean;
   trustBadges: HeroBadge[];
@@ -127,6 +129,7 @@ export const DEFAULT_HERO_CONFIG: HeroConfig = {
   storyVideoUrl:
     'https://res.cloudinary.com/kisnodzz/video/upload/f_auto,q_auto/v1/madhuvan_honey/videos/WhatsApp-Video-2026-10-02-at-1-1790995078981.mp4',
   heroImageUrl: '/images/brand/hero_illustration_feathered.png',
+  heroMobileImageUrl: '',
   calloutBadgeText: 'Pure Honey\nStronger Communities',
   showCalloutBadge: true,
   trustBadges: [

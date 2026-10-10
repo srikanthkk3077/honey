@@ -58,18 +58,26 @@ const SlideBackground: React.FC<{ slide: SliderItem; isActive: boolean }> = ({ s
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
-        <img
-          src={slide.imageUrl || '/images/brand/hero_illustration_feathered.png'}
-          alt={slide.title}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center center',
-            display: 'block',
-          }}
-          loading="eager"
-        />
+        <picture
+          key={`slider-pic-${slide.id || 'slide'}-${slide.mobileImageUrl || 'none'}`}
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        >
+          {slide.mobileImageUrl && (
+            <source media="(max-width: 960px)" srcSet={slide.mobileImageUrl} />
+          )}
+          <img
+            src={slide.imageUrl || '/images/brand/hero_illustration_feathered.png'}
+            alt={slide.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              display: 'block',
+            }}
+            loading="eager"
+          />
+        </picture>
       )}
 
       {/* Elegant dark overlay gradient for readability */}

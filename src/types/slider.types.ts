@@ -6,6 +6,7 @@ export interface SliderItem {
   subtitle?: string;
   badge?: string;
   imageUrl: string;
+  mobileImageUrl?: string;
   videoUrl?: string;
   mediaType: SliderMediaType;
   linkUrl: string;
