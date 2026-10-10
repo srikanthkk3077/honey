@@ -534,14 +534,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         productApi.getCategories().catch(() => []),
         videoApi.getAll().catch(() => []),
       ]);
-      setProducts(fetchedProducts || []);
-      setCategories(fetchedCategories || []);
-      setVideos(fetchedVideos && fetchedVideos.length > 0 ? fetchedVideos : getInitialVideos());
+      if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+        setProducts(fetchedProducts);
+      }
+      if (Array.isArray(fetchedCategories) && fetchedCategories.length > 0) {
+        setCategories(fetchedCategories);
+      }
+      if (Array.isArray(fetchedVideos) && fetchedVideos.length > 0) {
+        setVideos(fetchedVideos);
+      }
     } catch {
-      // Backend offline or error - keep empty without restoring mock data
-      setProducts([]);
-      setCategories([]);
-      setVideos(getInitialVideos());
+      // Backend offline or waking up - retain cached data from localStorage
     } finally {
       setIsProductsLoading(false);
       setIsVideosLoading(false);

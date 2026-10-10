@@ -48,7 +48,16 @@ export const getOptimizedMediaUrl = (
   const transformString = transformations.join(',');
 
   if (url.includes('/upload/')) {
-    return url.replace(/\/upload\/(?:[a-zA-Z0-9_,:]+\/)?/, '/upload/' + transformString + '/');
+    // If already has this transformation string, return as is
+    if (url.includes(`/upload/${transformString}/`)) return url;
+
+    // If an existing transformation segment exists (e.g. /upload/f_auto,q_auto/ or /upload/w_400/), replace it
+    if (/\/upload\/[a-z]_[^/]+\//i.test(url)) {
+      return url.replace(/\/upload\/[a-z]_[^/]+\//i, `/upload/${transformString}/`);
+    }
+
+    // Otherwise insert immediately after /upload/
+    return url.replace('/upload/', `/upload/${transformString}/`);
   }
 
   return url;
