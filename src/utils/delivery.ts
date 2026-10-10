@@ -181,6 +181,7 @@ export const cleanAddressForMaps = (address?: Partial<ShippingAddress> | null): 
   }
 
   const street2 = (address.addressLine2 || '').trim();
+  const landmark = (address.landmark || '').trim();
   const city = (address.city || '').trim();
   const state = (address.state || '').trim();
   const pincode = (address.pincode || '').replace(/\D/g, '').slice(0, 6);
@@ -188,6 +189,7 @@ export const cleanAddressForMaps = (address?: Partial<ShippingAddress> | null): 
   const parts: string[] = [];
   if (street) parts.push(street);
   if (street2) parts.push(street2);
+  if (landmark) parts.push(`Near ${landmark}`);
 
   // Avoid repeating city or state if already clearly stated in street
   if (city && !street.toLowerCase().includes(city.toLowerCase())) {

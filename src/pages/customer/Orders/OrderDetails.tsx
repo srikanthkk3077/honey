@@ -502,11 +502,15 @@ export const OrderDetails: React.FC = () => {
                 )}
               </div>
               <div style={{ fontSize: '0.9rem', color: '#57534E', lineHeight: 1.6 }}>
-                {shipping.fullName} • {shipping.phone}
+                <strong>{shipping.fullName}</strong> • {shipping.phone}
                 <br />
                 {shipping.addressLine1}
                 {shipping.addressLine2 && `, ${shipping.addressLine2}`}
-                <br />
+                {shipping.landmark && (
+                  <span style={{ display: 'block', fontSize: '0.82rem', color: '#D97706' }}>
+                    📍 Landmark: Near {shipping.landmark}
+                  </span>
+                )}
                 {shipping.city}, {shipping.state} - <strong>{shipping.pincode}</strong>
               </div>
             </div>

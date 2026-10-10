@@ -31,8 +31,13 @@ const validators = {
     return '';
   },
   addressLine1: (v: string) => {
-    if (!v.trim()) return 'Street address is required';
-    if (v.trim().length < 8) return 'Please enter your full street address';
+    if (!v.trim()) return 'Flat, House no. or Building name is required';
+    if (v.trim().length < 2) return 'Please enter your flat or house number';
+    return '';
+  },
+  addressLine2: (v: string) => {
+    if (!v.trim()) return 'Street, Road, Area or Locality is required';
+    if (v.trim().length < 3) return 'Please enter your street or area';
     return '';
   },
   city: (v: string) => {
@@ -52,7 +57,7 @@ const validators = {
 };
 
 type FK = keyof typeof validators;
-const FIELDS: FK[] = ['fullName', 'phone', 'email', 'addressLine1', 'city', 'state', 'pincode'];
+const FIELDS: FK[] = ['fullName', 'phone', 'email', 'addressLine1', 'addressLine2', 'city', 'state', 'pincode'];
 
 const inpStyle = (err: boolean, ok: boolean): React.CSSProperties => ({
   width: '100%',
@@ -117,6 +122,12 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
   const [showCustomMapUrlInput, setShowCustomMapUrlInput] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const [autoDetectedInfo, setAutoDetectedInfo] = useState<{
+    area: string;
+    city: string;
+    state: string;
+    pincode: string;
+  } | null>(null);
 
   const handleDetectLocation = () => {
     if (!('geolocation' in navigator)) {
@@ -139,28 +150,51 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
           isCustomMapLink: true,
         };
 
-        // Try reverse geocoding via OpenStreetMap Nominatim
+        let detectedStreet = '';
+        let detectedCity = '';
+        let detectedState = '';
+        let detectedPin = '';
+
+        // Reverse geocoding via OpenStreetMap Nominatim
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
           if (res.ok) {
             const data = await res.json();
-            const addr = data?.address;
-            if (addr) {
-              if (!address.pincode && addr.postcode) {
-                const pin = addr.postcode.replace(/\D/g, '').slice(0, 6);
-                if (pin.length === 6) {
-                  updates.pincode = pin;
-                  handlePincodeChange(pin);
-                }
+            const addr = data?.address || {};
+
+            // 1. Street / Road / Area / Locality
+            const streetParts = [
+              addr.road || addr.street || addr.pedestrian || '',
+              addr.neighbourhood || addr.suburb || addr.residential || addr.locality || addr.subdivision || '',
+            ].filter(Boolean);
+
+            detectedStreet = streetParts.join(', ');
+            if (!detectedStreet && data?.display_name) {
+              detectedStreet = data.display_name.split(',').slice(0, 2).map((s: string) => s.trim()).join(', ');
+            }
+
+            // 2. City
+            detectedCity = addr.city || addr.town || addr.district || addr.county || addr.village || addr.city_district || '';
+
+            // 3. State
+            detectedState = addr.state || '';
+
+            // 4. PIN Code
+            if (addr.postcode) {
+              const clean = addr.postcode.replace(/\D/g, '').slice(0, 6);
+              if (clean.length === 6) {
+                detectedPin = clean;
               }
-              if (!address.city) {
-                updates.city = addr.district || addr.county || addr.city || addr.town || addr.village || '';
-              }
-              if (!address.state && addr.state) {
-                updates.state = addr.state;
-              }
+            }
+
+            if (detectedStreet) updates.addressLine2 = detectedStreet;
+            if (detectedCity) updates.city = detectedCity;
+            if (detectedState) updates.state = detectedState;
+            if (detectedPin) {
+              updates.pincode = detectedPin;
+              handlePincodeChange(detectedPin);
             }
           }
         } catch {
@@ -168,14 +202,26 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
         }
 
         onChange(updates);
+        setAutoDetectedInfo({
+          area: detectedStreet,
+          city: detectedCity || address.city,
+          state: detectedState || address.state,
+          pincode: detectedPin || address.pincode,
+        });
         setLocationMessage(`Exact doorstep pin locked (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`);
         setIsLocating(false);
+
+        // Auto-focus House / Flat input so user can seamlessly type building details
+        setTimeout(() => {
+          const houseInput = document.getElementById('address-house-input');
+          if (houseInput) houseInput.focus();
+        }, 120);
       },
       (err) => {
         setIsLocating(false);
         let msg = 'Could not access GPS location.';
-        if (err.code === 1) msg = 'Location permission denied. Please allow location access in your browser.';
-        else if (err.code === 2) msg = 'Location unavailable. Please check your GPS/network.';
+        if (err.code === 1) msg = 'Location permission was denied. Please allow location access in your browser.';
+        else if (err.code === 2) msg = 'Location unavailable. Please check your device GPS/network.';
         else if (err.code === 3) msg = 'Location request timed out.';
         alert(msg);
       },
@@ -195,6 +241,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
       googleMapsLink: freshLink,
     });
     setLocationMessage(null);
+    setAutoDetectedInfo(null);
   };
 
   // Initialize with stored pincode from product page if address pincode is empty
@@ -295,18 +342,112 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
             <div
               style={{
                 height: '100%',
-                width: `${(prog / 7) * 100}%`,
-                background: prog === 7 && serviceability?.isServiceable ? '#059669' : '#D97706',
+                width: `${(prog / FIELDS.length) * 100}%`,
+                background: prog === FIELDS.length && serviceability?.isServiceable ? '#059669' : '#D97706',
                 borderRadius: '4px',
                 transition: 'width 0.3s ease',
               }}
             />
           </div>
           <span style={{ fontSize: '0.72rem', color: '#78716C', fontWeight: 600, whiteSpace: 'nowrap' }}>
-            {prog}/7 fields
+            {prog}/{FIELDS.length} fields
           </span>
         </div>
       </div>
+
+      {/* Zomato / Swiggy Style Auto-Detect Bar */}
+      <div
+        style={{
+          padding: '12px 16px',
+          borderRadius: '12px',
+          backgroundColor: '#FFFBEB',
+          border: '1.5px solid #FDE68A',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              backgroundColor: '#FEF3C7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#D97706',
+              flexShrink: 0,
+            }}
+          >
+            <Crosshair size={18} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#92400E' }}>
+              Auto-Detect Delivery Location
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#B45309' }}>
+              Click to auto-fill Street, Area, City, and PIN code via GPS
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDetectLocation}
+          disabled={isLocating}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            color: '#FFFFFF',
+            backgroundColor: '#D97706',
+            border: 'none',
+            padding: '8px 14px',
+            borderRadius: '8px',
+            cursor: isLocating ? 'wait' : 'pointer',
+            boxShadow: '0 2px 4px rgba(217,119,6,0.2)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          {isLocating ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Crosshair size={14} />}
+          {isLocating ? 'Detecting Location...' : hasGps ? '📍 Update GPS Location' : '📍 Use Current Location'}
+        </button>
+      </div>
+
+      {/* Auto-detected notification banner */}
+      {autoDetectedInfo && (
+        <div
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            backgroundColor: '#ECFDF5',
+            border: '1.5px solid #A7F3D0',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '10px',
+            animation: 'afd 0.25s ease',
+          }}
+        >
+          <CheckCircle2 size={18} color="#059669" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#065F46' }}>
+              Location Auto-Detected via GPS:
+            </div>
+            <div style={{ fontSize: '0.8rem', color: '#047857', marginTop: '2px' }}>
+              {autoDetectedInfo.area ? `${autoDetectedInfo.area}, ` : ''}{autoDetectedInfo.city}, {autoDetectedInfo.state} - <strong>{autoDetectedInfo.pincode}</strong>
+            </div>
+            <div style={{ fontSize: '0.76rem', color: '#059669', marginTop: '4px', fontWeight: 600 }}>
+              👇 Now enter your <strong>Flat / House / Building Name</strong> below to complete your address.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Name + Phone */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
@@ -348,18 +489,72 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
         />
       </F>
 
-      {/* Street Address */}
-      <F label="Street Address / House No. / Apartment" icon={<MapPin size={13} />} error={errors.addressLine1 || ''} show={show('addressLine1')} valid={ok('addressLine1')}>
+      {/* House / Flat / Floor / Building Name (Manual Entry) */}
+      <F
+        label="Flat / House No. / Building / Floor"
+        icon={<Building size={13} />}
+        error={errors.addressLine1 || ''}
+        show={show('addressLine1')}
+        valid={ok('addressLine1')}
+        hint="Enter your door/flat number, apartment name, or house details"
+      >
         <input
+          id="address-house-input"
           type="text"
           value={address.addressLine1}
-          placeholder="Flat 304, Green Terrace Apartments, MG Road"
+          placeholder="e.g. Flat 304, Green Terrace Apartments"
           style={inpStyle(err('addressLine1'), ok('addressLine1'))}
           onChange={(e) => change('addressLine1', e.target.value)}
           onBlur={() => touch('addressLine1', address.addressLine1)}
-          autoComplete="street-address"
+          autoComplete="address-line1"
         />
       </F>
+
+      {/* Street / Road / Area / Locality (Auto-filled via GPS or Manual) */}
+      <F
+        label="Street / Road / Area / Locality"
+        icon={<MapPin size={13} />}
+        error={errors.addressLine2 || ''}
+        show={show('addressLine2')}
+        valid={ok('addressLine2')}
+        hint="Auto-filled via GPS or entered manually (e.g. MG Road, Indiranagar)"
+      >
+        <input
+          type="text"
+          value={address.addressLine2 || ''}
+          placeholder="e.g. MG Road, Indiranagar or Jubilee Hills Road No. 12"
+          style={inpStyle(err('addressLine2'), ok('addressLine2'))}
+          onChange={(e) => change('addressLine2', e.target.value)}
+          onBlur={() => touch('addressLine2', address.addressLine2 || '')}
+          autoComplete="address-line2"
+        />
+      </F>
+
+      {/* Nearby Landmark (Optional) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <label
+          style={{
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            color: '#374151',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+        >
+          <Compass size={13} /> Nearby Landmark <span style={{ fontSize: '0.74rem', color: '#9CA3AF', fontWeight: 500 }}>(Optional)</span>
+        </label>
+        <input
+          type="text"
+          value={address.landmark || ''}
+          placeholder="e.g. Near Apollo Hospital, Opposite Metro Pillar 42"
+          style={inpStyle(false, !!address.landmark?.trim())}
+          onChange={(e) => onChange({ landmark: e.target.value })}
+        />
+        <span style={{ fontSize: '0.72rem', color: '#78716C' }}>
+          Helps our courier delivery partner locate your doorstep faster
+        </span>
+      </div>
 
       {/* PIN Code + City + State */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>

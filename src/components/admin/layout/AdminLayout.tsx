@@ -73,7 +73,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
       {/* Global API loading bar */}
       <AdminLoadingBar />
 
-      <div id="desktop-admin-sidebar">
+      <div id="desktop-admin-sidebar" style={{ width: '260px', flexShrink: 0 }}>
         <AdminSidebar />
       </div>
 

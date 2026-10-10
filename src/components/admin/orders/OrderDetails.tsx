@@ -377,13 +377,29 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
               <MapPin size={16} color="#D97706" style={{ marginTop: '3px', flexShrink: 0 }} />
               <div>
                 {order.shippingAddress ? (
-                  <>
-                    <div>{order.shippingAddress.addressLine1}</div>
-                    {order.shippingAddress.addressLine2 && <div>{order.shippingAddress.addressLine2}</div>}
-                    <div>
-                      {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ fontWeight: 700, color: '#1C1917' }}>
+                      🏠 {order.shippingAddress.addressLine1}
                     </div>
-                  </>
+                    {order.shippingAddress.addressLine2 && (
+                      <div style={{ color: '#44403C' }}>
+                        🛣️ {order.shippingAddress.addressLine2}
+                      </div>
+                    )}
+                    {order.shippingAddress.landmark && (
+                      <div style={{ color: '#92400E', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#FEF3C7', padding: '2px 8px', borderRadius: '6px', width: 'fit-content' }}>
+                        📍 Landmark: <strong>{order.shippingAddress.landmark}</strong>
+                      </div>
+                    )}
+                    <div style={{ color: '#57534E' }}>
+                      🌆 {order.shippingAddress.city}, {order.shippingAddress.state} - <strong>{order.shippingAddress.pincode}</strong>
+                    </div>
+                    {typeof order.shippingAddress.latitude === 'number' && typeof order.shippingAddress.longitude === 'number' && (
+                      <div style={{ fontSize: '0.78rem', color: '#047857', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                        🛰️ GPS Doorstep Pin: <strong>{order.shippingAddress.latitude.toFixed(4)}, {order.shippingAddress.longitude.toFixed(4)}</strong>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div style={{ color: '#78716C', fontStyle: 'italic' }}>No shipping address provided</div>
                 )}

@@ -331,8 +331,9 @@ export const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = (
             <div>
               {transaction.order?.shippingAddress ? (
                 <>
-                  <div>{transaction.order.shippingAddress.addressLine1}</div>
+                  <div><strong>{transaction.order.shippingAddress.addressLine1}</strong></div>
                   {transaction.order.shippingAddress.addressLine2 && <div>{transaction.order.shippingAddress.addressLine2}</div>}
+                  {transaction.order.shippingAddress.landmark && <div style={{ color: '#D97706', fontSize: '0.8rem' }}>📍 Near {transaction.order.shippingAddress.landmark}</div>}
                   <div>
                     {transaction.order.shippingAddress.city}, {transaction.order.shippingAddress.state} - {transaction.order.shippingAddress.pincode}
                   </div>

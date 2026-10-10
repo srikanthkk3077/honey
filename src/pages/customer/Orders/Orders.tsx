@@ -359,7 +359,9 @@ const TrackingModal: React.FC<TrackingModalProps> = ({ order, onClose, onBuyAgai
                 Delivering to: {order.shippingAddress?.fullName || order.customerName}
               </div>
               <div style={{ color: '#78716C' }}>
-                {order.shippingAddress?.addressLine1}, {order.shippingAddress?.city},{' '}
+                {order.shippingAddress?.addressLine1}
+                {order.shippingAddress?.addressLine2 ? `, ${order.shippingAddress.addressLine2}` : ''}
+                {order.shippingAddress?.landmark ? ` (Near ${order.shippingAddress.landmark})` : ''}, {order.shippingAddress?.city},{' '}
                 {order.shippingAddress?.state} {order.shippingAddress?.pincode}
               </div>
             </div>

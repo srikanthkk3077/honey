@@ -25,7 +25,9 @@ export const Checkout: React.FC = () => {
     fullName: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
-    addressLine1: user?.address?.street || '',
+    addressLine1: (user?.address as any)?.addressLine1 || user?.address?.street || '',
+    addressLine2: (user?.address as any)?.addressLine2 || '',
+    landmark: (user?.address as any)?.landmark || '',
     city: user?.address?.city || '',
     state: user?.address?.state || '',
     pincode: user?.address?.pincode || '',
@@ -42,7 +44,9 @@ export const Checkout: React.FC = () => {
         fullName: user.name || prev.fullName,
         email: user.email || prev.email,
         phone: user.phone || prev.phone,
-        addressLine1: user.address?.street || prev.addressLine1,
+        addressLine1: (user.address as any)?.addressLine1 || user.address?.street || prev.addressLine1,
+        addressLine2: (user.address as any)?.addressLine2 || prev.addressLine2,
+        landmark: (user.address as any)?.landmark || prev.landmark,
         city: user.address?.city || prev.city,
         state: user.address?.state || prev.state,
         pincode: user.address?.pincode || prev.pincode,
@@ -52,8 +56,8 @@ export const Checkout: React.FC = () => {
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address.fullName || !address.email || !address.phone || !address.addressLine1 || !address.city || !address.pincode) {
-      alert('Please fill out all required shipping address fields.');
+    if (!address.fullName || !address.email || !address.phone || !address.addressLine1 || !address.addressLine2 || !address.city || !address.pincode) {
+      alert('Please fill out all required shipping address fields (including Flat/Building and Street/Area).');
       return;
     }
 
@@ -299,7 +303,12 @@ export const Checkout: React.FC = () => {
               <div style={{ borderTop: '1px solid #E7E5E4', paddingTop: '0.75rem', fontSize: '0.85rem', color: '#57534E', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div className="flex items-start gap-2">
                   <MapPin size={16} color="#D97706" style={{ marginTop: '2px', flexShrink: 0 }} />
-                  <div>Shipping to: {completedOrder.shippingAddress.addressLine1}, {completedOrder.shippingAddress.city}, {completedOrder.shippingAddress.state} - {completedOrder.shippingAddress.pincode}</div>
+                  <div>
+                    Shipping to: <strong>{completedOrder.shippingAddress.addressLine1}</strong>
+                    {completedOrder.shippingAddress.addressLine2 && `, ${completedOrder.shippingAddress.addressLine2}`}
+                    {completedOrder.shippingAddress.landmark && ` (Near ${completedOrder.shippingAddress.landmark})`}
+                    , {completedOrder.shippingAddress.city}, {completedOrder.shippingAddress.state} - {completedOrder.shippingAddress.pincode}
+                  </div>
                 </div>
                 <div>
                   <a

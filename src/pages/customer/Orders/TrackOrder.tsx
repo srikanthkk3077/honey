@@ -971,6 +971,7 @@ export const TrackOrder: React.FC = () => {
                       <div style={{ marginTop: '4px' }}>
                         {matchedOrder.shippingAddress?.addressLine1}
                         {matchedOrder.shippingAddress?.addressLine2 ? `, ${matchedOrder.shippingAddress.addressLine2}` : ''}
+                        {matchedOrder.shippingAddress?.landmark ? ` (Near ${matchedOrder.shippingAddress.landmark})` : ''}
                       </div>
                       <div>
                         {matchedOrder.shippingAddress?.city}, {matchedOrder.shippingAddress?.state} -{' '}
