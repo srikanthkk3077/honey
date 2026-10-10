@@ -15,12 +15,14 @@ export const CONTACT_INFO = {
   whatsapp: "+91 7780514383",
   email: "madhuvanhoney.in@gmail.com",
   salesEmail: "orders@madhuvanhoney.com",
+  instagram: "madhuvanhoney.in",
+  instagramUrl: "https://www.instagram.com/madhuvanhoney.in/",
   address: "H No 3408, New MIG Vidyut Nagar, BHEL RC Puram, Tellapur, Sangareddy 502032, Sangareddy (Urban), Sangareddy, Telangana - 502032",
   hours: "Mon - Sat: 9:00 AM - 7:00 PM IST"
 };
 
 export const SOCIAL_LINKS = {
-  instagram: "https://instagram.com/madhuvanhoney",
+  instagram: "https://www.instagram.com/madhuvanhoney.in/",
   facebook: "https://facebook.com/madhuvanhoney",
   youtube: "https://youtube.com/@madhuvanhoney",
   twitter: "https://twitter.com/madhuvanhoney"

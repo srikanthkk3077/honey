@@ -10,7 +10,7 @@ const buildFallbackSlide = (heroConfig: any): SliderItem => ({
   id: 'hero-fallback',
   title: `${heroConfig?.titleLine1 || 'More Than Honey'} ${heroConfig?.titleLine2 || 'A Healthier Lifestyle'}`,
   subtitle: heroConfig?.subtitle || "Pure honey, collected from forest flowers for your family's better health.",
-  badge: heroConfig?.eyebrow || 'FROM FOREST TO FAMILY',
+  badge: heroConfig?.eyebrow || 'PURE HONEY, NATURE’S GENUINE GIFT',
   mediaType: 'image',
   imageUrl: heroConfig?.heroImageUrl || '/images/brand/hero_illustration_feathered.png',
   videoUrl: '',

@@ -116,7 +116,7 @@ export interface HeroConfig {
 }
 
 export const DEFAULT_HERO_CONFIG: HeroConfig = {
-  eyebrow: 'FROM FOREST TO FAMILY',
+  eyebrow: 'PURE HONEY, NATURE’S GENUINE GIFT',
   titleLine1: 'More Than Honey',
   titleLine2: 'A Healthier Lifestyle',
   subtitle: "Pure honey, collected from forest flowers for your family's better health.",

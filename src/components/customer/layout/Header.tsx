@@ -95,49 +95,38 @@ export const Header: React.FC = () => {
               <Menu size={24} />
             </button>
 
-            {/* Brand Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              <div
+            {/* Brand Logo & Application Name */}
+            <Link
+              to="/"
+              className="flex items-center"
+              style={{ textDecoration: 'none', gap: 'clamp(8px, 1.2vw, 12px)' }}
+              aria-label="Madhuvan Raw Pure Honey Home"
+            >
+              <img
+                src="/icons/madhuvan_bee_logo.svg"
+                alt="Madhuvan Honey Logo"
                 style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #FEF3C7 0%, #F59E0B 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 10px rgba(245, 158, 11, 0.25)',
+                  width: 'clamp(46px, 4.2vw, 56px)',
+                  height: 'clamp(46px, 4.2vw, 56px)',
+                  objectFit: 'contain',
                   flexShrink: 0,
+                  display: 'block',
+                  filter: 'drop-shadow(0 2px 8px rgba(199, 122, 18, 0.25))',
+                  transition: 'transform 0.25s ease',
                 }}
-              >
-                <img src="/icons/bee.svg" alt="Madhuvan Honey" width="26" height="26" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span
-                  style={{
-                    fontFamily: 'var(--font-serif)',
-                    fontWeight: 800,
-                    fontSize: 'clamp(1.2rem, 3.5vw, 1.45rem)',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1,
-                    color: '#1C1917',
-                  }}
-                >
-                  MADHUVAN
-                </span>
-                <span
-                  className="brand-subtitle"
-                  style={{
-                    fontSize: '0.65rem',
-                    fontWeight: 700,
-                    letterSpacing: '0.18em',
-                    color: '#D97706',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Raw Forest Honey
-                </span>
-              </div>
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              />
+              <img
+                src="/icons/madhuvan_wordmark.svg"
+                alt="Madhuvan Raw Pure Honey"
+                style={{
+                  height: 'clamp(46px, 4.2vw, 56px)',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
             </Link>
           </div>
 

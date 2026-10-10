@@ -75,24 +75,17 @@ export const Footer: React.FC = () => {
           {/* COL 1 — Brand */}
           <div>
             {/* Logo wordmark */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-              <div style={{
-                width: '40px', height: '40px', borderRadius: '10px',
-                background: 'linear-gradient(135deg, #FEF3C7, #F59E0B)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 3px 10px rgba(217,119,6,0.3)',
-                flexShrink: 0,
-              }}>
-                <img src="/icons/bee.svg" alt="bee" width="22" height="22" />
-              </div>
-              <div>
-                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#1C1917', letterSpacing: '0.06em' }}>
-                  MADHUVAN
-                </div>
-                <div style={{ fontSize: '0.6rem', color: '#D97706', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                  Raw Honey
-                </div>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.25rem' }}>
+              <img
+                src="/icons/madhuvan_bee_logo.svg"
+                alt="Madhuvan Logo"
+                style={{ width: '46px', height: '46px', objectFit: 'contain', flexShrink: 0 }}
+              />
+              <img
+                src="/icons/madhuvan_wordmark.svg"
+                alt="Madhuvan Raw Pure Honey"
+                style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+              />
             </div>
 
             <p style={{
@@ -113,6 +106,12 @@ export const Footer: React.FC = () => {
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}>
                 <Mail size={13} color="#D97706" />
                 {CONTACT_INFO.email}
+              </a>
+              <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}
+                title="Follow us on Instagram (@madhuvanhoney.in)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                madhuvanhoney.in
               </a>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#78716C', fontSize: '0.82rem' }}>
                 <MapPin size={13} color="#D97706" />

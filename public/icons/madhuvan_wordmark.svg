@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="150" viewBox="120 8 360 148" role="img" aria-labelledby="title desc">
+  <title id="title">Madhuvan Raw Pure Honey</title>
+  <desc id="desc">Madhuvan wordmark in dark brown serif lettering with a small golden bee accent and the subtitle Raw Pure Honey in gold.</desc>
+  <rect width="600" height="180" fill="none"/>
+  <!-- Small bee accent above the wordmark -->
+  <g transform="translate(300 23)" stroke="#7A4A12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="-9" cy="-5" rx="8" ry="5" fill="#FFF1C5" transform="rotate(-28 -9 -5)"/>
+    <ellipse cx="9" cy="-5" rx="8" ry="5" fill="#FFF1C5" transform="rotate(28 9 -5)"/>
+    <ellipse cx="0" cy="1" rx="5.5" ry="10" fill="#E9A72D"/>
+    <path d="M-5 -2 H5 M-5 3 H5 M-3 8 H3" fill="none" stroke="#56300C" stroke-width="2.5"/>
+    <path d="M-2 -9 Q-8 -16 -11 -12 M2 -9 Q8 -16 11 -12" fill="none"/>
+    <circle cx="-11" cy="-12" r="1.5" fill="#56300C"/><circle cx="11" cy="-12" r="1.5" fill="#56300C"/>
+  </g>
+  <text x="300" y="91" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="59" font-weight="700" letter-spacing="-1.8" fill="#2F1B0D">MADHUVAN</text>
+  <path d="M135 116 H465" stroke="#D99A25" stroke-width="1.5"/>
+  <text x="300" y="145" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="600" letter-spacing="6.5" fill="#A86512">RAW PURE HONEY</text>
+</svg>

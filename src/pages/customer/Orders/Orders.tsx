@@ -1359,8 +1359,8 @@ export const Orders: React.FC = () => {
               }}
             >
               <img
-                src="/images/brand/madhuvan_honey_jar.jpg"
-                alt="Madhuban Raw Forest Honey with wooden dipper and comb"
+                src="/images/brand/madhuvan_jute_jar.jpg"
+                alt="Madhuvan Raw Honey jar with wooden dipper"
                 style={{
                   width: '100%',
                   aspectRatio: '1 / 1',
@@ -1387,10 +1387,7 @@ export const Orders: React.FC = () => {
               >
                 <div>
                   <div style={{ fontSize: '0.92rem', fontWeight: 800, letterSpacing: '0.02em' }}>
-                    100% Raw Forest Honey
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#FEF3C7', fontWeight: 500 }}>
-                    Unpasteurized &amp; NMR Lab Tested
+                    Madhuvan 100% Raw Honey
                   </div>
                 </div>
                 <Sparkles size={18} color="#F59E0B" />

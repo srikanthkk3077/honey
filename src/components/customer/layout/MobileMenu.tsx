@@ -53,21 +53,17 @@ export const MobileMenu: React.FC = () => {
         <div>
           {/* Header */}
           <div className="flex items-center justify-between" style={{ marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid #E7E5E4' }}>
-            <div className="flex items-center gap-2">
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #FEF3C7, #F59E0B)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <img src="/icons/bee.svg" alt="Madhuvan" width="24" height="24" />
-              </div>
-              <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 800, fontSize: '1.25rem' }}>MADHUVAN</span>
+            <div className="flex items-center gap-2.5">
+              <img
+                src="/icons/madhuvan_bee_logo.svg"
+                alt="Madhuvan Logo"
+                style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+              />
+              <img
+                src="/icons/madhuvan_wordmark.svg"
+                alt="Madhuvan Raw Pure Honey"
+                style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
+              />
             </div>
             <button
               onClick={() => setMobileMenuOpen(false)}

@@ -279,7 +279,7 @@ export const HeroEditor: React.FC = () => {
   const previewImage = currentPreviewSlide?.imageUrl || form.heroImageUrl || '/images/brand/hero_illustration_feathered.png';
   const previewEyebrow = (currentPreviewSlide?.eyebrow && currentPreviewSlide.eyebrow.trim())
     ? currentPreviewSlide.eyebrow
-    : (form.eyebrow || 'FROM FOREST TO FAMILY');
+    : (form.eyebrow || 'PURE HONEY, NATURE’S GENUINE GIFT');
   const previewTitle1 = (currentPreviewSlide?.titleLine1 && currentPreviewSlide.titleLine1.trim())
     ? currentPreviewSlide.titleLine1
     : (form.titleLine1 || 'More Than Honey');
@@ -900,7 +900,7 @@ export const HeroEditor: React.FC = () => {
                       titleLine1: form.titleLine1 || 'More Than Honey',
                       titleLine2: form.titleLine2 || 'A Healthier Lifestyle',
                       subtitle: form.subtitle || "Pure honey, collected from forest flowers for your family's better health.",
-                      eyebrow: form.eyebrow || 'FROM FOREST TO FAMILY',
+                      eyebrow: form.eyebrow || 'PURE HONEY, NATURE’S GENUINE GIFT',
                       primaryCtaText: form.primaryCtaText || 'SHOP RAW HONEY',
                       primaryCtaLink: form.primaryCtaLink || '/shop',
                       secondaryCtaText: form.secondaryCtaText || 'Watch Our Story',
@@ -1196,7 +1196,7 @@ export const HeroEditor: React.FC = () => {
                           <Input
                             value={slide.eyebrow || ''}
                             onChange={(e) => updateBannerSlide(idx, { eyebrow: e.target.value })}
-                            placeholder={form.eyebrow || 'FROM FOREST TO FAMILY'}
+                            placeholder={form.eyebrow || 'PURE HONEY, NATURE’S GENUINE GIFT'}
                           />
                         </div>
                         <div>
@@ -1394,7 +1394,7 @@ export const HeroEditor: React.FC = () => {
             <Input
               value={form.eyebrow}
               onChange={(e) => handleChange('eyebrow', e.target.value)}
-              placeholder="e.g. FROM FOREST TO FAMILY"
+              placeholder="e.g. PURE HONEY, NATURE’S GENUINE GIFT"
             />
             <span style={{ fontSize: '0.78rem', color: '#78716C', marginTop: '4px', display: 'block' }}>
               Appears in warm terracotta capitals above the main headline.
