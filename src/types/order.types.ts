@@ -61,6 +61,8 @@ export interface Order {
   paymentScreenshot?: string;
   paymentVerifiedAt?: string;
   paymentRejectedReason?: string;
+  couponCode?: string;
+  couponDiscount?: number;
   trackingNumber?: string;
   createdAt: string;
   deliveredAt?: string;

@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   LogOut,
   MessageSquare,
+  Tag,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
 
@@ -37,6 +38,7 @@ export const AdminMobileMenu: React.FC<AdminMobileMenuProps> = ({ isOpen, onClos
     { name: 'Customer Orders', path: '/admin/orders', icon: <ShoppingBag size={20} /> },
     { name: 'Transactions', path: '/admin/transactions', icon: <Receipt size={20} /> },
     { name: 'Registered Customers', path: '/admin/customers', icon: <Users size={20} /> },
+    { name: 'Coupons', path: '/admin/coupons', icon: <Tag size={20} /> },
     { name: 'Categories', path: '/admin/categories', icon: <Layers size={20} /> },
     { name: 'Store Settings', path: '/admin/settings', icon: <Settings size={20} /> },
   ];

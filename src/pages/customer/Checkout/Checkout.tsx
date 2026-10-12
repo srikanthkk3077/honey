@@ -12,6 +12,7 @@ import { Button } from '../../../components/common/Button';
 import confetti from 'canvas-confetti';
 import { formatPrice } from '../../../utils/formatPrice';
 import { checkPincodeServiceability, generateGoogleMapsLink } from '../../../utils/delivery';
+import { AppliedCoupon } from '../../../services/couponApi';
 
 export const Checkout: React.FC = () => {
   const { cart, placeOrder, user, settings } = useStore();
@@ -20,6 +21,7 @@ export const Checkout: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   const [address, setAddress] = useState<ShippingAddress>({
     fullName: user?.name || '',
@@ -83,7 +85,7 @@ export const Checkout: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      const order = await placeOrder(address, paymentMethod, details);
+      const order = await placeOrder(address, paymentMethod, details, appliedCoupon?.discountAmount ?? 0, appliedCoupon?.code);
       setCompletedOrder(order);
       setCurrentStep(3);
       try {
@@ -454,7 +456,11 @@ export const Checkout: React.FC = () => {
 
             {/* Right Column: Order Summary Preview */}
             <div className="checkout-summary-col" style={{ position: 'sticky', top: '90px' }}>
-              <OrderSummary />
+              <OrderSummary
+                appliedCoupon={appliedCoupon}
+                onCouponApply={setAppliedCoupon}
+                onCouponRemove={() => setAppliedCoupon(null)}
+              />
             </div>
           </div>
         )}

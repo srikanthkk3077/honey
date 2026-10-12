@@ -16,6 +16,7 @@ const Customers = lazy(() => import('../pages/admin/Customers/Customers').then(m
 const Categories = lazy(() => import('../pages/admin/Categories/Categories').then(m => ({ default: m.Categories })));
 const Reviews = lazy(() => import('../pages/admin/Reviews/Reviews').then(m => ({ default: m.Reviews })));
 const Settings = lazy(() => import('../pages/admin/Settings/Settings').then(m => ({ default: m.Settings })));
+const Coupons = lazy(() => import('../pages/admin/Coupons/Coupons').then(m => ({ default: m.Coupons })));
 
 export const AdminRoutes = (
   <>
@@ -121,6 +122,14 @@ export const AdminRoutes = (
       element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="coupons"
+      element={
+        <ProtectedRoute>
+          <Coupons />
         </ProtectedRoute>
       }
     />

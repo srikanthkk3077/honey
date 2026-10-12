@@ -70,6 +70,8 @@ function normaliseOrder(raw: any): Order {
     deliveredAt: raw.deliveredAt,
     paymentVerifiedAt: raw.paymentVerifiedAt || undefined,
     paymentRejectedReason: raw.paymentRejectedReason || undefined,
+    couponCode: raw.couponCode || undefined,
+    couponDiscount: raw.couponDiscount || undefined,
   };
 }
 
@@ -98,6 +100,8 @@ export interface CreateOrderPayload {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
+  couponCode?: string;
+  couponDiscount?: number;
   notes?: string;
   utrNumber?: string;
   paymentScreenshot?: string;

@@ -98,7 +98,9 @@ interface StoreContextType {
   placeOrder: (
     shippingAddress: ShippingAddress,
     paymentMethod: PaymentMethodType,
-    paymentDetails?: { utrNumber?: string; paymentScreenshot?: string }
+    paymentDetails?: { utrNumber?: string; paymentScreenshot?: string },
+    couponDiscount?: number,
+    couponCode?: string
   ) => Promise<Order>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   verifyPayment: (orderId: string) => Promise<void>;
@@ -815,8 +817,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const placeOrder = async (
     shippingAddress: ShippingAddress,
     paymentMethod: PaymentMethodType,
-    paymentDetails?: { utrNumber?: string; paymentScreenshot?: string }
+    paymentDetails?: { utrNumber?: string; paymentScreenshot?: string },
+    couponDiscount: number = 0,
+    couponCode?: string
   ): Promise<Order> => {
+    const effectiveDiscount = cartDiscount + (couponDiscount || 0);
+    const effectiveTotal = Math.max(0, cartTotal - (couponDiscount || 0));
+
     const payload: CreateOrderPayload = {
       shippingAddress,
       paymentMethod,
@@ -840,9 +847,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         };
       }),
       subtotal: cartSubtotal,
-      discount: cartDiscount,
+      discount: effectiveDiscount,
+      couponDiscount: couponDiscount || 0,
+      couponCode: couponCode || undefined,
       shippingFee: cartShippingFee,
-      total: cartTotal,
+      total: effectiveTotal,
       customerName: shippingAddress.fullName,
       customerEmail: shippingAddress.email,
       customerPhone: shippingAddress.phone,
@@ -857,7 +866,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (paymentMethod === 'upi') {
       showToast(`Order ${newOrder.orderNumber} placed! Payment verification pending.`, 'info');
     } else {
-      showToast(`Order ${newOrder.orderNumber} placed successfully!`, 'success');
+      showToast(`Order ${newOrder.orderNumber} placed successfully!${couponCode ? ` Coupon ${couponCode} applied.` : ''}`, 'success');
     }
     return newOrder;
   };
