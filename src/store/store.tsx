@@ -747,7 +747,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const cartDiscount = cart.reduce((acc, item) => acc + (item.originalPrice - item.price) * item.quantity, 0);
-  const cartShippingFee = cartSubtotal >= FREE_SHIPPING_THRESHOLD || cartSubtotal === 0 ? 0 : STANDARD_SHIPPING_FEE;
+  const effectiveFreeShippingThreshold = settings.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD;
+  const effectiveShippingFee = settings.shippingFee ?? STANDARD_SHIPPING_FEE;
+  const cartShippingFee = cartSubtotal >= effectiveFreeShippingThreshold || cartSubtotal === 0 ? 0 : effectiveShippingFee;
   const cartTotal = cartSubtotal + cartShippingFee;
 
   const addToCart = (product: Product, size: string, quantity = 1) => {

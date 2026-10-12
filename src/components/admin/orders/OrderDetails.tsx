@@ -331,33 +331,69 @@ export const OrderDetailsModalContent: React.FC<OrderDetailsProps> = ({ order, o
       </div>
 
       {/* Fulfillment Status Control */}
-      <div style={{ padding: '1rem', backgroundColor: '#FAF7F2', borderRadius: '12px', border: '1px solid #E7E5E4' }}>
-        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#44403C', marginBottom: '0.5rem' }}>
-          Change Fulfillment Status:
+      <div style={{ padding: '1.25rem', backgroundColor: '#FAF7F2', borderRadius: '16px', border: '1px solid #E7E5E4' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 700, color: '#78716C', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '1rem' }}>
+          <span>⚙️</span> Change Fulfillment Status
         </label>
-        <div className="flex items-center gap-2 flex-wrap">
-          {(['pending', 'processing', 'shipped', 'delivered', 'cancelled'] as OrderStatus[]).map((st) => (
-            <button
-              key={st}
-              type="button"
-              onClick={() => onUpdateStatus(st)}
-              style={{
-                padding: '4px 12px',
-                borderRadius: '8px',
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                border: order.orderStatus === st ? '2px solid #D97706' : '1px solid #D6D3D1',
-                background: order.orderStatus === st ? '#FEF3C7' : '#FFFFFF',
-                color: order.orderStatus === st ? '#92400E' : '#57534E',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-              }}
-            >
-              {st}
-            </button>
-          ))}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {(
+            [
+              { st: 'pending',    label: 'Pending',    icon: '🕐', activeColor: '#92400E', activeBg: 'linear-gradient(135deg, #F59E0B, #D97706)', activeBorder: '#D97706', inactiveBorder: '#FDE68A', inactiveColor: '#92400E', inactiveBg: '#FFFBEB' },
+              { st: 'processing', label: 'Processing', icon: '⚡', activeColor: '#1E40AF', activeBg: 'linear-gradient(135deg, #3B82F6, #2563EB)', activeBorder: '#2563EB', inactiveBorder: '#BFDBFE', inactiveColor: '#1D4ED8', inactiveBg: '#EFF6FF' },
+              { st: 'shipped',    label: 'Shipped',    icon: '🚚', activeColor: '#312E81', activeBg: 'linear-gradient(135deg, #6366F1, #4F46E5)', activeBorder: '#4F46E5', inactiveBorder: '#C7D2FE', inactiveColor: '#4338CA', inactiveBg: '#EEF2FF' },
+              { st: 'delivered',  label: 'Delivered',  icon: '✅', activeColor: '#064E3B', activeBg: 'linear-gradient(135deg, #10B981, #059669)', activeBorder: '#059669', inactiveBorder: '#A7F3D0', inactiveColor: '#065F46', inactiveBg: '#ECFDF5' },
+              { st: 'cancelled',  label: 'Cancelled',  icon: '✗',  activeColor: '#7F1D1D', activeBg: 'linear-gradient(135deg, #EF4444, #DC2626)', activeBorder: '#DC2626', inactiveBorder: '#FECACA', inactiveColor: '#B91C1C', inactiveBg: '#FEF2F2' },
+            ] as const
+          ).map(({ st, label, icon, activeColor, activeBg, activeBorder, inactiveBorder, inactiveColor, inactiveBg }) => {
+            const isActive = order.orderStatus === st;
+            return (
+              <button
+                key={st}
+                type="button"
+                onClick={() => onUpdateStatus(st)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '7px 14px',
+                  borderRadius: '10px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  border: `2px solid ${isActive ? activeBorder : inactiveBorder}`,
+                  background: isActive ? activeBg : inactiveBg,
+                  color: isActive ? '#FFFFFF' : inactiveColor,
+                  cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                  boxShadow: isActive ? `0 4px 12px ${activeBorder}55` : 'none',
+                  transform: isActive ? 'translateY(-1px)' : 'translateY(0)',
+                  letterSpacing: '0.01em',
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = activeBorder;
+                    (e.currentTarget as HTMLButtonElement).style.color = activeColor;
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 2px 8px ${activeBorder}33`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = inactiveBorder;
+                    (e.currentTarget as HTMLButtonElement).style.color = inactiveColor;
+                    (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                  }
+                }}
+              >
+                <span style={{ fontSize: '0.85rem' }}>{icon}</span>
+                {label}
+                {isActive && <span style={{ marginLeft: '2px', fontSize: '0.7rem', opacity: 0.9 }}>●</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
+
 
       {/* Customer & Shipping info */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>

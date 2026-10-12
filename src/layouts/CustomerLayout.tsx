@@ -25,10 +25,12 @@ export const CustomerLayout: React.FC = () => {
     toasts,
     removeToast,
     isAuthenticated,
+    settings,
   } = useStore();
   const navigate = useNavigate();
 
-  const freeShippingAway = Math.max(0, FREE_SHIPPING_THRESHOLD - cartSubtotal);
+  const effectiveFreeShippingThreshold = settings?.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD;
+  const freeShippingAway = Math.max(0, effectiveFreeShippingThreshold - cartSubtotal);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

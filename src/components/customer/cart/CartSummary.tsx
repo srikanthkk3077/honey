@@ -7,7 +7,7 @@ import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 import { Button } from '../../common/Button';
 
 export const CartSummary: React.FC = () => {
-  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast, isAuthenticated } = useStore();
+  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast, isAuthenticated, settings } = useStore();
   const [promoCode, setPromoCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState(0);
   const navigate = useNavigate();
@@ -24,7 +24,8 @@ export const CartSummary: React.FC = () => {
   };
 
   const finalTotal = Math.max(0, cartTotal - discountApplied);
-  const freeShippingAway = Math.max(0, FREE_SHIPPING_THRESHOLD - cartSubtotal);
+  const effectiveFreeShippingThreshold = settings?.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD;
+  const freeShippingAway = Math.max(0, effectiveFreeShippingThreshold - cartSubtotal);
 
   return (
     <div
@@ -60,7 +61,7 @@ export const CartSummary: React.FC = () => {
             <div style={{ width: '100%', height: '6px', background: '#FEF3C7', borderRadius: '4px', overflow: 'hidden' }}>
               <div
                 style={{
-                  width: `${Math.min(100, ((FREE_SHIPPING_THRESHOLD - freeShippingAway) / FREE_SHIPPING_THRESHOLD) * 100)}%`,
+                  width: `${Math.min(100, ((effectiveFreeShippingThreshold - freeShippingAway) / effectiveFreeShippingThreshold) * 100)}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #F59E0B, #D97706)',
                 }}

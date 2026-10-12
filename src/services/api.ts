@@ -135,12 +135,12 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<{ message?: string; error?: string; errors?: any }>) => {
     const status = error.response?.status;
-    if (status === 401) {
+    if (status === 401 || status === 403) {
       // Clear stale credentials
       removeToken();
       localStorage.removeItem('madhuvan_auth_user');
 
-      // If session expired while on admin console, smoothly route to login
+      // If session expired or access denied while on admin console, smoothly route to login
       if (
         typeof window !== 'undefined' &&
         window.location.pathname.startsWith('/admin') &&
