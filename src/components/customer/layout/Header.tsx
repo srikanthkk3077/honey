@@ -45,7 +45,7 @@ export const Header: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+      setIsScrolled(window.scrollY > 25);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -75,10 +75,10 @@ export const Header: React.FC = () => {
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
-      <div className="container" style={{ padding: '0.85rem clamp(0.75rem, 3vw, 1.5rem)' }}>
-        <div className="flex items-center justify-between">
+      <div className="container header-container" style={{ padding: '0.85rem clamp(0.75rem, 3vw, 1.5rem)' }}>
+        <div className="flex items-center justify-between header-row" style={{ minWidth: 0 }}>
           {/* Mobile hamburger */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 header-brand-group" style={{ minWidth: 0, flexShrink: 1 }}>
             <button
               onClick={() => setMobileMenuOpen(true)}
               style={{
@@ -98,13 +98,14 @@ export const Header: React.FC = () => {
             {/* Brand Logo & Application Name */}
             <Link
               to="/"
-              className="flex items-center"
-              style={{ textDecoration: 'none', gap: 'clamp(8px, 1.2vw, 12px)' }}
+              className="flex items-center header-logo-link"
+              style={{ textDecoration: 'none', gap: 'clamp(8px, 1.2vw, 12px)', minWidth: 0, flexShrink: 1 }}
               aria-label="Madhuvan Raw Pure Honey Home"
             >
               <img
                 src="/icons/madhuvan_bee_logo.svg"
                 alt="Madhuvan Honey Logo"
+                className="header-bee-logo"
                 style={{
                   width: 'clamp(46px, 4.2vw, 56px)',
                   height: 'clamp(46px, 4.2vw, 56px)',
@@ -120,11 +121,13 @@ export const Header: React.FC = () => {
               <img
                 src="/icons/madhuvan_wordmark.svg"
                 alt="Madhuvan Raw Pure Honey"
+                className="header-wordmark"
                 style={{
                   height: 'clamp(46px, 4.2vw, 56px)',
                   width: 'auto',
                   objectFit: 'contain',
                   display: 'block',
+                  flexShrink: 1,
                 }}
               />
             </Link>
@@ -177,10 +180,11 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Action Icons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 header-actions-group" style={{ flexShrink: 0 }}>
             {/* Search Button */}
             <button
               onClick={() => setSearchOpen(!searchOpen)}
+              className="header-icon-btn header-search-btn"
               style={{
                 background: 'none',
                 border: 'none',
@@ -191,6 +195,7 @@ export const Header: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
               title="Search honey products"
             >
@@ -200,7 +205,7 @@ export const Header: React.FC = () => {
             {/* Wishlist */}
             <Link
               to="/shop?filter=wishlist"
-              className="header-wishlist-link"
+              className="header-icon-btn header-wishlist-link"
               style={{
                 background: 'none',
                 border: 'none',
@@ -210,6 +215,7 @@ export const Header: React.FC = () => {
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
+                flexShrink: 0,
               }}
               title="Saved items"
             >
@@ -240,6 +246,7 @@ export const Header: React.FC = () => {
             {/* Cart Button */}
             <button
               onClick={() => setCartDrawerOpen(true)}
+              className="header-icon-btn header-cart-btn"
               style={{
                 background: 'none',
                 border: 'none',
@@ -249,6 +256,7 @@ export const Header: React.FC = () => {
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
+                flexShrink: 0,
               }}
               title="Shopping cart"
             >
@@ -278,10 +286,11 @@ export const Header: React.FC = () => {
             </button>
 
             {/* Account / Admin */}
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
               {isAuthenticated ? (
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
+                  className="header-user-btn"
                   style={{
                     background: '#FEF3C7',
                     border: '1px solid #F59E0B',
@@ -305,6 +314,7 @@ export const Header: React.FC = () => {
                 <Link
                   to="/login"
                   id="header-login-btn"
+                  className="header-login-btn"
                   style={{
                     background: '#4A1F0A',
                     color: '#FFFFFF',
@@ -489,13 +499,122 @@ export const Header: React.FC = () => {
       <style>{`
         @media (max-width: 920px) {
           #desktop-nav { display: none !important; }
-          #mobile-nav-toggle { display: block !important; }
+          #mobile-nav-toggle { display: flex !important; }
         }
 
-        @media (max-width: 520px) {
+        /* Tablets & small desktops */
+        @media (max-width: 768px) {
+          .header-brand-group {
+            gap: 8px !important;
+          }
+          .header-actions-group {
+            gap: 8px !important;
+          }
+          .header-bee-logo {
+            width: 42px !important;
+            height: 42px !important;
+          }
+          .header-wordmark {
+            height: 38px !important;
+          }
+        }
+
+        /* Mobile phones (<= 540px) */
+        @media (max-width: 540px) {
+          .header-container {
+            padding: 0.55rem 0.65rem !important;
+          }
+          .header-row {
+            min-width: 0 !important;
+            gap: 6px !important;
+          }
+          .header-brand-group {
+            gap: 6px !important;
+            min-width: 0 !important;
+            flex-shrink: 1 !important;
+          }
+          .header-logo-link {
+            gap: 5px !important;
+            min-width: 0 !important;
+            flex-shrink: 1 !important;
+          }
+          #mobile-nav-toggle {
+            padding: 2px !important;
+            flex-shrink: 0 !important;
+          }
+          #mobile-nav-toggle svg {
+            width: 22px !important;
+            height: 22px !important;
+          }
+          .header-bee-logo {
+            width: 34px !important;
+            height: 34px !important;
+            flex-shrink: 0 !important;
+          }
+          .header-wordmark {
+            height: 28px !important;
+            max-width: 105px !important;
+            flex-shrink: 1 !important;
+          }
+          .header-actions-group {
+            gap: 4px !important;
+            flex-shrink: 0 !important;
+          }
+          .header-icon-btn {
+            padding: 4px !important;
+          }
+          .header-icon-btn svg {
+            width: 19px !important;
+            height: 19px !important;
+          }
           .account-label { display: none !important; }
           .brand-subtitle { display: none !important; }
           .header-wishlist-link { display: none !important; }
+          .header-user-btn {
+            padding: 0 !important;
+            width: 32px !important;
+            height: 32px !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            border-radius: 50% !important;
+            flex-shrink: 0 !important;
+          }
+          #header-login-btn {
+            padding: 5px 12px !important;
+            font-size: 0.8rem !important;
+            flex-shrink: 0 !important;
+          }
+        }
+
+        /* Narrow mobile screens (<= 380px) */
+        @media (max-width: 380px) {
+          .header-container {
+            padding: 0.5rem 0.4rem !important;
+          }
+          .header-brand-group {
+            gap: 4px !important;
+          }
+          .header-logo-link {
+            gap: 4px !important;
+          }
+          .header-bee-logo {
+            width: 30px !important;
+            height: 30px !important;
+          }
+          .header-wordmark {
+            height: 24px !important;
+            max-width: 82px !important;
+          }
+          .header-actions-group {
+            gap: 3px !important;
+          }
+          .header-icon-btn {
+            padding: 3px !important;
+          }
+          .header-icon-btn svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
         }
       `}</style>
     </header>
