@@ -30,85 +30,6 @@ const isRealCustomerAvatar = (avatar?: string): boolean => {
   return true;
 };
 
-// Decorative vignette image on the bottom right of each card matching Image 1
-const CardVignette: React.FC<{ index: number; item: Testimonial }> = ({ index, item }) => {
-  const isChef =
-    (item.role && item.role.toLowerCase().includes('chef')) ||
-    (item.name && item.name.toLowerCase().includes('chef'));
-
-  const isKidsOrToast =
-    (item.comment &&
-      (item.comment.toLowerCase().includes('toast') ||
-        item.comment.toLowerCase().includes('kids') ||
-        item.comment.toLowerCase().includes('butter'))) ||
-    index % 3 === 2;
-
-  // Chef Card Vignette (Chef Hat Icon + Gourmet Dish)
-  if (isChef || index % 3 === 1) {
-    return (
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-end',
-          flexShrink: 0,
-        }}
-      >
-        <div style={{ marginBottom: '-6px', zIndex: 2, marginRight: '4px' }}>
-          <ChefHat size={22} color="#D97706" strokeWidth={1.8} />
-        </div>
-        <img
-          src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=140&q=80"
-          alt="Chef gourmet honey dish"
-          style={{
-            width: '64px',
-            height: '52px',
-            borderRadius: '12px',
-            objectFit: 'cover',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Kids / Toast Card Vignette (Honey Bowl with Wooden Dipper)
-  if (isKidsOrToast) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'flex-end', flexShrink: 0 }}>
-        <img
-          src="https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=140&q=80"
-          alt="Honey dipper and bowl"
-          style={{
-            width: '68px',
-            height: '54px',
-            borderRadius: '12px',
-            objectFit: 'cover',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Standard Honey Jar Vignette
-  return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', flexShrink: 0 }}>
-      <img
-        src="https://images.unsplash.com/photo-1587049352851-8d4e8913390a?auto=format&fit=crop&w=140&q=80"
-        alt="Madhuvan honey jar"
-        style={{
-          width: '64px',
-          height: '54px',
-          borderRadius: '12px',
-          objectFit: 'cover',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-        }}
-      />
-    </div>
-  );
-};
 
 export const Testimonials: React.FC = () => {
   const { homeReviews, isHomeReviewsLoading } = useStore();
@@ -548,7 +469,7 @@ export const Testimonials: React.FC = () => {
                         </div>
 
                         {/* Right Decorative Vignette matching Image 1 */}
-                        <CardVignette index={idx} item={item} />
+                        {/* <CardVignette index={idx} item={item} /> */}
                       </div>
                     </div>
                   </div>

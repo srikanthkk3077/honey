@@ -92,7 +92,7 @@ export const Header: React.FC = () => {
               id="mobile-nav-toggle"
               aria-label="Open mobile menu"
             >
-              <Menu size={24} />
+              <Menu size={24} /> 
             </button>
 
             {/* Brand Logo & Application Name */}
@@ -511,11 +511,11 @@ export const Header: React.FC = () => {
             gap: 8px !important;
           }
           .header-bee-logo {
-            width: 42px !important;
-            height: 42px !important;
+            width: 44px !important;
+            height: 44px !important;
           }
           .header-wordmark {
-            height: 38px !important;
+            height: 40px !important;
           }
         }
 
@@ -534,7 +534,7 @@ export const Header: React.FC = () => {
             flex-shrink: 1 !important;
           }
           .header-logo-link {
-            gap: 5px !important;
+            gap: 6px !important;
             min-width: 0 !important;
             flex-shrink: 1 !important;
           }
@@ -547,13 +547,13 @@ export const Header: React.FC = () => {
             height: 22px !important;
           }
           .header-bee-logo {
-            width: 34px !important;
-            height: 34px !important;
+            width: 42px !important;
+            height: 42px !important;
             flex-shrink: 0 !important;
           }
           .header-wordmark {
-            height: 28px !important;
-            max-width: 105px !important;
+            height: 38px !important;
+            max-width: 145px !important;
             flex-shrink: 1 !important;
           }
           .header-actions-group {
@@ -598,12 +598,12 @@ export const Header: React.FC = () => {
             gap: 4px !important;
           }
           .header-bee-logo {
-            width: 30px !important;
-            height: 30px !important;
+            width: 36px !important;
+            height: 36px !important;
           }
           .header-wordmark {
-            height: 24px !important;
-            max-width: 82px !important;
+            height: 32px !important;
+            max-width: 115px !important;
           }
           .header-actions-group {
             gap: 3px !important;
