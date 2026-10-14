@@ -216,8 +216,8 @@ export const SettingsForm: React.FC = () => {
       phone,
       email,
       address,
-      freeShippingThreshold: Number(freeShippingThreshold) || 999,
-      shippingFee: Number(shippingFee) || 79,
+      freeShippingThreshold: Number(freeShippingThreshold) || FREE_SHIPPING_THRESHOLD,
+      shippingFee: Number(shippingFee) || STANDARD_SHIPPING_FEE,
       paymentConfig: {
         upiId,
         accountHolderName,

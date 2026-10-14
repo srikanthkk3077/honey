@@ -105,23 +105,23 @@ export const Sliders: React.FC = () => {
           border: '1px solid #E7E5E4',
           padding: '1.25rem 1.5rem',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
           gap: '1rem',
           boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
         }}
       >
-        <div>
+        <div style={{ flex: '1 1 180px', minWidth: 0 }}>
           <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1C1917', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span>🏠</span> Home Page Hero Section — Display Mode
           </div>
           <p style={{ fontSize: '0.82rem', color: '#78716C', margin: 0 }}>
-            Choose what to show on the home page hero area. Saved & applied immediately.
+            Choose what to show on the home page hero area. Saved &amp; applied immediately.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', flexShrink: 0 }}>
           <button
             type="button"
             disabled={isSavingMode}
@@ -136,6 +136,7 @@ export const Sliders: React.FC = () => {
               fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
               boxShadow: currentMode === 'hero' ? '0 0 0 3px rgba(217,119,6,0.12)' : 'none',
               transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap',
             }}
           >
             <span style={{ fontSize: '1rem' }}>🍯</span>
@@ -157,6 +158,7 @@ export const Sliders: React.FC = () => {
               fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer',
               boxShadow: currentMode === 'carousel' ? '0 0 0 3px rgba(217,119,6,0.12)' : 'none',
               transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap',
             }}
           >
             <span style={{ fontSize: '1rem' }}>🎞️</span>
@@ -168,15 +170,27 @@ export const Sliders: React.FC = () => {
 
       {/* Main Switcher Tabs */}
       <div
+        className="admin-tabs-bar"
         style={{
           display: 'flex',
-          gap: '10px',
+          gap: '4px',
           borderBottom: '2px solid #E7E5E4',
           paddingBottom: '0',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
         }}
       >
+        <style>{`
+          .admin-tabs-bar::-webkit-scrollbar { display: none; }
+          @media (max-width: 640px) {
+            .admin-tab-btn { padding: 0.6rem 0.85rem !important; font-size: 0.82rem !important; }
+            .admin-tab-btn span { white-space: nowrap; }
+          }
+        `}</style>
         <button
           type="button"
+          className="admin-tab-btn"
           onClick={() => setActiveTab('hero')}
           style={{
             display: 'inline-flex',
@@ -196,14 +210,16 @@ export const Sliders: React.FC = () => {
             boxShadow: activeTab === 'hero' ? '0 -2px 10px rgba(0,0,0,0.03)' : 'none',
             position: 'relative',
             bottom: '-2px',
+            flexShrink: 0,
           }}
         >
           <Sparkles size={17} color={activeTab === 'hero' ? '#D97706' : '#A8A29E'} />
-          <span>Hero Banner (Artisanal Forest Layout)</span>
+          <span style={{ whiteSpace: 'nowrap' }}>Hero Banner (Artisanal Forest Layout)</span>
         </button>
 
         <button
           type="button"
+          className="admin-tab-btn"
           onClick={() => setActiveTab('shop')}
           style={{
             display: 'inline-flex',
@@ -223,14 +239,16 @@ export const Sliders: React.FC = () => {
             boxShadow: activeTab === 'shop' ? '0 -2px 10px rgba(0,0,0,0.03)' : 'none',
             position: 'relative',
             bottom: '-2px',
+            flexShrink: 0,
           }}
         >
           <ShoppingBag size={17} color={activeTab === 'shop' ? '#D97706' : '#A8A29E'} />
-          <span>Shop Honey Page (Banner & Badges)</span>
+          <span style={{ whiteSpace: 'nowrap' }}>Shop Honey Page (Banner &amp; Badges)</span>
         </button>
 
         <button
           type="button"
+          className="admin-tab-btn"
           onClick={() => setActiveTab('carousel')}
           style={{
             display: 'inline-flex',
@@ -250,10 +268,11 @@ export const Sliders: React.FC = () => {
             boxShadow: activeTab === 'carousel' ? '0 -2px 10px rgba(0,0,0,0.03)' : 'none',
             position: 'relative',
             bottom: '-2px',
+            flexShrink: 0,
           }}
         >
           <SlidersHorizontal size={17} color={activeTab === 'carousel' ? '#D97706' : '#A8A29E'} />
-          <span>Carousel Sliders ({sliders.length})</span>
+          <span style={{ whiteSpace: 'nowrap' }}>Carousel Sliders ({sliders.length})</span>
         </button>
       </div>
 

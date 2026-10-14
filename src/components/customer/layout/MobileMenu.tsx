@@ -7,8 +7,10 @@ import { WhatsAppIcon } from '../../common/WhatsAppIcon';
 import { getWhatsAppUrl } from '../../../utils/whatsapp';
 
 export const MobileMenu: React.FC = () => {
-  const { mobileMenuOpen, setMobileMenuOpen, cartCount, wishlist, isAuthenticated, user, logout } = useStore();
+  const { mobileMenuOpen, setMobileMenuOpen, cartCount, wishlist, isAuthenticated, user, logout, settings } = useStore();
   const location = useLocation();
+  const phone = settings?.phone || CONTACT_INFO.phone;
+  const storeName = settings?.storeName || 'Madhuvan Honey';
 
   if (!mobileMenuOpen) return null;
 
@@ -109,7 +111,7 @@ export const MobileMenu: React.FC = () => {
         {/* Bottom profile / admin */}
         <div style={{ marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid #E7E5E4', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <a
-            href={getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey! I would like to chat with customer support.')}
+            href={getWhatsAppUrl(phone, `Hello ${storeName}! I would like to chat with customer support.`)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setMobileMenuOpen(false)}
@@ -133,8 +135,8 @@ export const MobileMenu: React.FC = () => {
           </a>
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem', color: '#78716C' }}>
-            <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g, '')}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#78716C', textDecoration: 'none' }}>
-              <Phone size={14} /> {CONTACT_INFO.phone}
+            <a href={`tel:${phone.replace(/\s+/g, '')}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#78716C', textDecoration: 'none' }}>
+              <Phone size={14} /> {phone}
             </a>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <MapPin size={14} /> Uttarakhand

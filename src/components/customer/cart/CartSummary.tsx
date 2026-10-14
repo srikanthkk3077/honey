@@ -5,21 +5,46 @@ import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
 import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 import { Button } from '../../common/Button';
+import { couponApi, AppliedCoupon } from '../../../services/couponApi';
 
 export const CartSummary: React.FC = () => {
-  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast, isAuthenticated, settings } = useStore();
+  const { cartSubtotal, cartDiscount, cartShippingFee, cartTotal, setCartDrawerOpen, showToast, isAuthenticated, settings, user } = useStore();
   const [promoCode, setPromoCode] = useState('');
-  const [discountApplied, setDiscountApplied] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
   const navigate = useNavigate();
 
-  const handleApplyPromo = (e: React.FormEvent) => {
+  const discountApplied = appliedCoupon?.discountAmount ?? 0;
+
+  const handleApplyPromo = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (promoCode.trim().toUpperCase() === 'MADHUVAN10') {
-      const extraDiscount = Math.round(cartSubtotal * 0.1);
-      setDiscountApplied(extraDiscount);
-      showToast('10% Harvest discount applied!', 'success');
-    } else {
-      showToast('Invalid promo code. Try MADHUVAN10', 'error');
+    const code = promoCode.trim();
+    if (!code) return;
+
+    if (appliedCoupon) {
+      // Remove currently applied coupon
+      setAppliedCoupon(null);
+      setPromoCode('');
+      showToast('Coupon removed.', 'info');
+      return;
+    }
+
+    setIsApplying(true);
+    try {
+      const result = await couponApi.validate(code, cartTotal, user?.email);
+      setAppliedCoupon(result);
+      showToast(
+        `Coupon "${result.code}" applied! You save ${formatPrice(result.discountAmount)}.`,
+        'success'
+      );
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Invalid or expired coupon code.';
+      showToast(msg, 'error');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -89,9 +114,12 @@ export const CartSummary: React.FC = () => {
           </div>
         )}
 
-        {discountApplied > 0 && (
+        {appliedCoupon && discountApplied > 0 && (
           <div className="flex items-center justify-between">
-            <span style={{ color: '#D97706' }}>Coupon Discount (MADHUVAN10)</span>
+            <span style={{ color: '#D97706' }}>
+              <Tag size={13} style={{ display: 'inline', marginRight: 4 }} />
+              Coupon ({appliedCoupon.code})
+            </span>
             <span style={{ fontWeight: 600, color: '#D97706' }}>- {formatPrice(discountApplied)}</span>
           </div>
         )}
@@ -120,37 +148,44 @@ export const CartSummary: React.FC = () => {
         </div>
       </div>
 
-      {/* Promo Code Input */}
+      {/* Coupon Code Input */}
       <form onSubmit={handleApplyPromo} style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
         <input
           type="text"
-          placeholder="Promo code (e.g. MADHUVAN10)"
+          placeholder="Enter coupon code"
           value={promoCode}
-          onChange={(e) => setPromoCode(e.target.value)}
+          onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+          disabled={!!appliedCoupon || isApplying}
           style={{
             flex: 1,
             minWidth: 0,
             padding: '0.65rem 0.85rem',
             borderRadius: '10px',
-            border: '1px solid #D6D3D1',
+            border: appliedCoupon ? '1px solid #D97706' : '1px solid #D6D3D1',
             fontSize: '0.85rem',
             outline: 'none',
+            background: appliedCoupon ? '#FFFBEB' : '#fff',
+            color: appliedCoupon ? '#92400E' : '#1C1917',
+            fontWeight: appliedCoupon ? 700 : 400,
           }}
         />
         <button
           type="submit"
+          disabled={isApplying || (!promoCode.trim() && !appliedCoupon)}
           style={{
             padding: '0.65rem 1rem',
             borderRadius: '10px',
-            background: '#1C1917',
-            color: '#FFFFFF',
-            border: 'none',
+            background: appliedCoupon ? '#FEF3C7' : '#1C1917',
+            color: appliedCoupon ? '#92400E' : '#FFFFFF',
+            border: appliedCoupon ? '1px solid #D97706' : 'none',
             fontSize: '0.85rem',
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: isApplying ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap',
+            opacity: (isApplying || (!promoCode.trim() && !appliedCoupon)) ? 0.6 : 1,
           }}
         >
-          Apply
+          {isApplying ? '...' : appliedCoupon ? 'Remove' : 'Apply'}
         </button>
       </form>
 
@@ -175,7 +210,7 @@ export const CartSummary: React.FC = () => {
       {/* Safe Guarantee */}
       <div className="flex items-center justify-center gap-2" style={{ marginTop: '1.25rem', color: '#78716C', fontSize: '0.8rem' }}>
         <ShieldCheck size={16} color="#059669" />
-        <span>100% Guaranteed Safe & Temperature-Protected Dispatch</span>
+        <span>100% Guaranteed Safe &amp; Temperature-Protected Dispatch</span>
       </div>
     </div>
   );

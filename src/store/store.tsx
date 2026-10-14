@@ -196,6 +196,12 @@ const getInitialSettings = (): StoreSettings => {
   const loaded = storage.get<StoreSettings>(SETTINGS_STORAGE_KEY, DEFAULT_SETTINGS);
   if (!loaded.deliveryConfig) {
     loaded.deliveryConfig = DEFAULT_DELIVERY_CONFIG;
+  } else {
+    // Ensure all required fields exist on a partially-loaded deliveryConfig
+    loaded.deliveryConfig = {
+      ...DEFAULT_DELIVERY_CONFIG,
+      ...loaded.deliveryConfig,
+    };
   }
   if (!loaded.heroConfig) {
     loaded.heroConfig = DEFAULT_HERO_CONFIG;
@@ -334,6 +340,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...DEFAULT_DELIVERY_CONFIG,
               ...(prev.deliveryConfig || {}),
               ...(data.deliveryConfig || {}),
+              // Always prefer the locally-persisted serviceabilityMode over the backend response
+              // because the backend may return the hardcoded default 'restricted_pincodes' even
+              // after the admin explicitly set 'all_india'.
+              serviceabilityMode:
+                prev.deliveryConfig?.serviceabilityMode === 'all_india'
+                  ? 'all_india'
+                  : (data.deliveryConfig?.serviceabilityMode || prev.deliveryConfig?.serviceabilityMode || DEFAULT_DELIVERY_CONFIG.serviceabilityMode),
               serviceablePincodes:
                 Array.isArray(data.deliveryConfig?.serviceablePincodes) && data.deliveryConfig.serviceablePincodes.length > 0
                   ? data.deliveryConfig.serviceablePincodes
@@ -427,6 +440,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...(result.deliveryConfig || {}),
               // Explicit client updates always take precedence over backend response
               ...(updates.deliveryConfig || {}),
+              // Explicit serviceabilityMode from admin update always wins
+              serviceabilityMode:
+                updates.deliveryConfig?.serviceabilityMode ||
+                result.deliveryConfig?.serviceabilityMode ||
+                prev.deliveryConfig?.serviceabilityMode ||
+                DEFAULT_DELIVERY_CONFIG.serviceabilityMode,
               serviceablePincodes:
                 Array.isArray(updates.deliveryConfig?.serviceablePincodes)
                   ? updates.deliveryConfig.serviceablePincodes

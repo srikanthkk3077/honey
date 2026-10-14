@@ -396,102 +396,100 @@ export const HeroEditor: React.FC = () => {
     : getSlideGradientMask(previewBgColor);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', paddingBottom: '6rem' }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .hero-editor-top-actions { flex-direction: column !important; align-items: flex-start !important; }
+          .hero-editor-top-btn-group { width: 100%; flex-wrap: wrap !important; }
+          .hero-editor-top-btn-group a,
+          .hero-editor-top-btn-group button:not([data-save]) { flex: 1 1 auto; justify-content: center; }
+          .hero-editor-sticky-bar { flex-wrap: wrap !important; gap: 0.75rem !important; padding: 0.85rem 1rem !important; }
+          .hero-editor-sticky-bar-text { font-size: 0.78rem !important; flex: 1 1 100%; }
+          .hero-editor-sticky-bar-btn { width: 100% !important; justify-content: center; }
+        }
+      `}</style>
       {/* ── Top Header Actions Bar ── */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          backgroundColor: '#FFFFFF',
-          padding: '1.25rem 1.5rem',
-          borderRadius: '16px',
-          border: '1px solid #E7E5E4',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-        }}
-      >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '1.4rem' }}>🍯</span>
-            <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1C1917', margin: 0 }}>
-              Hero Page Customizer
-            </h2>
-            <span
+        <div className="hero-editor-top-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', backgroundColor: '#FFFFFF', padding: '1.25rem 1.5rem', borderRadius: '16px', border: '1px solid #E7E5E4', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.4rem' }}>🍯</span>
+              <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1C1917', margin: 0 }}>
+                Hero Page Customizer
+              </h2>
+              <span
+                style={{
+                  fontSize: '0.72rem',
+                  backgroundColor: '#FEF3C7',
+                  color: '#92400E',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                Artisanal Layout
+              </span>
+            </div>
+            <p style={{ color: '#78716C', fontSize: '0.86rem', margin: '4px 0 0 0' }}>
+              Fully control headlines, trust badges, buttons, artwork, and story video displayed at the top of the Home page.
+            </p>
+          </div>
+
+          <div className="hero-editor-top-btn-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
-                fontSize: '0.72rem',
-                backgroundColor: '#FEF3C7',
-                color: '#92400E',
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                textTransform: 'uppercase',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0.55rem 1rem',
+                backgroundColor: '#F5F5F4',
+                color: '#44403C',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                borderRadius: '10px',
+                textDecoration: 'none',
+                border: '1px solid #E7E5E4',
               }}
             >
-              Artisanal Layout
-            </span>
+              <ExternalLink size={15} />
+              <span>View Live Home</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '0.55rem 1rem',
+                backgroundColor: '#FFFFFF',
+                color: '#78716C',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                borderRadius: '10px',
+                border: '1px solid #E7E5E4',
+                cursor: 'pointer',
+              }}
+              title="Reset to original reference values"
+            >
+              <RotateCcw size={15} />
+              <span>Reset</span>
+            </button>
+
+            <Button
+              size="md"
+              leftIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Publishing...' : 'Save & Publish Hero'}
+            </Button>
           </div>
-          <p style={{ color: '#78716C', fontSize: '0.86rem', margin: '4px 0 0 0' }}>
-            Fully control headlines, trust badges, buttons, artwork, and story video displayed at the top of the Home page.
-          </p>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '0.55rem 1rem',
-              backgroundColor: '#F5F5F4',
-              color: '#44403C',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              textDecoration: 'none',
-              border: '1px solid #E7E5E4',
-            }}
-          >
-            <ExternalLink size={15} />
-            <span>View Live Home</span>
-          </a>
-
-          <button
-            type="button"
-            onClick={handleResetToDefault}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '0.55rem 1rem',
-              backgroundColor: '#FFFFFF',
-              color: '#78716C',
-              fontSize: '0.88rem',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: '1px solid #E7E5E4',
-              cursor: 'pointer',
-            }}
-            title="Reset to original reference values"
-          >
-            <RotateCcw size={15} />
-            <span>Reset</span>
-          </button>
-
-          <Button
-            size="md"
-            leftIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            {isSaving ? 'Publishing...' : 'Save & Publish Hero'}
-          </Button>
-        </div>
-      </div>
 
       {/* ── Interactive Live Preview Box ── */}
       <div
@@ -2497,6 +2495,7 @@ export const HeroEditor: React.FC = () => {
 
       {/* ── Sticky Bottom Action Bar ── */}
       <div
+        className="hero-editor-sticky-bar"
         style={{
           position: 'sticky',
           bottom: '1rem',
@@ -2509,19 +2508,23 @@ export const HeroEditor: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           zIndex: 20,
+          gap: '0.75rem',
         }}
       >
-        <div style={{ fontSize: '0.85rem', color: '#78716C' }}>
+        <div className="hero-editor-sticky-bar-text" style={{ fontSize: '0.85rem', color: '#78716C', minWidth: 0 }}>
           Remember to save your changes to publish them to the live website.
         </div>
-        <Button
-          size="md"
-          leftIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          onClick={handleSave}
-          disabled={isSaving}
-        >
-          {isSaving ? 'Publishing...' : 'Save & Publish Hero'}
-        </Button>
+        <div className="hero-editor-sticky-bar-btn" style={{ flexShrink: 0 }}>
+          <Button
+            size="md"
+            leftIcon={isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            onClick={handleSave}
+            disabled={isSaving}
+            style={{ width: '100%' }}
+          >
+            {isSaving ? 'Publishing...' : 'Save & Publish Hero'}
+          </Button>
+        </div>
       </div>
     </div>
   );

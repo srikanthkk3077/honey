@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { X, Phone, Mail, MapPin } from 'lucide-react';
 import { APP_NAME, CONTACT_INFO, SOCIAL_LINKS } from '../../../utils/constants';
 import { getWhatsAppUrl } from '../../../utils/whatsapp';
+import { useStore } from '../../../store/store';
+import { formatPrice } from '../../../utils/formatPrice';
+import { FREE_SHIPPING_THRESHOLD } from '../../../utils/constants';
 
 /* ── tiny X/Twitter SVG since lucide doesn't ship it ── */
 const XIcon = () => (
@@ -41,6 +44,35 @@ const POLICIES: Record<PolicyKey, { title: string; body: string }> = {
 
 export const Footer: React.FC = () => {
   const [policy, setPolicy] = useState<PolicyKey | null>(null);
+  const { settings } = useStore();
+
+  // Use live settings values, fall back to hardcoded constants
+  const phone = settings?.phone || CONTACT_INFO.phone;
+  const email = settings?.email || CONTACT_INFO.email;
+  const address = settings?.address || CONTACT_INFO.address;
+  const storeName = settings?.storeName || APP_NAME;
+  const freeShippingThreshold = settings?.freeShippingThreshold ?? FREE_SHIPPING_THRESHOLD;
+
+  // Build policies with live data
+  const POLICIES: Record<PolicyKey, { title: string; body: string }> = {
+    privacy: {
+      title: 'Privacy Policy',
+      body: `We collect only the information needed to process and deliver your order — name, shipping address, phone, and email. Your data is never sold or shared with third-party marketers. All payments are protected by 256-bit SSL encryption. To request data deletion write to ${email}.`,
+    },
+    terms: {
+      title: 'Terms of Service',
+      body: `By purchasing from ${storeName} you acknowledge that raw unheated honey naturally crystallises over time — this is a sign of purity, not spoilage. All prices are in INR inclusive of applicable GST. We reserve the right to update product availability without prior notice.`,
+    },
+    refund: {
+      title: 'Refund & Returns',
+      body: `We guarantee every jar. If your delivery arrives damaged, share a photo via WhatsApp (${phone}) within 48 hours for a free replacement or full refund. Opened jars cannot be physically returned per FSSAI food-safety norms, but quality concerns are always resolved.`,
+    },
+    shipping: {
+      title: 'Shipping Policy',
+      body: `Orders placed before 2 PM IST are dispatched within 24–48 hours. Estimated delivery: Metro — 2–4 days; Rest of India — 4–6 days. Free shipping on orders above ${formatPrice(freeShippingThreshold)}. A live tracking link is sent by SMS & WhatsApp once your parcel is scanned.`,
+    },
+  };
+
   const info = policy ? POLICIES[policy] : null;
 
   return (
@@ -97,15 +129,15 @@ export const Footer: React.FC = () => {
 
             {/* Contact micro-list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '1.4rem' }}>
-              <a href={`tel:${CONTACT_INFO.phone.replace(/\s+/g,'')}`}
+              <a href={`tel:${phone.replace(/\s+/g,'')}`}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}>
                 <Phone size={13} color="#D97706" />
-                {CONTACT_INFO.phone}
+                {phone}
               </a>
-              <a href={`mailto:${CONTACT_INFO.email}`}
+              <a href={`mailto:${email}`}
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}>
                 <Mail size={13} color="#D97706" />
-                {CONTACT_INFO.email}
+                {email}
               </a>
               <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer"
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#57534E', fontSize: '0.83rem', textDecoration: 'none' }}
@@ -123,7 +155,7 @@ export const Footer: React.FC = () => {
             <div style={{ display: 'flex', gap: '8px' }}>
               {[
                 { href: SOCIAL_LINKS.instagram, label: 'Instagram', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg> },
-                { href: getWhatsAppUrl(CONTACT_INFO.whatsapp, 'Hello Madhuvan Honey!'), label: 'WhatsApp', icon: <WAIcon /> },
+                { href: getWhatsAppUrl(phone, `Hello ${storeName}!`), label: 'WhatsApp', icon: <WAIcon /> },
                 { href: SOCIAL_LINKS.youtube,   label: 'YouTube',   icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="currentColor"/></svg> },
                 { href: SOCIAL_LINKS.twitter,   label: 'X',         icon: <XIcon /> },
               ].map(s => (
@@ -194,7 +226,7 @@ export const Footer: React.FC = () => {
             gap: '0.75rem',
           }}>
             <span style={{ fontSize: '0.78rem', color: '#A8A29E' }}>
-              © {new Date().getFullYear()} <strong style={{ color: '#78716C' }}>{APP_NAME}</strong>. All rights reserved.
+              © {new Date().getFullYear()} <strong style={{ color: '#78716C' }}>{storeName}</strong>. All rights reserved.
             </span>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
