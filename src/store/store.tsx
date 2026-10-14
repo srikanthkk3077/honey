@@ -203,6 +203,14 @@ const getInitialSettings = (): StoreSettings => {
       ...loaded.deliveryConfig,
     };
   }
+  if (!loaded.paymentConfig) {
+    loaded.paymentConfig = DEFAULT_SETTINGS.paymentConfig;
+  } else {
+    loaded.paymentConfig = {
+      ...DEFAULT_SETTINGS.paymentConfig,
+      ...loaded.paymentConfig,
+    };
+  }
   if (!loaded.heroConfig) {
     loaded.heroConfig = DEFAULT_HERO_CONFIG;
   }
@@ -332,21 +340,45 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ...prev,
             ...data,
             paymentConfig: {
-              ...prev.paymentConfig,
+              ...DEFAULT_SETTINGS.paymentConfig,
+              ...(prev.paymentConfig || {}),
+              ...(cached?.paymentConfig || {}),
               ...(data.paymentConfig || {}),
+              isCodActive:
+                data.paymentConfig?.isCodActive !== undefined
+                  ? data.paymentConfig.isCodActive
+                  : (prev.paymentConfig?.isCodActive !== undefined
+                      ? prev.paymentConfig.isCodActive
+                      : (cached?.paymentConfig?.isCodActive !== undefined
+                          ? cached.paymentConfig.isCodActive
+                          : DEFAULT_SETTINGS.paymentConfig.isCodActive)),
             },
             // Deep-merge deliveryConfig so serviceablePincodes & serviceabilityMode are never lost
             deliveryConfig: {
               ...DEFAULT_DELIVERY_CONFIG,
               ...(prev.deliveryConfig || {}),
+              ...(cached?.deliveryConfig || {}),
               ...(data.deliveryConfig || {}),
               // Always prefer the locally-persisted serviceabilityMode over the backend response
               // because the backend may return the hardcoded default 'restricted_pincodes' even
               // after the admin explicitly set 'all_india'.
               serviceabilityMode:
-                prev.deliveryConfig?.serviceabilityMode === 'all_india'
+                prev.deliveryConfig?.serviceabilityMode === 'all_india' || cached?.deliveryConfig?.serviceabilityMode === 'all_india'
                   ? 'all_india'
-                  : (data.deliveryConfig?.serviceabilityMode || prev.deliveryConfig?.serviceabilityMode || DEFAULT_DELIVERY_CONFIG.serviceabilityMode),
+                  : (data.deliveryConfig?.serviceabilityMode || prev.deliveryConfig?.serviceabilityMode || cached?.deliveryConfig?.serviceabilityMode || DEFAULT_DELIVERY_CONFIG.serviceabilityMode),
+              defaultDeliveryDays:
+                data.deliveryConfig?.defaultDeliveryDays ||
+                prev.deliveryConfig?.defaultDeliveryDays ||
+                cached?.deliveryConfig?.defaultDeliveryDays ||
+                DEFAULT_DELIVERY_CONFIG.defaultDeliveryDays,
+              codAvailableDefault:
+                data.deliveryConfig?.codAvailableDefault !== undefined
+                  ? data.deliveryConfig.codAvailableDefault
+                  : (prev.deliveryConfig?.codAvailableDefault !== undefined
+                      ? prev.deliveryConfig.codAvailableDefault
+                      : (cached?.deliveryConfig?.codAvailableDefault !== undefined
+                          ? cached.deliveryConfig.codAvailableDefault
+                          : DEFAULT_DELIVERY_CONFIG.codAvailableDefault)),
               serviceablePincodes:
                 Array.isArray(data.deliveryConfig?.serviceablePincodes) && data.deliveryConfig.serviceablePincodes.length > 0
                   ? data.deliveryConfig.serviceablePincodes
@@ -432,6 +464,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             paymentConfig: {
               ...prev.paymentConfig,
               ...(result.paymentConfig || {}),
+              ...(updates.paymentConfig || {}),
             },
             // Deep-merge deliveryConfig so admin's zones & mode survive the backend round-trip
             deliveryConfig: {
@@ -446,6 +479,19 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 result.deliveryConfig?.serviceabilityMode ||
                 prev.deliveryConfig?.serviceabilityMode ||
                 DEFAULT_DELIVERY_CONFIG.serviceabilityMode,
+              defaultDeliveryDays:
+                updates.deliveryConfig?.defaultDeliveryDays ||
+                result.deliveryConfig?.defaultDeliveryDays ||
+                prev.deliveryConfig?.defaultDeliveryDays ||
+                DEFAULT_DELIVERY_CONFIG.defaultDeliveryDays,
+              codAvailableDefault:
+                updates.deliveryConfig?.codAvailableDefault !== undefined
+                  ? updates.deliveryConfig.codAvailableDefault
+                  : (result.deliveryConfig?.codAvailableDefault !== undefined
+                      ? result.deliveryConfig.codAvailableDefault
+                      : (prev.deliveryConfig?.codAvailableDefault !== undefined
+                          ? prev.deliveryConfig.codAvailableDefault
+                          : DEFAULT_DELIVERY_CONFIG.codAvailableDefault)),
               serviceablePincodes:
                 Array.isArray(updates.deliveryConfig?.serviceablePincodes)
                   ? updates.deliveryConfig.serviceablePincodes

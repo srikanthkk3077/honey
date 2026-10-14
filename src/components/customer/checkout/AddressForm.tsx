@@ -284,16 +284,17 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
 
   // Initialize with stored pincode from product page if address pincode is empty
   useEffect(() => {
+    const isCodActive = settings?.paymentConfig?.isCodActive !== false;
     if (!address.pincode) {
       const savedPin = localStorage.getItem('madhuvan_customer_pincode');
       if (savedPin && savedPin.length === 6) {
         handlePincodeChange(savedPin);
       }
     } else if (address.pincode.length === 6) {
-      const result = checkPincodeServiceability(address.pincode, settings?.deliveryConfig);
+      const result = checkPincodeServiceability(address.pincode, settings?.deliveryConfig, isCodActive);
       setServiceability(result);
     }
-  }, [settings?.deliveryConfig]);
+  }, [settings?.deliveryConfig, settings?.paymentConfig?.isCodActive]);
 
   const touch = useCallback((f: FK, v: string) => {
     setTouched((p) => ({ ...p, [f]: true }));
@@ -312,7 +313,8 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
 
     if (clean.length === 6) {
       setIsLookingUpPin(true);
-      const res = checkPincodeServiceability(clean, settings?.deliveryConfig);
+      const isCodActive = settings?.paymentConfig?.isCodActive !== false;
+      const res = checkPincodeServiceability(clean, settings?.deliveryConfig, isCodActive);
       setServiceability(res);
 
       try {
@@ -347,7 +349,8 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
     });
 
     // Check delivery serviceability
-    const pinCheck = checkPincodeServiceability(address.pincode, settings?.deliveryConfig);
+    const isCodActive = settings?.paymentConfig?.isCodActive !== false;
+    const pinCheck = checkPincodeServiceability(address.pincode, settings?.deliveryConfig, isCodActive);
     if (!pinCheck.isServiceable) {
       errs.pincode = pinCheck.message || 'Delivery is not available to this PIN code.';
       setServiceability(pinCheck);
@@ -676,7 +679,11 @@ export const AddressForm: React.FC<AddressFormProps> = ({ address, onChange, onS
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.8rem', color: '#047857', paddingLeft: '24px', flexWrap: 'wrap' }}>
                 <span>🚚 Estimated Transit: <strong>{serviceability.deliveryDays}</strong></span>
-                <span>💵 COD: <strong>{serviceability.isCodAvailable ? 'Eligible' : 'Prepaid Only'}</strong></span>
+                {serviceability.isCodAvailable ? (
+                  <span>💵 COD: <strong style={{ color: '#059669' }}>Eligible</strong></span>
+                ) : (
+                  <span style={{ color: '#92400E' }}>💳 Payment: <strong>Prepaid Only (Direct UPI / Bank)</strong></span>
+                )}
               </div>
             </>
           ) : (

@@ -56,6 +56,12 @@ export const Checkout: React.FC = () => {
     }
   }, [user?.id]);
 
+  const isCodGloballyActive = settings?.paymentConfig?.isCodActive !== false;
+  const pinCheck = address.pincode && address.pincode.length === 6
+    ? checkPincodeServiceability(address.pincode, settings?.deliveryConfig, isCodGloballyActive)
+    : null;
+  const isCodEligible = isCodGloballyActive && (pinCheck?.isCodAvailable ?? false);
+
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!address.fullName || !address.email || !address.phone || !address.addressLine1 || !address.addressLine2 || !address.city || !address.pincode) {
@@ -64,10 +70,15 @@ export const Checkout: React.FC = () => {
     }
 
     // Verify PIN code against store delivery settings
-    const check = checkPincodeServiceability(address.pincode, settings?.deliveryConfig);
+    const check = checkPincodeServiceability(address.pincode, settings?.deliveryConfig, isCodGloballyActive);
     if (!check.isServiceable) {
       alert(check.message || `Delivery is not serviceable to PIN code ${address.pincode}.`);
       return;
+    }
+
+    // Ensure payment method falls back to upi if COD is not allowed
+    if (!check.isCodAvailable && paymentMethod === 'cod') {
+      setPaymentMethod('upi');
     }
 
     // Ensure googleMapsLink is fresh and populated
@@ -82,6 +93,12 @@ export const Checkout: React.FC = () => {
   };
 
   const handlePlaceOrder = async (details?: { utrNumber?: string; paymentScreenshot?: string }) => {
+    if (paymentMethod === 'cod' && !isCodEligible) {
+      alert('Cash on Delivery is currently disabled by store admin or not available for this delivery area. Please pay via UPI or Direct Bank Transfer.');
+      setPaymentMethod('upi');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -450,6 +467,7 @@ export const Checkout: React.FC = () => {
                   onSubmit={handlePlaceOrder}
                   onBack={() => setCurrentStep(1)}
                   isProcessing={isProcessing}
+                  isCodAvailable={isCodEligible}
                 />
               ) : null}
             </div>

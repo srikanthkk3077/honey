@@ -49,17 +49,19 @@ export const ProductInfo: React.FC<{ product: Product }> = ({ product }) => {
 
   // Check saved pincode on mount
   useEffect(() => {
+    const isCodActive = settings?.paymentConfig?.isCodActive !== false;
     if (checkPin && checkPin.length === 6) {
-      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig);
+      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig, isCodActive);
       setPinResult(res);
     }
-  }, [settings?.deliveryConfig]);
+  }, [settings?.deliveryConfig, settings?.paymentConfig?.isCodActive]);
 
   const handleCheckPincode = async () => {
     if (checkPin.length !== 6) return;
     setIsCheckingPin(true);
     try {
-      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig);
+      const isCodActive = settings?.paymentConfig?.isCodActive !== false;
+      const res = checkPincodeServiceability(checkPin, settings?.deliveryConfig, isCodActive);
       if (res.isServiceable && !res.city) {
         // Fetch postal details for better display if not in zone
         const details = await fetchPincodeDetails(checkPin);

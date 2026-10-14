@@ -12,6 +12,7 @@ interface PaymentMethodProps {
   onSubmit: (details?: { utrNumber?: string; paymentScreenshot?: string }) => void;
   onBack: () => void;
   isProcessing: boolean;
+  isCodAvailable?: boolean;
 }
 
 export const PaymentMethod: React.FC<PaymentMethodProps> = ({
@@ -20,6 +21,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
   onSubmit,
   onBack,
   isProcessing,
+  isCodAvailable = true,
 }) => {
   const { cartTotal, showToast, settings } = useStore();
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -27,6 +29,17 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Check store admin global COD switch & PIN code delivery availability
+  const isCodGloballyActive = settings?.paymentConfig?.isCodActive !== false;
+  const isCodAllowed = isCodGloballyActive && (isCodAvailable !== false);
+
+  // Fallback to UPI if COD is disabled
+  React.useEffect(() => {
+    if (!isCodAllowed && selectedMethod === 'cod') {
+      onSelect('upi');
+    }
+  }, [isCodAllowed, selectedMethod, onSelect]);
 
   // Dynamic settlement details configured by Admin in Store Settings
   const upiId = settings?.paymentConfig?.upiId || BUSINESS_PAYMENT_DETAILS.upiId;
@@ -86,6 +99,12 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
       const err = validateUtr(utrNumber);
       if (err) { setFormError(err); return; }
       onSubmit({ utrNumber: utrNumber.trim(), paymentScreenshot: screenshotPreview || undefined });
+    } else if (selectedMethod === 'cod') {
+      if (!isCodAllowed) {
+        setFormError('Cash on Delivery is currently disabled by store admin or unavailable for your shipping address.');
+        return;
+      }
+      onSubmit();
     } else {
       onSubmit();
     }
@@ -101,7 +120,9 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
           Select Payment Method
         </h3>
         <p style={{ color: '#78716C', fontSize: '0.88rem', margin: 0 }}>
-          Launch with zero gateway fees — Pay via direct UPI transfer or Cash on Delivery.
+          {isCodAllowed
+            ? 'Launch with zero gateway fees — Pay via direct UPI transfer or Cash on Delivery.'
+            : 'Launch with zero gateway fees — Pay securely via direct UPI transfer or Direct Bank Wire.'}
         </p>
       </div>
 
@@ -155,53 +176,55 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
           </div>
         </label>
 
-        {/* Cash on Delivery (COD) Option */}
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '1rem',
-            padding: '1.25rem',
-            borderRadius: '16px',
-            border: selectedMethod === 'cod' ? '2px solid #D97706' : '1px solid #E7E5E4',
-            backgroundColor: selectedMethod === 'cod' ? '#FFFBEB' : '#FFFFFF',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-          }}
-        >
-          <input
-            type="radio"
-            name="paymentMethod"
-            checked={selectedMethod === 'cod'}
-            onChange={() => onSelect('cod')}
-            style={{ accentColor: '#D97706', width: '18px', height: '18px', marginTop: '4px' }}
-          />
-          <div style={{ flex: 1 }}>
-            <div className="flex items-center gap-2">
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  background: '#EFF6FF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Banknote size={20} color="#2563EB" />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#1C1917' }}>
-                  Cash on Delivery (COD)
+        {/* Cash on Delivery (COD) Option — Only rendered if enabled by Admin */}
+        {isCodAllowed && (
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '1rem',
+              padding: '1.25rem',
+              borderRadius: '16px',
+              border: selectedMethod === 'cod' ? '2px solid #D97706' : '1px solid #E7E5E4',
+              backgroundColor: selectedMethod === 'cod' ? '#FFFBEB' : '#FFFFFF',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              checked={selectedMethod === 'cod'}
+              onChange={() => onSelect('cod')}
+              style={{ accentColor: '#D97706', width: '18px', height: '18px', marginTop: '4px' }}
+            />
+            <div style={{ flex: 1 }}>
+              <div className="flex items-center gap-2">
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    background: '#EFF6FF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Banknote size={20} color="#2563EB" />
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#78716C' }}>
-                  Pay cash or courier QR at doorstep upon delivery
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#1C1917' }}>
+                    Cash on Delivery (COD)
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#78716C' }}>
+                    Pay cash or courier QR at doorstep upon delivery
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </label>
+          </label>
+        )}
       </div>
 
       {/* UPI Details Box (Shown when UPI is selected) */}

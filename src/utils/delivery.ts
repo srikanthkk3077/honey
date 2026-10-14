@@ -174,7 +174,8 @@ export interface PincodeCheckResult {
 
 export const checkPincodeServiceability = (
   pincode: string,
-  config?: DeliveryConfig
+  config?: DeliveryConfig,
+  isCodGloballyActive?: boolean
 ): PincodeCheckResult => {
   const clean = pincode.replace(/\D/g, '').slice(0, 6);
   if (!clean || clean.length !== 6) {
@@ -189,17 +190,25 @@ export const checkPincodeServiceability = (
   const activeConfig = config || DEFAULT_DELIVERY_CONFIG;
   const list = activeConfig.serviceablePincodes || DEFAULT_DELIVERY_ZONES;
 
+  // Master COD switch configured by Admin in Store Payment Settings
+  const isMasterCodActive = isCodGloballyActive !== false;
+
   // Find exact matching zone
   const matched = list.find((z) => z.pincode === clean && z.isActive !== false);
 
   if (activeConfig.serviceabilityMode === 'all_india') {
+    // If admin explicitly unchecked codAvailableDefault, default is false
+    const defaultCod = activeConfig.codAvailableDefault !== false;
+    const isZoneCod = matched ? matched.isCodAvailable !== false : defaultCod;
+    const isCodAvailable = isMasterCodActive && isZoneCod;
+
     return {
       isServiceable: true,
       zone: matched,
       city: matched?.city,
       state: matched?.state,
       deliveryDays: matched?.deliveryDays || activeConfig.defaultDeliveryDays || '2-4 business days',
-      isCodAvailable: matched ? matched.isCodAvailable : activeConfig.codAvailableDefault,
+      isCodAvailable,
       message: matched
         ? `Delivery available! Express arrival in ${matched.deliveryDays}.`
         : `All-India delivery available! Estimated arrival in ${activeConfig.defaultDeliveryDays || '2-4 days'}.`,
@@ -208,13 +217,14 @@ export const checkPincodeServiceability = (
 
   // Restricted mode: must match an approved zone
   if (matched) {
+    const isCodAvailable = isMasterCodActive && (matched.isCodAvailable !== false);
     return {
       isServiceable: true,
       zone: matched,
       city: matched.city,
       state: matched.state,
       deliveryDays: matched.deliveryDays,
-      isCodAvailable: matched.isCodAvailable,
+      isCodAvailable,
       message: `Delivery available to ${matched.city}! Estimated arrival in ${matched.deliveryDays}.`,
     };
   }
