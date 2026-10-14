@@ -363,9 +363,10 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               // because the backend may return the hardcoded default 'restricted_pincodes' even
               // after the admin explicitly set 'all_india'.
               serviceabilityMode:
-                prev.deliveryConfig?.serviceabilityMode === 'all_india' || cached?.deliveryConfig?.serviceabilityMode === 'all_india'
+                data.deliveryConfig?.serviceabilityMode ||
+                (prev.deliveryConfig?.serviceabilityMode === 'all_india' || cached?.deliveryConfig?.serviceabilityMode === 'all_india'
                   ? 'all_india'
-                  : (data.deliveryConfig?.serviceabilityMode || prev.deliveryConfig?.serviceabilityMode || cached?.deliveryConfig?.serviceabilityMode || DEFAULT_DELIVERY_CONFIG.serviceabilityMode),
+                  : (prev.deliveryConfig?.serviceabilityMode || cached?.deliveryConfig?.serviceabilityMode || DEFAULT_DELIVERY_CONFIG.serviceabilityMode)),
               defaultDeliveryDays:
                 data.deliveryConfig?.defaultDeliveryDays ||
                 prev.deliveryConfig?.defaultDeliveryDays ||
@@ -380,11 +381,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                           ? cached.deliveryConfig.codAvailableDefault
                           : DEFAULT_DELIVERY_CONFIG.codAvailableDefault)),
               serviceablePincodes:
-                Array.isArray(data.deliveryConfig?.serviceablePincodes) && data.deliveryConfig.serviceablePincodes.length > 0
+                Array.isArray(data.deliveryConfig?.serviceablePincodes)
                   ? data.deliveryConfig.serviceablePincodes
                   : (Array.isArray(prev.deliveryConfig?.serviceablePincodes) && prev.deliveryConfig.serviceablePincodes.length > 0
                       ? prev.deliveryConfig.serviceablePincodes
-                      : DEFAULT_DELIVERY_CONFIG.serviceablePincodes),
+                      : (Array.isArray(cached?.deliveryConfig?.serviceablePincodes) && cached.deliveryConfig.serviceablePincodes.length > 0
+                          ? cached.deliveryConfig.serviceablePincodes
+                          : DEFAULT_DELIVERY_CONFIG.serviceablePincodes)),
             },
             heroConfig: {
               ...DEFAULT_HERO_CONFIG,

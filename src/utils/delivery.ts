@@ -27,10 +27,13 @@ export const DEFAULT_DELIVERY_ZONES: DeliveryZone[] = [
 ];
 
 export const DEFAULT_DELIVERY_CONFIG: DeliveryConfig = {
-  serviceabilityMode: 'restricted_pincodes', // strictly validates matching areas as requested
-  serviceablePincodes: DEFAULT_DELIVERY_ZONES,
+  serviceabilityMode: 'all_india',
+  serviceablePincodes: [
+    { pincode: '500001', city: 'Hyderabad', state: 'Telangana', deliveryDays: '2-3 business days', isCodAvailable: true, isActive: true },
+    { pincode: '500081', city: 'Hyderabad (HITEC City)', state: 'Telangana', deliveryDays: '2-3 business days', isCodAvailable: true, isActive: true },
+  ],
   defaultDeliveryDays: '2-4 business days',
-  codAvailableDefault: true,
+  codAvailableDefault: false,
 };
 
 // ─── Fast Offline Indian Metro Pincode Dictionary ───────────────────────────
