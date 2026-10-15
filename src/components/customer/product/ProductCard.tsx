@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import {
   Heart,
   ShoppingCart,
@@ -15,10 +16,12 @@ import {
 import { Product } from '../../../types/product.types';
 import { useStore } from '../../../store/store';
 import { formatPrice } from '../../../utils/formatPrice';
+import '../../../pages/customer/Shop/Shop.animations.css';
 
 interface ProductCardProps {
   product: Product;
   layout?: 'grid' | 'list';
+  index?: number;
 }
 
 // Helper to pick an appropriate icon for benefit badges
@@ -42,10 +45,11 @@ function getBenefitIcon(text: string) {
   return <Sparkles size={12} color="#92400E" />;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid', index = 0 }) => {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const [hovering, setHovering] = useState(false);
   const [added, setAdded] = useState(false);
+  const [popHeart, setPopHeart] = useState(false);
 
   const nameLower = (product.name || '').toLowerCase();
   const catLower = (
@@ -193,12 +197,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
     if (isOutOfStock) return;
     addToCart(product, activeSize, 1);
     setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+    setTimeout(() => setAdded(false), 2000);
+
+    // Warm artisanal golden confetti / sparkles burst
+    try {
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const x = (rect.left + rect.width / 2) / window.innerWidth;
+      const y = (rect.top + rect.height / 2) / window.innerHeight;
+      confetti({
+        particleCount: 26,
+        spread: 55,
+        origin: { x, y },
+        colors: ['#F59E0B', '#D97706', '#FDE68A', '#10B981', '#FEF3C7'],
+        ticks: 90,
+        gravity: 1.1,
+        scalar: 0.8,
+        disableForReducedMotion: true,
+      });
+    } catch {
+      // Ignore if canvas-confetti is unsupported
+    }
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setPopHeart(true);
+    setTimeout(() => setPopHeart(false), 500);
     toggleWishlist(product.id);
   };
 
@@ -228,25 +253,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
     <div
       onMouseEnter={() => !isOutOfStock && setHovering(true)}
       onMouseLeave={() => setHovering(false)}
+      className="shop-product-card-anim"
       style={{
         position: 'relative',
         borderRadius: '16px',
         overflow: 'hidden',
         background: '#FFFFFF',
-        border: '1px solid #EAE6DF',
+        border: hovering ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid #EAE6DF',
         boxShadow: hovering
-          ? '0 12px 28px rgba(0, 0, 0, 0.08)'
+          ? '0 18px 36px -6px rgba(180, 83, 9, 0.16), 0 8px 16px -4px rgba(41, 24, 14, 0.06)'
           : '0 2px 10px rgba(0, 0, 0, 0.03)',
-        transform: hovering && !isOutOfStock ? 'translateY(-4px)' : 'translateY(0)',
-        transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: hovering && !isOutOfStock ? 'translateY(-6px)' : 'translateY(0)',
+        transition: 'all 0.32s cubic-bezier(0.16, 1, 0.3, 1)',
         display: 'flex',
         flexDirection: isList ? 'row' : 'column',
         height: '100%',
         opacity: isOutOfStock ? 0.78 : 1,
+        animationDelay: `${((index || 0) % 12) * 0.05}s`,
       }}
     >
       {/* ── Image Container ── */}
       <div
+        className="product-image-container"
         style={{
           position: 'relative',
           width: isList ? '260px' : '100%',
@@ -269,15 +297,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               height: '100%',
               objectFit: 'cover',
               display: 'block',
-              transform: hovering ? 'scale(1.05)' : 'scale(1)',
-              transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: hovering ? 'scale(1.08)' : 'scale(1)',
+              transition: 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           />
         </Link>
 
+        {/* Diagonal Glass Sheen Sweep on Jar Hover */}
+        <div className="product-image-gloss-sheen" />
+
         {/* Badge Ribbon (Top-Left) */}
         {badgeInfo && (
           <div
+            className={`shop-card-badge ${
+              badgeInfo.text.toUpperCase().includes('BEST') ? 'shop-card-badge-bestseller' : ''
+            }`}
             style={{
               position: 'absolute',
               top: '10px',
@@ -303,6 +337,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
         <button
           onClick={handleToggleWishlist}
           aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          className={`shop-wishlist-btn ${popHeart ? 'active-pop' : ''}`}
           style={{
             position: 'absolute',
             top: '10px',
@@ -318,8 +353,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'transform 0.18s ease, background-color 0.18s ease',
-            transform: hovering ? 'scale(1.06)' : 'scale(1)',
           }}
         >
           <Heart
@@ -461,15 +494,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             {benefits.map((b, idx) => (
               <div
                 key={idx}
+                className="shop-benefit-pill"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
                   minWidth: 0,
+                  cursor: 'default',
                 }}
                 title={b}
               >
                 <div
+                  className="shop-benefit-icon"
                   style={{
                     width: '22px',
                     height: '22px',
@@ -517,6 +553,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
                 <button
                   key={s.size}
                   type="button"
+                  className={`shop-size-pill ${isSelected ? 'active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault();
                     setSelectedSize(s.size);
@@ -530,7 +567,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
                     color: isSelected ? '#78350F' : '#78716C',
                     border: isSelected ? '1px solid #F59E0B' : '1px solid transparent',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
                   }}
                 >
                   {s.size}
@@ -596,9 +632,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
             type="button"
             onClick={handleAddToCart}
             disabled={isOutOfStock}
+            className="shop-add-cart-btn"
             style={{
               width: '100%',
-              padding: '9px 14px',
+              padding: '9.5px 14px',
               borderRadius: '10px',
               border: 'none',
               backgroundColor: isOutOfStock
@@ -615,22 +652,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'gri
               gap: '8px',
               cursor: isOutOfStock ? 'not-allowed' : 'pointer',
               boxShadow: isOutOfStock ? 'none' : '0 2px 8px rgba(58, 31, 13, 0.2)',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseOver={(e) => {
-              if (!isOutOfStock && !added) {
-                e.currentTarget.style.backgroundColor = '#291508';
-              }
-            }}
-            onMouseOut={(e) => {
-              if (!isOutOfStock && !added) {
-                e.currentTarget.style.backgroundColor = '#3A1F0D';
-              }
             }}
           >
             {added ? (
               <>
-                <Check size={16} />
+                <span className="shop-checkmark-anim" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <Check size={16} />
+                </span>
                 <span>Added to Cart!</span>
               </>
             ) : isOutOfStock ? (

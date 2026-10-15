@@ -2047,7 +2047,7 @@ export const HeroEditor: React.FC = () => {
                     }}
                   >
                     <img
-                      src={form.heroImageUrl || '/images/brand/hero_illustration_feathered.png'}
+                      src={form.heroImageUrl}
                       alt="Desktop Artwork"
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />

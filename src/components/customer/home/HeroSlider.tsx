@@ -66,7 +66,7 @@ const SlideBackground: React.FC<{ slide: SliderItem; isActive: boolean }> = ({ s
             <source media="(max-width: 960px)" srcSet={slide.mobileImageUrl} />
           )}
           <img
-            src={slide.imageUrl || '/images/brand/hero_illustration_feathered.png'}
+            src={slide.imageUrl}
             alt={slide.title}
             style={{
               width: '100%',

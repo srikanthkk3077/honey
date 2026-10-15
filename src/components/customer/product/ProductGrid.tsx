@@ -56,8 +56,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   if (layout === 'list') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} layout="list" />
+        {products.map((product, idx) => (
+          <ProductCard key={product.id} product={product} layout="list" index={idx} />
         ))}
       </div>
     );
@@ -72,8 +72,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       }}
       className="shop-product-grid"
     >
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} layout="grid" />
+      {products.map((product, idx) => (
+        <ProductCard key={product.id} product={product} layout="grid" index={idx} />
       ))}
       <style>{`
         @media (min-width: 1200px) {

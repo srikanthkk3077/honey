@@ -1,0 +1,712 @@
+/* ===================================================================
+   MADHUVAN HONEY - SHOP PAGE LUXURY ARTISANAL ANIMATIONS
+   =================================================================== */
+
+/* ─── 1. HERO BANNER ANIMATIONS ─────────────────────────────────────── */
+
+/* Natural wing fluttering for bees */
+@keyframes beeWingLeft {
+  0% {
+    transform: rotate(-35deg) scaleY(1);
+  }
+  100% {
+    transform: rotate(-15deg) scaleY(0.4);
+  }
+}
+
+@keyframes beeWingRight {
+  0% {
+    transform: rotate(25deg) scaleY(1);
+  }
+  100% {
+    transform: rotate(5deg) scaleY(0.4);
+  }
+}
+
+.shop-bee-wing-l {
+  transform-origin: 17px 12px;
+  animation: beeWingLeft 0.08s infinite alternate ease-in-out;
+}
+
+.shop-bee-wing-r {
+  transform-origin: 24px 11px;
+  animation: beeWingRight 0.08s infinite alternate ease-in-out;
+}
+
+/* Flight paths for animated bees */
+@keyframes beeFlightLoop1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate3d(18px, -14px, 0) rotate(6deg);
+  }
+  40% {
+    transform: translate3d(35px, -6px, 0) rotate(-3deg);
+  }
+  60% {
+    transform: translate3d(24px, 12px, 0) rotate(5deg);
+  }
+  80% {
+    transform: translate3d(-10px, 8px, 0) rotate(-6deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes beeFlightLoop2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(-14px, 16px, 0) rotate(-8deg);
+  }
+  50% {
+    transform: translate3d(-26px, -8px, 0) rotate(4deg);
+  }
+  75% {
+    transform: translate3d(-8px, -18px, 0) rotate(7deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes beeFlightLoop3 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.85) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(15px, 15px, 0) scale(0.88) rotate(5deg);
+  }
+  66% {
+    transform: translate3d(-12px, 20px, 0) scale(0.82) rotate(-5deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.85) rotate(0deg);
+  }
+}
+
+.shop-bee-1 {
+  position: absolute;
+  z-index: 4;
+  animation: beeFlightLoop1 8s infinite ease-in-out;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.shop-bee-1:hover {
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+}
+
+.shop-bee-2 {
+  position: absolute;
+  z-index: 4;
+  animation: beeFlightLoop2 9.5s infinite ease-in-out;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.shop-bee-2:hover {
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+}
+
+.shop-bee-3 {
+  position: absolute;
+  z-index: 3;
+  opacity: 0.75;
+  animation: beeFlightLoop3 11s infinite ease-in-out;
+}
+
+/* Floating golden pollen / honey particles */
+@keyframes pollenDrift {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  75% {
+    opacity: 0.6;
+    transform: translateY(-55px) translateX(25px) scale(1.1);
+  }
+  100% {
+    transform: translateY(-90px) translateX(45px) scale(0.6);
+    opacity: 0;
+  }
+}
+
+.shop-pollen-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FDE68A 0%, #F59E0B 70%, transparent 100%);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  pointer-events: none;
+  z-index: 3;
+  animation: pollenDrift 5s infinite ease-in-out;
+}
+
+/* Sunlight beam / warm golden amber glow sweep across banner */
+@keyframes ambientSunbeamSweep {
+  0% {
+    opacity: 0.25;
+    transform: translateX(-40%) skewX(-20deg);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateX(30%) skewX(-15deg);
+  }
+  100% {
+    opacity: 0.25;
+    transform: translateX(110%) skewX(-20deg);
+  }
+}
+
+.shop-sunbeam-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(254, 240, 138, 0.08) 30%,
+    rgba(245, 158, 11, 0.15) 50%,
+    rgba(254, 240, 138, 0.08) 70%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+  animation: ambientSunbeamSweep 14s infinite ease-in-out;
+}
+
+/* Golden liquid calligraphy shimmer for "Pure Honey Pure Life" */
+@keyframes goldCalligraphyShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes scriptFloatBob {
+  0%, 100% {
+    transform: translateY(0px) rotate(-0.5deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(0.8deg);
+  }
+}
+
+.shop-hero-script-shimmer {
+  display: inline-block;
+  background: linear-gradient(
+    115deg,
+    #78350F 0%,
+    #B45309 25%,
+    #FBBF24 45%,
+    #FFFBEB 55%,
+    #D97706 70%,
+    #78350F 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldCalligraphyShimmer 7s infinite linear, scriptFloatBob 4.5s infinite ease-in-out;
+  text-shadow: 0 2px 10px rgba(245, 158, 11, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.shop-hero-script-shimmer:hover {
+  transform: scale(1.04) rotate(0deg);
+}
+
+/* Organic leaf breeze sway for decorative foliage */
+@keyframes leafBreeze {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(2.5deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(-1.5deg) scale(0.99);
+  }
+}
+
+.shop-leaf-sway {
+  animation: leafBreeze 7s infinite alternate ease-in-out;
+  transform-origin: top left;
+}
+
+.shop-leaf-sway-bottom {
+  animation: leafBreeze 8s infinite alternate ease-in-out;
+  transform-origin: bottom right;
+}
+
+/* Trust badges in hero banner */
+.shop-hero-badge-pill {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+
+.shop-hero-badge-pill:hover {
+  transform: translateY(-3px) scale(1.03);
+  background-color: #FFFFFF !important;
+  box-shadow: 0 6px 18px rgba(46, 125, 50, 0.14) !important;
+  border-color: #2E7D32 !important;
+}
+
+.shop-hero-badge-pill:hover .shop-badge-icon-wrap {
+  transform: scale(1.12) rotate(6deg);
+  background-color: #ECFDF5 !important;
+  border-color: #059669 !important;
+  color: #059669 !important;
+}
+
+.shop-badge-icon-wrap {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── 2. PRODUCT CARDS ANIMATIONS ──────────────────────────────────── */
+
+/* Staggered entrance animation for product cards */
+@keyframes productCardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(22px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.shop-product-card-anim {
+  animation: productCardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Glass gloss reflection sweep over product image */
+@keyframes jarGlossSweep {
+  0% {
+    transform: translateX(-120%) skewX(-25deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(250%) skewX(-25deg);
+    opacity: 0;
+  }
+}
+
+.product-image-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.product-image-gloss-sheen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 40%,
+    rgba(254, 240, 138, 0.5) 50%,
+    rgba(255, 255, 255, 0.35) 60%,
+    transparent 100%
+  );
+  transform: translateX(-120%) skewX(-25deg);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.shop-product-card-anim:hover .product-image-gloss-sheen {
+  animation: jarGlossSweep 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Shimmer gleam across ribbon badges */
+@keyframes badgeGleamEffect {
+  0% {
+    left: -120%;
+  }
+  40%, 100% {
+    left: 180%;
+  }
+}
+
+.shop-card-badge {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shop-card-badge::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  animation: badgeGleamEffect 3.8s infinite ease-in-out;
+}
+
+@keyframes amberBadgePulse {
+  0%, 100% {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.6);
+  }
+}
+
+.shop-card-badge-bestseller {
+  animation: amberBadgePulse 2.8s infinite ease-in-out;
+}
+
+/* Wishlist Heart Button Animations */
+@keyframes heartSpringPop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.35) rotate(-6deg);
+  }
+  60% {
+    transform: scale(0.9) rotate(4deg);
+  }
+  80% {
+    transform: scale(1.1) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.shop-wishlist-btn {
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+.shop-wishlist-btn:hover {
+  transform: scale(1.18) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25) !important;
+  background-color: #FFF5F5 !important;
+}
+
+.shop-wishlist-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.shop-wishlist-btn.active-pop svg {
+  animation: heartSpringPop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Key Benefits Interactive Pills */
+.shop-benefit-pill {
+  transition: all 0.22s ease;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.shop-benefit-pill:hover {
+  background-color: rgba(245, 158, 11, 0.12);
+  transform: translateY(-1.5px);
+}
+
+.shop-benefit-pill:hover .shop-benefit-icon {
+  transform: scale(1.16) rotate(8deg);
+  border-color: #B45309 !important;
+  background-color: #FEF3C7 !important;
+}
+
+.shop-benefit-icon {
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Size Variant Selector Pills */
+.shop-size-pill {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.shop-size-pill:hover:not(.active) {
+  background-color: #E7E5E4 !important;
+  color: #1C1917 !important;
+  transform: translateY(-1px);
+}
+
+.shop-size-pill.active {
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3) !important;
+  transform: scale(1.04);
+}
+
+.shop-size-pill:active {
+  transform: scale(0.96) !important;
+}
+
+/* Add to Cart Button Animations */
+@keyframes btnSheenSweep {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+.shop-add-cart-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.shop-add-cart-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: none;
+  pointer-events: none;
+}
+
+.shop-add-cart-btn:hover:not(:disabled)::after {
+  animation: btnSheenSweep 0.75s ease-out;
+}
+
+.shop-add-cart-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(58, 31, 13, 0.3) !important;
+}
+
+.shop-add-cart-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.3) rotate(8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.shop-checkmark-anim {
+  animation: checkmarkPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ─── 3. OTHER PAGE ANIMATIONS ─────────────────────────────────────── */
+
+/* Sidebar Filter Items */
+@keyframes radioSelectPulse {
+  0% {
+    transform: scale(0.7);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.shop-filter-radio-dot {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.shop-filter-radio-active {
+  animation: radioSelectPulse 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.shop-filter-cat-row {
+  transition: all 0.18s ease;
+}
+
+.shop-filter-cat-row:hover {
+  background-color: #FAF4EB !important;
+  transform: translateX(3px);
+}
+
+.shop-filter-cat-row:hover .shop-filter-cat-count {
+  transform: scale(1.1);
+  background-color: rgba(217, 119, 6, 0.25) !important;
+  color: #78350F !important;
+}
+
+.shop-filter-cat-count {
+  transition: all 0.18s ease;
+}
+
+/* Clear filter button hover */
+.shop-clear-filter-btn {
+  transition: all 0.2s ease;
+}
+
+.shop-clear-filter-btn:hover {
+  color: #B91C1C !important;
+  transform: scale(1.05);
+}
+
+.shop-clear-filter-btn:hover svg {
+  transform: rotate(90deg);
+}
+
+.shop-clear-filter-btn svg {
+  transition: transform 0.25s ease;
+}
+
+/* Sidebar Promo Banner breathing & button */
+@keyframes arrowSlide {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.shop-promo-btn {
+  transition: all 0.22s ease;
+}
+
+.shop-promo-btn:hover {
+  background-color: rgba(69, 36, 23, 0.98) !important;
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+}
+
+.shop-promo-btn:hover .shop-promo-arrow {
+  animation: arrowSlide 1s infinite ease-in-out;
+}
+
+/* Top Bar Controls */
+.shop-view-mode-btn {
+  transition: all 0.2s ease;
+}
+
+.shop-view-mode-btn:hover {
+  background-color: #FAF6F0 !important;
+  color: #78350F !important;
+  transform: scale(1.08);
+}
+
+.shop-filter-pill-tag {
+  animation: productCardEntrance 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
+}
+
+.shop-filter-pill-tag:hover {
+  border-color: #D97706 !important;
+  background-color: #FEF3C7 !important;
+}
+
+.shop-filter-pill-tag button:hover {
+  transform: scale(1.2);
+  color: #DC2626 !important;
+}
+
+/* Sort dropdown */
+.shop-sort-select {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.shop-sort-select:hover,
+.shop-sort-select:focus {
+  border-color: #D97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15) !important;
+}
+
+/* Bottom Trust Items */
+.shop-bottom-trust-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+  border-radius: 12px;
+  padding: 8px;
+}
+
+.shop-bottom-trust-card:hover {
+  transform: translateY(-4px);
+  background-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+.shop-bottom-trust-card:hover .shop-bottom-icon-wrap {
+  transform: scale(1.15) rotate(10deg);
+  border-color: #15803D !important;
+  background-color: #ECFDF5 !important;
+  color: #15803D !important;
+  box-shadow: 0 0 14px rgba(46, 125, 50, 0.25);
+}
+
+.shop-bottom-icon-wrap {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Floating Honey Bee / Back-to-Top Button */
+@keyframes floatingBackToTop {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.shop-back-to-top-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  color: #FFFFFF;
+  border: 2px solid #FDE68A;
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.35);
+  cursor: pointer;
+  animation: floatingBackToTop 3.5s infinite ease-in-out;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.shop-back-to-top-btn:hover {
+  transform: translateY(-4px) scale(1.05) !important;
+  box-shadow: 0 12px 30px rgba(217, 119, 6, 0.5) !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+}
+
+.shop-back-to-top-btn:active {
+  transform: scale(0.95) !important;
+}

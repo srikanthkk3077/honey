@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useStore } from '../../../store/store';
 import { ProductGrid } from '../../../components/customer/product/ProductGrid';
@@ -17,6 +17,85 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { DEFAULT_SHOP_CONFIG } from '../../../types/customer.types';
+import './Shop.animations.css';
+
+// Animated Honey Bee with fluttering wings and golden glow
+const AnimatedBee: React.FC<{
+  className?: string;
+  style?: React.CSSProperties;
+  size?: number;
+}> = ({ className = '', style, size = 32 }) => (
+  <div className={`shop-animated-bee ${className}`} style={{ width: size, height: size, ...style }}>
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id={`beeBodyGrad-${size}`} cx="45%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="35%" stopColor="#F59E0B" />
+          <stop offset="75%" stopColor="#D97706" />
+          <stop offset="100%" stopColor="#78350F" />
+        </radialGradient>
+        <linearGradient id={`beeWingGrad-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
+          <stop offset="100%" stopColor="rgba(254,243,199,0.35)" />
+        </linearGradient>
+        <filter id={`beeDropGlow-${size}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#F59E0B" floodOpacity="0.45" />
+        </filter>
+      </defs>
+      <g filter={`url(#beeDropGlow-${size})`}>
+        {/* Left Wing (rapid flutter) */}
+        <ellipse
+          className="shop-bee-wing-l"
+          cx="17"
+          cy="12"
+          rx="9"
+          ry="5"
+          fill={`url(#beeWingGrad-${size})`}
+          stroke="#FDE68A"
+          strokeWidth="0.8"
+        />
+        {/* Right Wing (rapid flutter) */}
+        <ellipse
+          className="shop-bee-wing-r"
+          cx="24"
+          cy="11"
+          rx="9"
+          ry="5"
+          fill={`url(#beeWingGrad-${size})`}
+          stroke="#FDE68A"
+          strokeWidth="0.8"
+        />
+        {/* Honey Bee Body */}
+        <ellipse cx="20" cy="22" rx="9" ry="13" transform="rotate(38 20 22)" fill={`url(#beeBodyGrad-${size})`} />
+        {/* Artisanal Stripes */}
+        <path d="M 12 18 Q 19 21 25 22" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M 14 23 Q 21 25 27 27" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
+        {/* Head */}
+        <circle cx="27" cy="16" r="4.2" fill="#291508" />
+        {/* Eye with Golden Glint */}
+        <circle cx="28" cy="15" r="1.1" fill="#FEF3C7" />
+        {/* Antennae */}
+        <path d="M 29 14 Q 33 11 32 8" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+        <circle cx="32" cy="8" r="0.9" fill="#F59E0B" />
+        <path d="M 30 16 Q 34 15 35 12" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+        <circle cx="35" cy="12" r="0.9" fill="#F59E0B" />
+        {/* Stinger */}
+        <path d="M 11.5 28.5 L 8.5 31.5" stroke="#291508" strokeWidth="1.4" strokeLinecap="round" />
+      </g>
+    </svg>
+  </div>
+);
+
+// Floating Golden Honey Particles
+const PollenParticles: React.FC = () => (
+  <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 3 }}>
+    <div className="shop-pollen-particle" style={{ width: 6, height: 6, left: '12%', top: '70%', animationDelay: '0s', animationDuration: '6s' }} />
+    <div className="shop-pollen-particle" style={{ width: 8, height: 8, left: '34%', top: '80%', animationDelay: '1.5s', animationDuration: '7s' }} />
+    <div className="shop-pollen-particle" style={{ width: 5, height: 5, left: '58%', top: '75%', animationDelay: '2.5s', animationDuration: '5.5s' }} />
+    <div className="shop-pollen-particle" style={{ width: 7, height: 7, left: '76%', top: '65%', animationDelay: '0.8s', animationDuration: '6.5s' }} />
+    <div className="shop-pollen-particle" style={{ width: 6, height: 6, left: '88%', top: '82%', animationDelay: '3.2s', animationDuration: '7.5s' }} />
+  </div>
+);
 
 // Price range options matching reference design
 interface PriceRangeOption {
@@ -48,6 +127,15 @@ export const Shop: React.FC = () => {
   const [sortBy, setSortBy] = useState<'best-selling' | 'price-asc' | 'price-desc' | 'rating' | 'newest'>('best-selling');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Shop configuration from store settings (managed by admin!)
   const shopConfig = settings?.shopConfig || DEFAULT_SHOP_CONFIG;
@@ -200,6 +288,15 @@ export const Shop: React.FC = () => {
               display: 'block',
             }}
           />
+          {/* Animated golden sunlight sweep overlay */}
+          <div className="shop-sunbeam-overlay" />
+
+          {/* Floating golden honey particles */}
+          <PollenParticles />
+
+          {/* Animated Honey Bees */}
+          <AnimatedBee className="shop-bee-1" style={{ top: '24%', left: '42%' }} size={36} />
+          <AnimatedBee className="shop-bee-2" style={{ top: '16%', right: '14%' }} size={32} />
         </section>
       ) : (
         <section
@@ -215,8 +312,20 @@ export const Shop: React.FC = () => {
             padding: '2.5rem 0',
           }}
         >
-          {/* Subtle decorative honeycomb in top left */}
+          {/* Animated golden sunlight sweep overlay */}
+          <div className="shop-sunbeam-overlay" />
+
+          {/* Floating golden honey particles */}
+          <PollenParticles />
+
+          {/* Animated Honey Bees fluttering across the collection banner */}
+          <AnimatedBee className="shop-bee-1" style={{ top: '20%', left: '44%' }} size={36} />
+          <AnimatedBee className="shop-bee-2" style={{ top: '15%', right: '14%' }} size={34} />
+          <AnimatedBee className="shop-bee-3" style={{ top: '65%', right: '30%' }} size={26} />
+
+          {/* Decorative honeycomb & leaves in top left with gentle breeze animation */}
           <div
+            className="shop-leaf-sway"
             style={{
               position: 'absolute',
               top: 0,
@@ -227,12 +336,13 @@ export const Shop: React.FC = () => {
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'left top',
               backgroundSize: 'contain',
-              opacity: 0.65,
+              opacity: 0.7,
               pointerEvents: 'none',
+              zIndex: 2,
             }}
           />
 
-          <div className="container" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="container" style={{ position: 'relative', zIndex: 3 }}>
             <div
               style={{
                 display: 'flex',
@@ -257,7 +367,18 @@ export const Shop: React.FC = () => {
                     gap: '6px',
                   }}
                 >
-                  <span>{shopConfig.eyebrow}</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      backgroundColor: '#ECFDF5',
+                      color: '#065F46',
+                      padding: '3px 9px',
+                      borderRadius: '20px',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                    }}
+                  >
+                    {shopConfig.eyebrow}
+                  </span>
                 </p>
 
                 <h1
@@ -268,6 +389,7 @@ export const Shop: React.FC = () => {
                     color: '#29180E',
                     lineHeight: 1.15,
                     margin: '0 0 0.75rem 0',
+                    textShadow: '0 1px 2px rgba(255,255,255,0.8)',
                   }}
                 >
                   {shopConfig.title}
@@ -285,25 +407,33 @@ export const Shop: React.FC = () => {
                   {shopConfig.subtitle}
                 </p>
 
-                {/* 3 Trust badges row */}
+                {/* 3 Trust badges row with interactive hover animation */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '1.25rem',
+                    gap: '1rem',
                     flexWrap: 'wrap',
                   }}
                 >
                   {shopConfig.trustBadges.map((badge, idx) => (
                     <div
                       key={idx}
+                      className="shop-hero-badge-pill"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '8px',
+                        gap: '9px',
+                        padding: '6px 12px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(235, 228, 216, 0.9)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                       }}
                     >
                       <div
+                        className="shop-badge-icon-wrap"
                         style={{
                           width: '32px',
                           height: '32px',
@@ -338,7 +468,7 @@ export const Shop: React.FC = () => {
                 </div>
               </div>
 
-              {/* Right Script Text or Watermark */}
+              {/* Right Script Text with Gold Calligraphy Shimmer */}
               {shopConfig.heroScriptText && (
                 <div
                   style={{
@@ -350,6 +480,7 @@ export const Shop: React.FC = () => {
                   }}
                 >
                   <span
+                    className="shop-hero-script-shimmer"
                     style={{
                       fontFamily: "'Playfair Display', Georgia, serif",
                       fontStyle: 'italic',
@@ -427,6 +558,7 @@ export const Shop: React.FC = () => {
                 {isFiltered && (
                   <button
                     onClick={handleClearFilters}
+                    className="shop-clear-filter-btn"
                     style={{
                       background: 'none',
                       border: 'none',
@@ -436,10 +568,10 @@ export const Shop: React.FC = () => {
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '2px',
+                      gap: '3px',
                     }}
                   >
-                    <X size={12} /> Clear
+                    <X size={13} /> Clear
                   </button>
                 )}
               </div>
@@ -467,6 +599,7 @@ export const Shop: React.FC = () => {
                       <button
                         key="all"
                         onClick={() => handleCategorySelect('all')}
+                        className="shop-filter-cat-row"
                         style={{
                           width: '100%',
                           textAlign: 'left',
@@ -481,17 +614,11 @@ export const Shop: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          transition: 'background-color 0.15s ease',
-                        }}
-                        onMouseOver={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = '#FAF6F0';
-                        }}
-                        onMouseOut={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span
+                            className={`shop-filter-radio-dot ${isActive ? 'shop-filter-radio-active' : ''}`}
                             style={{
                               width: '14px',
                               height: '14px',
@@ -505,6 +632,7 @@ export const Shop: React.FC = () => {
                           <span>All Honeys</span>
                         </span>
                         <span
+                          className="shop-filter-cat-count"
                           style={{
                             fontSize: '0.68rem',
                             fontWeight: 700,
@@ -528,6 +656,7 @@ export const Shop: React.FC = () => {
                       <button
                         key={cat.id || cat.slug}
                         onClick={() => handleCategorySelect(cat.slug)}
+                        className="shop-filter-cat-row"
                         style={{
                           width: '100%',
                           textAlign: 'left',
@@ -542,17 +671,11 @@ export const Shop: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          transition: 'background-color 0.15s ease',
-                        }}
-                        onMouseOver={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = '#FAF6F0';
-                        }}
-                        onMouseOut={(e) => {
-                          if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span
+                            className={`shop-filter-radio-dot ${isActive ? 'shop-filter-radio-active' : ''}`}
                             style={{
                               width: '14px',
                               height: '14px',
@@ -566,6 +689,7 @@ export const Shop: React.FC = () => {
                           <span>{cat.name}</span>
                         </span>
                         <span
+                          className="shop-filter-cat-count"
                           style={{
                             fontSize: '0.68rem',
                             fontWeight: 700,
@@ -605,6 +729,7 @@ export const Shop: React.FC = () => {
                       <button
                         key={range.id}
                         onClick={() => handlePriceSelect(range.id)}
+                        className="shop-filter-cat-row"
                         style={{
                           width: '100%',
                           textAlign: 'left',
@@ -619,10 +744,10 @@ export const Shop: React.FC = () => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '8px',
-                          transition: 'background-color 0.15s ease',
                         }}
                       >
                         <span
+                          className={`shop-filter-radio-dot ${isSelected ? 'shop-filter-radio-active' : ''}`}
                           style={{
                             width: '14px',
                             height: '14px',
@@ -653,6 +778,7 @@ export const Shop: React.FC = () => {
                       }
                       setSearchParams(params);
                     }}
+                    className="shop-filter-cat-row"
                     style={{
                       width: '100%',
                       padding: '7px 10px',
@@ -677,6 +803,7 @@ export const Shop: React.FC = () => {
                       <span>Saved Favorites</span>
                     </span>
                     <span
+                      className="shop-filter-cat-count"
                       style={{
                         fontSize: '0.68rem',
                         fontWeight: 700,
@@ -708,7 +835,7 @@ export const Shop: React.FC = () => {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     padding: '10px 12px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    boxShadow: '0 4px 14px rgba(217, 119, 6, 0.12)',
                   }}
                 >
                   {/* Gradient overlay to ensure text is crystal clear */}
@@ -742,13 +869,14 @@ export const Shop: React.FC = () => {
 
                   <Link
                     to={shopConfig.sidebarPromo?.linkUrl || '/about'}
+                    className="shop-promo-btn"
                     style={{
                       position: 'relative',
                       zIndex: 2,
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      backgroundColor: 'rgba(45, 24, 16, 0.9)',
+                      gap: '5px',
+                      backgroundColor: 'rgba(45, 24, 16, 0.92)',
                       backdropFilter: 'blur(4px)',
                       color: '#FFFFFF',
                       fontSize: '0.68rem',
@@ -758,10 +886,10 @@ export const Shop: React.FC = () => {
                       textDecoration: 'none',
                       width: 'fit-content',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                      transition: 'background-color 0.2s',
                     }}
                   >
-                    <span>{shopConfig.sidebarPromo?.buttonText || 'Learn More →'}</span>
+                    <span>{shopConfig.sidebarPromo?.buttonText?.replace('→', '').trim() || 'Learn More'}</span>
+                    <span className="shop-promo-arrow">→</span>
                   </Link>
                 </div>
               )}
@@ -815,6 +943,7 @@ export const Shop: React.FC = () => {
                   <button
                     onClick={() => setViewMode('grid')}
                     title="Grid View"
+                    className="shop-view-mode-btn"
                     style={{
                       width: '30px',
                       height: '30px',
@@ -833,6 +962,7 @@ export const Shop: React.FC = () => {
                   <button
                     onClick={() => setViewMode('list')}
                     title="List View"
+                    className="shop-view-mode-btn"
                     style={{
                       width: '30px',
                       height: '30px',
@@ -853,6 +983,7 @@ export const Shop: React.FC = () => {
                 {/* Active Filter Pill Chip */}
                 {selectedCategory !== 'all' ? (
                   <div
+                    className="shop-filter-pill-tag"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -884,6 +1015,7 @@ export const Shop: React.FC = () => {
                   </div>
                 ) : (
                   <div
+                    className="shop-filter-pill-tag"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -905,6 +1037,7 @@ export const Shop: React.FC = () => {
                 {/* Price Filter Chip */}
                 {priceParam && (
                   <div
+                    className="shop-filter-pill-tag"
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -946,6 +1079,7 @@ export const Shop: React.FC = () => {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as any)}
+                    className="shop-sort-select"
                     style={{
                       padding: '6px 28px 6px 10px',
                       borderRadius: '8px',
@@ -1059,8 +1193,9 @@ export const Shop: React.FC = () => {
             overflow: 'hidden',
           }}
         >
-          {/* Decorative Honeycomb & Leaves at Bottom-Right */}
+          {/* Decorative Honeycomb & Leaves at Bottom-Right with gentle sway */}
           <div
+            className="shop-leaf-sway-bottom"
             style={{
               position: 'absolute',
               right: '0',
@@ -1089,6 +1224,7 @@ export const Shop: React.FC = () => {
             {shopConfig.bottomTrustItems.map((item, idx) => (
               <div
                 key={idx}
+                className="shop-bottom-trust-card"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1096,6 +1232,7 @@ export const Shop: React.FC = () => {
                 }}
               >
                 <div
+                  className="shop-bottom-icon-wrap"
                   style={{
                     width: '38px',
                     height: '38px',
@@ -1145,6 +1282,19 @@ export const Shop: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Honey Bee Back-To-Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="shop-back-to-top-btn"
+          title="Back to Top"
+          aria-label="Back to Top"
+        >
+          <AnimatedBee size={22} />
+          <span>Back to Top 🍯</span>
+        </button>
+      )}
 
       {/* Responsive styles */}
       <style>{`

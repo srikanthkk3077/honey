@@ -1297,9 +1297,7 @@ export const Orders: React.FC = () => {
                 margin: 0,
               }}
             >
-              From our forest
-              <br />
-              to your home
+              Madhuvan Pure and Natural Honey
             </h2>
 
             <p
@@ -1361,7 +1359,7 @@ export const Orders: React.FC = () => {
               }}
             >
               <img
-                src="/images/brand/madhuvan_jute_jar.jpg"
+                src="/images/brand/madhuvan.png"
                 alt="Madhuvan Raw Honey jar with wooden dipper"
                 style={{
                   width: '100%',
