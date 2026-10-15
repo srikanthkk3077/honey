@@ -1,0 +1,356 @@
+/* ===================================================================
+   MADHUVAN HONEY - HERO SECTION LUXURY ARTISANAL ANIMATIONS
+   =================================================================== */
+
+/* ── 1. Animated Bees Flight & Wing Flutter ───────────────────────── */
+@keyframes heroBeeWingL {
+  0% {
+    transform: rotate(-35deg) scaleY(1);
+  }
+  100% {
+    transform: rotate(-15deg) scaleY(0.35);
+  }
+}
+
+@keyframes heroBeeWingR {
+  0% {
+    transform: rotate(25deg) scaleY(1);
+  }
+  100% {
+    transform: rotate(5deg) scaleY(0.35);
+  }
+}
+
+.hero-bee-wing-l {
+  transform-origin: 17px 12px;
+  animation: heroBeeWingL 0.08s infinite alternate ease-in-out;
+}
+
+.hero-bee-wing-r {
+  transform-origin: 24px 11px;
+  animation: heroBeeWingR 0.08s infinite alternate ease-in-out;
+}
+
+@keyframes heroBeeFlight1 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(22px, -18px, 0) rotate(8deg);
+  }
+  50% {
+    transform: translate3d(40px, -4px, 0) rotate(-4deg);
+  }
+  75% {
+    transform: translate3d(15px, 14px, 0) rotate(6deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes heroBeeFlight2 {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  30% {
+    transform: translate3d(-18px, 20px, 0) rotate(-9deg);
+  }
+  60% {
+    transform: translate3d(-32px, -10px, 0) rotate(5deg);
+  }
+  85% {
+    transform: translate3d(-10px, -18px, 0) rotate(8deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+}
+
+@keyframes heroBeeFlight3 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.85) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(20px, 18px, 0) scale(0.9) rotate(6deg);
+  }
+  66% {
+    transform: translate3d(-15px, 22px, 0) scale(0.82) rotate(-6deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.85) rotate(0deg);
+  }
+}
+
+.hero-animated-bee-1 {
+  position: absolute;
+  z-index: 6;
+  animation: heroBeeFlight1 8.5s infinite ease-in-out;
+  cursor: pointer;
+  transition: filter 0.25s ease;
+}
+
+.hero-animated-bee-1:hover {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.9));
+}
+
+.hero-animated-bee-2 {
+  position: absolute;
+  z-index: 6;
+  animation: heroBeeFlight2 10s infinite ease-in-out;
+  cursor: pointer;
+  transition: filter 0.25s ease;
+}
+
+.hero-animated-bee-2:hover {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.9));
+}
+
+.hero-animated-bee-3 {
+  position: absolute;
+  z-index: 4;
+  opacity: 0.8;
+  animation: heroBeeFlight3 12s infinite ease-in-out;
+}
+
+/* ── 2. Floating Golden Pollen Particles ────────────────────────── */
+@keyframes heroPollenFloat {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.6;
+    transform: translateY(-65px) translateX(30px) scale(1.15);
+  }
+  100% {
+    transform: translateY(-110px) translateX(55px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.hero-pollen-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFFBEB 0%, #FDE68A 40%, #F59E0B 80%, transparent 100%);
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+  pointer-events: none;
+  z-index: 4;
+  animation: heroPollenFloat 6s infinite ease-in-out;
+}
+
+/* ── 3. Ambient Sunlight Sweep Overlay ──────────────────────────── */
+@keyframes heroSunlightRay {
+  0% {
+    opacity: 0.2;
+    transform: translateX(-40%) skewX(-20deg);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(35%) skewX(-15deg);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateX(120%) skewX(-20deg);
+  }
+}
+
+.hero-sunbeam-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(254, 243, 199, 0.08) 25%,
+    rgba(245, 158, 11, 0.18) 50%,
+    rgba(254, 243, 199, 0.08) 75%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+  animation: heroSunlightRay 15s infinite ease-in-out;
+}
+
+/* ── 4. Liquid Gold Calligraphy Shimmer for Headline ────────────── */
+@keyframes heroGoldShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.hero-title-gold-shimmer {
+  display: inline-block;
+  background: linear-gradient(
+    115deg,
+    #F59E0B 0%,
+    #FBBF24 25%,
+    #FFFBEB 45%,
+    #FEF3C7 55%,
+    #D97706 75%,
+    #F59E0B 100%
+  );
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroGoldShimmer 6.5s infinite linear;
+  text-shadow: 0 2px 14px rgba(245, 158, 11, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.hero-title-gold-shimmer:hover {
+  transform: scale(1.02);
+}
+
+/* ── 5. Eyebrow Badge Glow ───────────────────────────────────────── */
+@keyframes eyebrowGlowPulse {
+  0%, 100% {
+    opacity: 0.9;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-1px);
+  }
+}
+
+.hero-eyebrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  animation: eyebrowGlowPulse 4s infinite ease-in-out;
+}
+
+/* ── 6. CTA Action Buttons Polish ────────────────────────────────── */
+@keyframes btnSheenSweep {
+  0% {
+    left: -120%;
+  }
+  100% {
+    left: 180%;
+  }
+}
+
+.hero-primary-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hero-primary-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transform: skewX(-22deg);
+  pointer-events: none;
+}
+
+.hero-primary-btn:hover::after {
+  animation: btnSheenSweep 0.85s ease-out;
+}
+
+.hero-primary-btn:hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.45) !important;
+  filter: brightness(1.1) !important;
+}
+
+.hero-primary-btn:hover .hero-arrow-icon {
+  transform: translateX(6px);
+}
+
+.hero-arrow-icon {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Radar pulse ring for Watch Story button */
+@keyframes playRadarPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.65);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(245, 158, 11, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.hero-play-icon-wrap {
+  animation: playRadarPulse 2.4s infinite ease-out;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hero-secondary-btn {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hero-secondary-btn:hover {
+  transform: translateY(-2.5px) scale(1.02) !important;
+  background-color: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.7) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+}
+
+.hero-secondary-btn:hover .hero-play-icon-wrap {
+  transform: scale(1.18);
+}
+
+/* ── 7. Trust Badges Interactive Polish ──────────────────────────── */
+.trust-badge-item {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+
+.trust-badge-item:hover {
+  transform: translateY(-4px) scale(1.04);
+}
+
+.trust-badge-item:hover .trust-badge-icon-wrap {
+  transform: scale(1.15) rotate(8deg);
+  border-color: #F59E0B !important;
+  background-color: rgba(254, 243, 199, 0.35) !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45) !important;
+  color: #F59E0B !important;
+}
+
+.trust-badge-icon-wrap {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── 8. Callout Badge Floating Bobbing ───────────────────────────── */
+@keyframes floatCalloutLux {
+  0%, 100% {
+    transform: rotate(-4deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-2.5deg) translateY(-8px);
+  }
+}
+
+.hero-callout-badge-lux {
+  animation: floatCalloutLux 4.5s infinite ease-in-out;
+  transition: all 0.3s ease;
+}
+
+.hero-callout-badge-lux:hover {
+  transform: rotate(-2deg) scale(1.06) !important;
+  box-shadow: 0 14px 30px rgba(245, 158, 11, 0.4) !important;
+}

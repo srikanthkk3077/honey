@@ -4,6 +4,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { useStore } from '../../../store/store';
 import { SliderItem } from '../../../types/slider.types';
 import { DEFAULT_HERO_CONFIG } from '../../../types/customer.types';
+import './Hero.animations.css';
 
 // Fallback slide built from heroConfig when no sliders exist
 const buildFallbackSlide = (heroConfig: any): SliderItem => ({
@@ -256,6 +257,7 @@ export const HeroSlider: React.FC = () => {
             {slide.ctaText && (
               <Link
                 to={slide.linkUrl || '/shop'}
+                className="hero-primary-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -272,13 +274,14 @@ export const HeroSlider: React.FC = () => {
                 }}
               >
                 <span>{slide.ctaText}</span>
-                <ArrowRight size={17} />
+                <ArrowRight size={17} className="hero-arrow-icon" />
               </Link>
             )}
 
             {slide.secondaryCtaText && (
               <Link
                 to={slide.secondaryCtaLink || '/videos'}
+                className="hero-secondary-btn"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -295,7 +298,9 @@ export const HeroSlider: React.FC = () => {
                   transition: 'all 0.25s ease',
                 }}
               >
-                <Play size={15} fill="#FFFFFF" />
+                <span className="hero-play-icon-wrap" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Play size={15} fill="#FFFFFF" />
+                </span>
                 <span>{slide.secondaryCtaText}</span>
               </Link>
             )}

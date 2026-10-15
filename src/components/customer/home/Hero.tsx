@@ -17,6 +17,86 @@ import {
 import { useStore } from '../../../store/store';
 import { DEFAULT_HERO_CONFIG, HeroBadge, HeroBannerSlide } from '../../../types/customer.types';
 import { isDarkColor, colorWithAlpha, getSlideGradientMask } from '../../../utils/color';
+import './Hero.animations.css';
+
+// Animated Honey Bee with fluttering wings and golden glow for Hero
+const HeroAnimatedBee: React.FC<{
+  className?: string;
+  style?: React.CSSProperties;
+  size?: number;
+}> = ({ className = '', style, size = 34 }) => (
+  <div className={className} style={{ width: size, height: size, pointerEvents: 'auto', ...style }}>
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id={`heroBeeBody-${size}`} cx="45%" cy="45%" r="55%">
+          <stop offset="0%" stopColor="#FDE68A" />
+          <stop offset="35%" stopColor="#F59E0B" />
+          <stop offset="75%" stopColor="#D97706" />
+          <stop offset="100%" stopColor="#78350F" />
+        </radialGradient>
+        <linearGradient id={`heroBeeWing-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
+          <stop offset="100%" stopColor="rgba(254,243,199,0.35)" />
+        </linearGradient>
+        <filter id={`heroBeeGlow-${size}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#F59E0B" floodOpacity="0.5" />
+        </filter>
+      </defs>
+      <g filter={`url(#heroBeeGlow-${size})`}>
+        {/* Left Wing (flutters rapidly) */}
+        <ellipse
+          className="hero-bee-wing-l"
+          cx="17"
+          cy="12"
+          rx="9"
+          ry="5"
+          fill={`url(#heroBeeWing-${size})`}
+          stroke="#FDE68A"
+          strokeWidth="0.8"
+        />
+        {/* Right Wing (flutters rapidly) */}
+        <ellipse
+          className="hero-bee-wing-r"
+          cx="24"
+          cy="11"
+          rx="9"
+          ry="5"
+          fill={`url(#heroBeeWing-${size})`}
+          stroke="#FDE68A"
+          strokeWidth="0.8"
+        />
+        {/* Bee Body */}
+        <ellipse cx="20" cy="22" rx="9" ry="13" transform="rotate(38 20 22)" fill={`url(#heroBeeBody-${size})`} />
+        {/* Dark Stripes */}
+        <path d="M 12 18 Q 19 21 25 22" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M 14 23 Q 21 25 27 27" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
+        {/* Head */}
+        <circle cx="27" cy="16" r="4.2" fill="#291508" />
+        {/* Honey Glint on Eye */}
+        <circle cx="28" cy="15" r="1.1" fill="#FEF3C7" />
+        {/* Antennae */}
+        <path d="M 29 14 Q 33 11 32 8" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+        <circle cx="32" cy="8" r="0.9" fill="#F59E0B" />
+        <path d="M 30 16 Q 34 15 35 12" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+        <circle cx="35" cy="12" r="0.9" fill="#F59E0B" />
+        {/* Stinger */}
+        <path d="M 11.5 28.5 L 8.5 31.5" stroke="#291508" strokeWidth="1.4" strokeLinecap="round" />
+      </g>
+    </svg>
+  </div>
+);
+
+// Floating Golden Honey Particles
+const HeroPollenParticles: React.FC = () => (
+  <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 4 }}>
+    <div className="hero-pollen-dot" style={{ width: 7, height: 7, left: '10%', top: '65%', animationDelay: '0s', animationDuration: '6s' }} />
+    <div className="hero-pollen-dot" style={{ width: 9, height: 9, left: '32%', top: '75%', animationDelay: '1.2s', animationDuration: '7.5s' }} />
+    <div className="hero-pollen-dot" style={{ width: 6, height: 6, left: '48%', top: '70%', animationDelay: '2.4s', animationDuration: '5.8s' }} />
+    <div className="hero-pollen-dot" style={{ width: 8, height: 8, left: '68%', top: '80%', animationDelay: '0.6s', animationDuration: '6.8s' }} />
+    <div className="hero-pollen-dot" style={{ width: 6, height: 6, left: '84%', top: '60%', animationDelay: '3.1s', animationDuration: '8s' }} />
+    <div className="hero-pollen-dot" style={{ width: 8, height: 8, left: '92%', top: '75%', animationDelay: '1.8s', animationDuration: '7s' }} />
+  </div>
+);
 
 // Render the trust badge icon based on the icon key
 const renderBadgeIcon = (iconKey: string) => {
@@ -279,6 +359,17 @@ export const Hero: React.FC = () => {
           </div>
         );
       })}
+
+      {/* Warm Ambient Sunlight Sweep Overlay */}
+      <div className="hero-sunbeam-layer" />
+
+      {/* Floating Golden Pollen Particles */}
+      <HeroPollenParticles />
+
+      {/* Floating Animated Honey Bees fluttering across the scene */}
+      <HeroAnimatedBee className="hero-animated-bee-1" style={{ top: '20%', left: '46%' }} size={38} />
+      <HeroAnimatedBee className="hero-animated-bee-2" style={{ top: '15%', right: '16%' }} size={34} />
+      <HeroAnimatedBee className="hero-animated-bee-3" style={{ top: '68%', right: '35%' }} size={26} />
       
       <div
         className="container"
@@ -314,9 +405,9 @@ export const Hero: React.FC = () => {
               animation: total > 1 ? 'heroContentFade 0.65s cubic-bezier(0.16, 1, 0.3, 1) both' : 'none',
             }}
           >
-            {/* 1. Eyebrow Tagline */}
+            {/* 1. Eyebrow Tagline with subtle breathing animation */}
             <div
-              className="hero-eyebrow"
+              className="hero-eyebrow hero-eyebrow-badge"
               style={{
                 fontSize: 'clamp(0.76rem, 1.3vw, 0.88rem)',
                 fontWeight: 800,
@@ -333,7 +424,7 @@ export const Hero: React.FC = () => {
               <span>{eyebrow}</span>
             </div>
 
-            {/* 2. Main Headline (Serif Elegant Typography) */}
+            {/* 2. Main Headline (Serif Elegant Typography with Liquid Gold Shimmer) */}
             <h1
               className="hero-headline"
               style={{
@@ -357,7 +448,14 @@ export const Hero: React.FC = () => {
                   {titleLine1}
                 </span>
                 {titleLine2 && (
-                  <span className="hero-title-line-2" style={{ display: 'block', color: isDark ? '#FFFBEB' : '#955C0D' }}>
+                  <span
+                    className="hero-title-line-2 hero-title-gold-shimmer"
+                    style={{
+                      display: 'block',
+                      color: isDark ? '#FFFBEB' : '#955C0D',
+                      marginTop: '2px',
+                    }}
+                  >
                     {titleLine2}
                   </span>
                 )}
@@ -445,18 +543,20 @@ export const Hero: React.FC = () => {
                     }}
                   >
                     <span
+                      className="hero-play-icon-wrap"
                       style={{
-                        width: '20px',
-                        height: '20px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
                         backgroundColor: isDark ? '#F59E0B' : '#381B0E',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: isDark ? '#1C1917' : '#FDDCC3',
+                        flexShrink: 0,
                       }}
                     >
-                      <Play size={10} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
+                      <Play size={11} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
                     </span>
                     <span>{secondaryCtaText}</span>
                   </button>
@@ -485,18 +585,20 @@ export const Hero: React.FC = () => {
                     }}
                   >
                     <span
+                      className="hero-play-icon-wrap"
                       style={{
-                        width: '20px',
-                        height: '20px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
                         backgroundColor: isDark ? '#F59E0B' : '#381B0E',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: isDark ? '#1C1917' : '#FDDCC3',
+                        flexShrink: 0,
                       }}
                     >
-                      <Play size={10} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
+                      <Play size={11} style={{ marginLeft: '1px' }} fill={isDark ? '#1C1917' : '#FDDCC3'} />
                     </span>
                     <span>{secondaryCtaText}</span>
                   </Link>
@@ -504,7 +606,7 @@ export const Hero: React.FC = () => {
               )}
             </div>
 
-            {/* 5. Trust Badges Row (4 circular line-art badges) */}
+            {/* 5. Trust Badges Row (4 circular line-art badges with interactive animation) */}
             {activeBadges.length > 0 && (
               <div
                 className="hero-trust-badges"
@@ -533,18 +635,19 @@ export const Hero: React.FC = () => {
                   >
                     {/* Circle Icon Container */}
                     <div
+                      className="trust-badge-icon-wrap"
                       style={{
-                        width: '42px',
-                        height: '42px',
+                        width: '44px',
+                        height: '44px',
                         borderRadius: '50%',
-                        border: isDark ? '1.5px solid rgba(255, 255, 255, 0.3)' : '1.5px solid rgba(154, 70, 22, 0.4)',
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.42)',
+                        border: isDark ? '1.5px solid rgba(255, 255, 255, 0.35)' : '1.5px solid rgba(154, 70, 22, 0.45)',
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(255, 255, 255, 0.5)',
+                        backdropFilter: 'blur(6px)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: isDark ? '#FBBF24' : '#8A3E15',
-                        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-                        transition: 'transform 0.2s ease, background-color 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                       }}
                     >
                       {renderBadgeIcon(badge.icon)}
@@ -584,19 +687,18 @@ export const Hero: React.FC = () => {
               paddingRight: 'clamp(0.5rem, 2vw, 2rem)',
             }}
           >
-            {/* Callout Speech Bubble (Pure Honey / Stronger Communities) */}
+            {/* Callout Speech Bubble (Pure Honey / Stronger Communities) with Luxury Bobbing */}
             {hero.showCalloutBadge !== false && (
               <div
-                className="hero-callout-badge"
+                className="hero-callout-badge hero-callout-badge-lux"
                 style={{
-                  backgroundColor: isDark ? 'rgba(28, 14, 8, 0.92)' : 'rgba(253, 237, 219, 0.95)',
+                  backgroundColor: isDark ? 'rgba(28, 14, 8, 0.94)' : 'rgba(253, 237, 219, 0.96)',
                   border: isDark ? '1.5px solid #F59E0B' : '1.5px solid #C47942',
                   borderRadius: '50px',
                   padding: '8px 18px',
-                  boxShadow: '0 8px 22px rgba(0, 0, 0, 0.25)',
+                  boxShadow: '0 10px 26px rgba(0, 0, 0, 0.28)',
                   transform: 'rotate(-4deg)',
                   pointerEvents: 'none',
-                  animation: 'floatCallout 4s ease-in-out infinite',
                 }}
               >
                 <div
