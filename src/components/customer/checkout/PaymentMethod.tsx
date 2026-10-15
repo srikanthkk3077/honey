@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PaymentMethodType } from '../../../types/order.types';
 import { UpiPaymentMethod } from '../../../types/customer.types';
-import { UPI_PRESETS } from '../../admin/settings/UpiMethodsManager';
+import { UPI_PRESETS, MethodIcon } from '../../admin/settings/UpiMethodsManager';
 import {
   QrCode, Banknote, ShieldCheck, Copy, Check, Upload, X,
   Building2, AlertCircle, CheckCircle2, Smartphone, ExternalLink,
@@ -272,18 +272,13 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
                         flex: '1 1 130px', justifyContent: 'center',
                       }}
                     >
-                      <div style={{
-                        width: '22px', height: '22px', borderRadius: '5px',
-                        background: color, display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', flexShrink: 0,
-                      }}>
-                        <span style={{ color: '#FFF', fontSize: '11px', fontWeight: 900 }}>{letter}</span>
-                      </div>
+                      <MethodIcon iconImage={method.iconImage} iconLetter={letter} color={color} size={24} />
                       Pay with {method.label}
                     </button>
                   );
                 })}
               </div>
+
 
               {/* App-not-installed fallback */}
               {fallbackMethodId && (() => {

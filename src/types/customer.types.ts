@@ -22,7 +22,8 @@ export interface UpiPaymentMethod {
   isActive: boolean;
   deepLinkScheme?: string; // e.g. "phonepe://pay", "tez://upi/pay"
   brandColor?: string;     // hex color for button
-  iconLetter?: string;     // single letter for icon avatar
+  iconLetter?: string;     // single letter for icon avatar (fallback)
+  iconImage?: string;      // base64 data URL of uploaded logo image
 }
 
 export interface PaymentConfig {
