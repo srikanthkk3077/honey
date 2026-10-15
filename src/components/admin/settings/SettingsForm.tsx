@@ -3,8 +3,9 @@ import { Input } from '../../common/Input';
 import { Button } from '../../common/Button';
 import { useStore } from '../../../store/store';
 import { APP_NAME, CONTACT_INFO, FREE_SHIPPING_THRESHOLD, STANDARD_SHIPPING_FEE, BUSINESS_PAYMENT_DETAILS } from '../../../utils/constants';
-import { DeliveryZone, DeliveryConfig } from '../../../types/customer.types';
+import { DeliveryZone, DeliveryConfig, UpiPaymentMethod } from '../../../types/customer.types';
 import { DEFAULT_DELIVERY_CONFIG, DEFAULT_DELIVERY_ZONES, fetchPincodeDetails } from '../../../utils/delivery';
+import { UpiMethodsManager } from './UpiMethodsManager';
 import {
   Loader,
   QrCode,
@@ -46,8 +47,10 @@ export const SettingsForm: React.FC = () => {
   const [isUpiActive, setIsUpiActive] = useState(settings?.paymentConfig?.isUpiActive ?? true);
   const [isBankTransferActive, setIsBankTransferActive] = useState(settings?.paymentConfig?.isBankTransferActive ?? true);
   const [isCodActive, setIsCodActive] = useState(settings?.paymentConfig?.isCodActive ?? true);
-  const [isPhonePeActive, setIsPhonePeActive] = useState(settings?.paymentConfig?.isPhonePeActive ?? true);
-  const [isGooglePayActive, setIsGooglePayActive] = useState(settings?.paymentConfig?.isGooglePayActive ?? true);
+  // Dynamic UPI methods list
+  const [upiMethods, setUpiMethods] = useState<UpiPaymentMethod[]>(
+    settings?.paymentConfig?.upiMethods ?? []
+  );
 
   // Delivery & Serviceability Configuration
   const [deliveryMode, setDeliveryMode] = useState<'all_india' | 'restricted_pincodes'>(
@@ -98,8 +101,7 @@ export const SettingsForm: React.FC = () => {
         if (p.isUpiActive !== undefined) setIsUpiActive(p.isUpiActive);
         if (p.isBankTransferActive !== undefined) setIsBankTransferActive(p.isBankTransferActive);
         if (p.isCodActive !== undefined) setIsCodActive(p.isCodActive);
-        if (p.isPhonePeActive !== undefined) setIsPhonePeActive(p.isPhonePeActive);
-        if (p.isGooglePayActive !== undefined) setIsGooglePayActive(p.isGooglePayActive);
+        if (Array.isArray(p.upiMethods)) setUpiMethods(p.upiMethods);
       }
 
       if (settings.deliveryConfig) {
@@ -231,8 +233,7 @@ export const SettingsForm: React.FC = () => {
         isUpiActive,
         isBankTransferActive,
         isCodActive,
-        isPhonePeActive,
-        isGooglePayActive,
+        upiMethods,
       },
       deliveryConfig: {
         serviceabilityMode: deliveryMode,
@@ -801,78 +802,13 @@ export const SettingsForm: React.FC = () => {
           </label>
         </div>
 
-        {/* UPI App Quick-Pay Buttons Section */}
-        <div style={{ borderTop: '1px solid #F5F1E9', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-          <div>
-            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#1C1917', marginBottom: '4px' }}>📱 UPI App Quick-Pay Buttons</div>
-            <p style={{ fontSize: '0.8rem', color: '#78716C', margin: 0, lineHeight: 1.5 }}>
-              When enabled, PhonePe and Google Pay one-tap buttons will appear on the checkout payment page. These open the app with your Business UPI ID and order amount pre-filled.
-            </p>
-          </div>
-
-          {/* PhonePe Toggle */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.85rem 1rem', borderRadius: '12px',
-            border: isPhonePeActive ? '1.5px solid #7C3AED' : '1px solid #E7E5E4',
-            backgroundColor: isPhonePeActive ? '#F5F3FF' : '#FAFAF9',
-            transition: 'all 0.2s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'linear-gradient(135deg, #5B21B6, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 900 }}>P</span>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1C1917' }}>PhonePe</div>
-                <div style={{ fontSize: '0.75rem', color: '#78716C' }}>Opens PhonePe with UPI deep link</div>
-              </div>
-            </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={isPhonePeActive}
-                onChange={(e) => setIsPhonePeActive(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: '#7C3AED' }}
-              />
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: isPhonePeActive ? '#5B21B6' : '#78716C' }}>
-                {isPhonePeActive ? 'Enabled' : 'Disabled'}
-              </span>
-            </label>
-          </div>
-
-          {/* Google Pay Toggle */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.85rem 1rem', borderRadius: '12px',
-            border: isGooglePayActive ? '1.5px solid #1A73E8' : '1px solid #E7E5E4',
-            backgroundColor: isGooglePayActive ? '#EFF6FF' : '#FAFAF9',
-            transition: 'all 0.2s ease',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'linear-gradient(135deg, #4285F4, #1A73E8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <span style={{ color: '#FFFFFF', fontSize: '12px', fontWeight: 900 }}>G</span>
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1C1917' }}>Google Pay (GPay)</div>
-                <div style={{ fontSize: '0.75rem', color: '#78716C' }}>Opens Google Pay with UPI deep link</div>
-              </div>
-            </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={isGooglePayActive}
-                onChange={(e) => setIsGooglePayActive(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: '#1A73E8' }}
-              />
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: isGooglePayActive ? '#1558BB' : '#78716C' }}>
-                {isGooglePayActive ? 'Enabled' : 'Disabled'}
-              </span>
-            </label>
-          </div>
-
-          <div style={{ fontSize: '0.78rem', color: '#92400E', backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', padding: '0.6rem 0.85rem', lineHeight: 1.5 }}>
-            💡 <strong>Tip:</strong> The Business UPI ID configured above is used in the deep links. Make sure your UPI ID is active before enabling these buttons.
-          </div>
+        {/* Dynamic UPI Methods Manager */}
+        <div style={{ borderTop: '1px solid #F5F1E9', paddingTop: '1rem' }}>
+          <UpiMethodsManager
+            methods={upiMethods}
+            masterUpiId={upiId}
+            onChange={setUpiMethods}
+          />
         </div>
       </div>
 

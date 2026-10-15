@@ -11,6 +11,20 @@ export interface Customer {
   city: string;
 }
 
+// Preset UPI app types available in the dropdown
+export type UpiMethodType = 'phonepe' | 'googlepay' | 'paytm' | 'bhim' | 'generic_upi' | 'custom';
+
+export interface UpiPaymentMethod {
+  id: string;              // uuid
+  type: UpiMethodType;
+  label: string;           // display name shown to customer
+  upiId: string;           // this method's UPI VPA
+  isActive: boolean;
+  deepLinkScheme?: string; // e.g. "phonepe://pay", "tez://upi/pay"
+  brandColor?: string;     // hex color for button
+  iconLetter?: string;     // single letter for icon avatar
+}
+
 export interface PaymentConfig {
   upiId?: string;
   upiQrCode?: string;
@@ -24,6 +38,9 @@ export interface PaymentConfig {
   isUpiActive?: boolean;
   isBankTransferActive?: boolean;
   isCodActive?: boolean;
+  // Dynamic UPI app methods list (replaces isPhonePeActive / isGooglePayActive)
+  upiMethods?: UpiPaymentMethod[];
+  // Legacy flags kept for backward compat — ignored when upiMethods present
   isPhonePeActive?: boolean;
   isGooglePayActive?: boolean;
 }
