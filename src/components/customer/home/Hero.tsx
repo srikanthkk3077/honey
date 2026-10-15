@@ -18,73 +18,10 @@ import { useStore } from '../../../store/store';
 import { DEFAULT_HERO_CONFIG, HeroBadge, HeroBannerSlide } from '../../../types/customer.types';
 import { isDarkColor, colorWithAlpha, getSlideGradientMask } from '../../../utils/color';
 import './Hero.animations.css';
+import { RealisticHoneyBee } from '../../common/RealisticHoneyBee';
 
-// Animated Honey Bee with fluttering wings and golden glow for Hero
-const HeroAnimatedBee: React.FC<{
-  className?: string;
-  style?: React.CSSProperties;
-  size?: number;
-}> = ({ className = '', style, size = 34 }) => (
-  <div className={className} style={{ width: size, height: size, pointerEvents: 'auto', ...style }}>
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id={`heroBeeBody-${size}`} cx="45%" cy="45%" r="55%">
-          <stop offset="0%" stopColor="#FDE68A" />
-          <stop offset="35%" stopColor="#F59E0B" />
-          <stop offset="75%" stopColor="#D97706" />
-          <stop offset="100%" stopColor="#78350F" />
-        </radialGradient>
-        <linearGradient id={`heroBeeWing-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-          <stop offset="100%" stopColor="rgba(254,243,199,0.35)" />
-        </linearGradient>
-        <filter id={`heroBeeGlow-${size}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#F59E0B" floodOpacity="0.5" />
-        </filter>
-      </defs>
-      <g filter={`url(#heroBeeGlow-${size})`}>
-        {/* Left Wing (flutters rapidly) */}
-        <ellipse
-          className="hero-bee-wing-l"
-          cx="17"
-          cy="12"
-          rx="9"
-          ry="5"
-          fill={`url(#heroBeeWing-${size})`}
-          stroke="#FDE68A"
-          strokeWidth="0.8"
-        />
-        {/* Right Wing (flutters rapidly) */}
-        <ellipse
-          className="hero-bee-wing-r"
-          cx="24"
-          cy="11"
-          rx="9"
-          ry="5"
-          fill={`url(#heroBeeWing-${size})`}
-          stroke="#FDE68A"
-          strokeWidth="0.8"
-        />
-        {/* Bee Body */}
-        <ellipse cx="20" cy="22" rx="9" ry="13" transform="rotate(38 20 22)" fill={`url(#heroBeeBody-${size})`} />
-        {/* Dark Stripes */}
-        <path d="M 12 18 Q 19 21 25 22" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M 14 23 Q 21 25 27 27" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
-        {/* Head */}
-        <circle cx="27" cy="16" r="4.2" fill="#291508" />
-        {/* Honey Glint on Eye */}
-        <circle cx="28" cy="15" r="1.1" fill="#FEF3C7" />
-        {/* Antennae */}
-        <path d="M 29 14 Q 33 11 32 8" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-        <circle cx="32" cy="8" r="0.9" fill="#F59E0B" />
-        <path d="M 30 16 Q 34 15 35 12" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-        <circle cx="35" cy="12" r="0.9" fill="#F59E0B" />
-        {/* Stinger */}
-        <path d="M 11.5 28.5 L 8.5 31.5" stroke="#291508" strokeWidth="1.4" strokeLinecap="round" />
-      </g>
-    </svg>
-  </div>
-);
+// Backwards-compatible alias for RealisticHoneyBee in Hero
+const HeroAnimatedBee = RealisticHoneyBee;
 
 // Floating Golden Honey Particles
 const HeroPollenParticles: React.FC = () => (
@@ -367,9 +304,9 @@ export const Hero: React.FC = () => {
       <HeroPollenParticles />
 
       {/* Floating Animated Honey Bees fluttering across the scene */}
-      <HeroAnimatedBee className="hero-animated-bee-1" style={{ top: '20%', left: '46%' }} size={38} />
-      <HeroAnimatedBee className="hero-animated-bee-2" style={{ top: '15%', right: '16%' }} size={34} />
-      <HeroAnimatedBee className="hero-animated-bee-3" style={{ top: '68%', right: '35%' }} size={26} />
+      <RealisticHoneyBee className="hero-animated-bee-1" style={{ top: '18%', left: '46%' }} size={44} />
+      <RealisticHoneyBee className="hero-animated-bee-2" style={{ top: '14%', right: '16%' }} size={38} flipped />
+      <RealisticHoneyBee className="hero-animated-bee-3" style={{ top: '68%', right: '35%' }} size={30} />
       
       <div
         className="container"

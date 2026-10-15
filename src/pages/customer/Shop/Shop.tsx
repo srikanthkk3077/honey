@@ -18,73 +18,10 @@ import {
 } from 'lucide-react';
 import { DEFAULT_SHOP_CONFIG } from '../../../types/customer.types';
 import './Shop.animations.css';
+import { RealisticHoneyBee } from '../../../components/common/RealisticHoneyBee';
 
-// Animated Honey Bee with fluttering wings and golden glow
-const AnimatedBee: React.FC<{
-  className?: string;
-  style?: React.CSSProperties;
-  size?: number;
-}> = ({ className = '', style, size = 32 }) => (
-  <div className={`shop-animated-bee ${className}`} style={{ width: size, height: size, ...style }}>
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id={`beeBodyGrad-${size}`} cx="45%" cy="45%" r="55%">
-          <stop offset="0%" stopColor="#FDE68A" />
-          <stop offset="35%" stopColor="#F59E0B" />
-          <stop offset="75%" stopColor="#D97706" />
-          <stop offset="100%" stopColor="#78350F" />
-        </radialGradient>
-        <linearGradient id={`beeWingGrad-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.95)" />
-          <stop offset="100%" stopColor="rgba(254,243,199,0.35)" />
-        </linearGradient>
-        <filter id={`beeDropGlow-${size}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#F59E0B" floodOpacity="0.45" />
-        </filter>
-      </defs>
-      <g filter={`url(#beeDropGlow-${size})`}>
-        {/* Left Wing (rapid flutter) */}
-        <ellipse
-          className="shop-bee-wing-l"
-          cx="17"
-          cy="12"
-          rx="9"
-          ry="5"
-          fill={`url(#beeWingGrad-${size})`}
-          stroke="#FDE68A"
-          strokeWidth="0.8"
-        />
-        {/* Right Wing (rapid flutter) */}
-        <ellipse
-          className="shop-bee-wing-r"
-          cx="24"
-          cy="11"
-          rx="9"
-          ry="5"
-          fill={`url(#beeWingGrad-${size})`}
-          stroke="#FDE68A"
-          strokeWidth="0.8"
-        />
-        {/* Honey Bee Body */}
-        <ellipse cx="20" cy="22" rx="9" ry="13" transform="rotate(38 20 22)" fill={`url(#beeBodyGrad-${size})`} />
-        {/* Artisanal Stripes */}
-        <path d="M 12 18 Q 19 21 25 22" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
-        <path d="M 14 23 Q 21 25 27 27" stroke="#291508" strokeWidth="2.4" strokeLinecap="round" />
-        {/* Head */}
-        <circle cx="27" cy="16" r="4.2" fill="#291508" />
-        {/* Eye with Golden Glint */}
-        <circle cx="28" cy="15" r="1.1" fill="#FEF3C7" />
-        {/* Antennae */}
-        <path d="M 29 14 Q 33 11 32 8" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-        <circle cx="32" cy="8" r="0.9" fill="#F59E0B" />
-        <path d="M 30 16 Q 34 15 35 12" stroke="#291508" strokeWidth="1.1" strokeLinecap="round" fill="none" />
-        <circle cx="35" cy="12" r="0.9" fill="#F59E0B" />
-        {/* Stinger */}
-        <path d="M 11.5 28.5 L 8.5 31.5" stroke="#291508" strokeWidth="1.4" strokeLinecap="round" />
-      </g>
-    </svg>
-  </div>
-);
+// Backwards-compatible alias for RealisticHoneyBee in Shop
+const AnimatedBee = RealisticHoneyBee;
 
 // Floating Golden Honey Particles
 const PollenParticles: React.FC = () => (
@@ -294,9 +231,9 @@ export const Shop: React.FC = () => {
           {/* Floating golden honey particles */}
           <PollenParticles />
 
-          {/* Animated Honey Bees */}
-          <AnimatedBee className="shop-bee-1" style={{ top: '24%', left: '42%' }} size={36} />
-          <AnimatedBee className="shop-bee-2" style={{ top: '16%', right: '14%' }} size={32} />
+          {/* Realistic Animated Honey Bees */}
+          <RealisticHoneyBee className="shop-bee-1" style={{ top: '24%', left: '42%' }} size={40} />
+          <RealisticHoneyBee className="shop-bee-2" style={{ top: '16%', right: '14%' }} size={34} flipped />
         </section>
       ) : (
         <section
@@ -318,10 +255,10 @@ export const Shop: React.FC = () => {
           {/* Floating golden honey particles */}
           <PollenParticles />
 
-          {/* Animated Honey Bees fluttering across the collection banner */}
-          <AnimatedBee className="shop-bee-1" style={{ top: '20%', left: '44%' }} size={36} />
-          <AnimatedBee className="shop-bee-2" style={{ top: '15%', right: '14%' }} size={34} />
-          <AnimatedBee className="shop-bee-3" style={{ top: '65%', right: '30%' }} size={26} />
+          {/* Realistic Animated Honey Bees fluttering across the collection banner */}
+          <RealisticHoneyBee className="shop-bee-1" style={{ top: '20%', left: '44%' }} size={42} />
+          <RealisticHoneyBee className="shop-bee-2" style={{ top: '15%', right: '14%' }} size={38} flipped />
+          <RealisticHoneyBee className="shop-bee-3" style={{ top: '65%', right: '30%' }} size={28} />
 
           {/* Decorative honeycomb & leaves in top left with gentle breeze animation */}
           <div
@@ -1291,7 +1228,7 @@ export const Shop: React.FC = () => {
           title="Back to Top"
           aria-label="Back to Top"
         >
-          <AnimatedBee size={22} />
+          <RealisticHoneyBee size={26} showPollen={false} />
           <span>Back to Top 🍯</span>
         </button>
       )}
