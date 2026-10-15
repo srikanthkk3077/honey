@@ -339,20 +339,27 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const loaded: StoreSettings = {
             ...prev,
             ...data,
-            paymentConfig: {
-              ...DEFAULT_SETTINGS.paymentConfig,
-              ...(prev.paymentConfig || {}),
-              ...(cached?.paymentConfig || {}),
-              ...(data.paymentConfig || {}),
-              isCodActive:
-                data.paymentConfig?.isCodActive !== undefined
-                  ? data.paymentConfig.isCodActive
-                  : (prev.paymentConfig?.isCodActive !== undefined
-                      ? prev.paymentConfig.isCodActive
-                      : (cached?.paymentConfig?.isCodActive !== undefined
-                          ? cached.paymentConfig.isCodActive
-                          : DEFAULT_SETTINGS.paymentConfig.isCodActive)),
-            },
+              paymentConfig: {
+                ...DEFAULT_SETTINGS.paymentConfig,
+                ...(prev.paymentConfig || {}),
+                ...(cached?.paymentConfig || {}),
+                ...(data.paymentConfig || {}),
+                isCodActive:
+                  data.paymentConfig?.isCodActive !== undefined
+                    ? data.paymentConfig.isCodActive
+                    : (prev.paymentConfig?.isCodActive !== undefined
+                        ? prev.paymentConfig.isCodActive
+                        : (cached?.paymentConfig?.isCodActive !== undefined
+                            ? cached.paymentConfig.isCodActive
+                            : DEFAULT_SETTINGS.paymentConfig.isCodActive)),
+                upiMethods: Array.isArray(data.paymentConfig?.upiMethods) && data.paymentConfig.upiMethods.length > 0
+                  ? data.paymentConfig.upiMethods
+                  : (Array.isArray(prev.paymentConfig?.upiMethods) && prev.paymentConfig.upiMethods.length > 0
+                      ? prev.paymentConfig.upiMethods
+                      : (Array.isArray(cached?.paymentConfig?.upiMethods) && cached.paymentConfig.upiMethods.length > 0
+                          ? cached.paymentConfig.upiMethods
+                          : (data.paymentConfig?.upiMethods || []))),
+              },
             // Deep-merge deliveryConfig so serviceablePincodes & serviceabilityMode are never lost
             deliveryConfig: {
               ...DEFAULT_DELIVERY_CONFIG,
@@ -468,6 +475,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               ...prev.paymentConfig,
               ...(result.paymentConfig || {}),
               ...(updates.paymentConfig || {}),
+              upiMethods:
+                updates.paymentConfig?.upiMethods !== undefined
+                  ? updates.paymentConfig.upiMethods
+                  : (result.paymentConfig?.upiMethods !== undefined
+                      ? result.paymentConfig.upiMethods
+                      : prev.paymentConfig?.upiMethods || []),
             },
             // Deep-merge deliveryConfig so admin's zones & mode survive the backend round-trip
             deliveryConfig: {

@@ -330,7 +330,8 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
               {upiMethods.length > 0
                 ? upiMethods.map((m) => (
                   <div key={m.id}>
-                    <label style={{ fontSize: '0.72rem', color: '#78716C', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                    <label style={{ fontSize: '0.72rem', color: '#78716C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
+                      <MethodIcon iconImage={m.iconImage} iconLetter={m.iconLetter || UPI_PRESETS[m.type]?.iconLetter || 'U'} color={m.brandColor || UPI_PRESETS[m.type]?.brandColor || '#D97706'} size={16} />
                       {m.label} UPI ID:
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', borderRadius: '9px', backgroundColor: '#FAF7F2', border: '1px solid #E7E5E4' }}>
