@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   MessageSquare,
   Tag,
+  CreditCard,
 } from 'lucide-react';
 import { useStore } from '../../../store/store';
 
@@ -30,6 +31,7 @@ export const AdminSidebar: React.FC = () => {
     { name: 'Customer Reviews', path: '/admin/reviews', icon: <MessageSquare size={20} /> },
     { name: 'Customer Orders', path: '/admin/orders', icon: <ShoppingBag size={20} /> },
     { name: 'Transactions', path: '/admin/transactions', icon: <Receipt size={20} /> },
+    { name: 'Payment Verification', path: '/admin/payment-verification', icon: <CreditCard size={20} /> },
     { name: 'Registered Customers', path: '/admin/customers', icon: <Users size={20} /> },
     { name: 'Coupons', path: '/admin/coupons', icon: <Tag size={20} /> },
     { name: 'Categories', path: '/admin/categories', icon: <Layers size={20} /> },

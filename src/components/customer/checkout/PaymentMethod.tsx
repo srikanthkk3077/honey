@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PaymentMethodType } from '../../../types/order.types';
-import { QrCode, Banknote, ShieldCheck, Copy, Check, Upload, X, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { QrCode, Banknote, ShieldCheck, Copy, Check, Upload, X, Building2, AlertCircle, CheckCircle2, Smartphone, ExternalLink } from 'lucide-react';
 import { Button } from '../../common/Button';
 import { BUSINESS_PAYMENT_DETAILS } from '../../../utils/constants';
 import { useStore } from '../../../store/store';
@@ -29,10 +29,15 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deepLinkFallback, setDeepLinkFallback] = useState<string | null>(null);
 
   // Check store admin global COD switch & PIN code delivery availability
   const isCodGloballyActive = settings?.paymentConfig?.isCodActive !== false;
   const isCodAllowed = isCodGloballyActive && (isCodAvailable !== false);
+
+  // UPI app button visibility (controlled by admin)
+  const isPhonePeEnabled = settings?.paymentConfig?.isPhonePeActive !== false;
+  const isGooglePayEnabled = settings?.paymentConfig?.isGooglePayActive !== false;
 
   // Fallback to UPI if COD is disabled
   React.useEffect(() => {
@@ -110,8 +115,33 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
     }
   };
 
+  // UPI deep links
   const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${cartTotal}&cu=INR&tn=MadhuvanHoney`;
+  const phonePeDeepLink = `phonepe://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${cartTotal}&cu=INR&tn=MadhuvanHoney`;
+  const googlePayDeepLink = `tez://upi/pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=${cartTotal}&cu=INR&tn=MadhuvanHoney`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(upiDeepLink)}`;
+
+  // Handle UPI app deep link with fallback
+  const handleUpiAppClick = (appName: 'phonepe' | 'googlepay') => {
+    const deepLink = appName === 'phonepe' ? phonePeDeepLink : googlePayDeepLink;
+    const fallbackPlayStore = appName === 'phonepe'
+      ? 'https://play.google.com/store/apps/details?id=com.phonepe.app'
+      : 'https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user';
+
+    // Attempt to open the app
+    const start = Date.now();
+    window.location.href = deepLink;
+
+    // After a short delay, check if app opened or not
+    setTimeout(() => {
+      const elapsed = Date.now() - start;
+      // If time elapsed is short, app likely didn't open
+      if (elapsed < 1500) {
+        setDeepLinkFallback(appName);
+        setTimeout(() => setDeepLinkFallback(null), 6000);
+      }
+    }, 1200);
+  };
 
   return (
     <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -247,6 +277,120 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
             </span>
             <span style={{ fontSize: '0.78rem', color: '#78716C' }}>0% Gateway Surcharge</span>
           </div>
+
+          {/* PhonePe & Google Pay Quick-Pay Buttons */}
+          {(isPhonePeEnabled || isGooglePayEnabled) && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#92400E', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Smartphone size={14} />
+                Quick-Pay with UPI App:
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                {/* PhonePe Button */}
+                {isPhonePeEnabled && (
+                  <button
+                    id="phonepe-pay-btn"
+                    type="button"
+                    onClick={() => handleUpiAppClick('phonepe')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 18px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #7C3AED',
+                      backgroundColor: '#F5F3FF',
+                      color: '#5B21B6',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      flex: '1 1 140px',
+                      justifyContent: 'center',
+                    }}
+                    onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#EDE9FE'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#F5F3FF'; }}
+                  >
+                    <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'linear-gradient(135deg, #5B21B6, #7C3AED)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ color: '#FFFFFF', fontSize: '11px', fontWeight: 900 }}>P</span>
+                    </div>
+                    Pay with PhonePe
+                  </button>
+                )}
+
+                {/* Google Pay Button */}
+                {isGooglePayEnabled && (
+                  <button
+                    id="googlepay-pay-btn"
+                    type="button"
+                    onClick={() => handleUpiAppClick('googlepay')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 18px',
+                      borderRadius: '12px',
+                      border: '1.5px solid #1A73E8',
+                      backgroundColor: '#EFF6FF',
+                      color: '#1558BB',
+                      fontWeight: 700,
+                      fontSize: '0.88rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      flex: '1 1 140px',
+                      justifyContent: 'center',
+                    }}
+                    onMouseEnter={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#DBEAFE'; }}
+                    onMouseLeave={(e) => { (e.target as HTMLButtonElement).style.backgroundColor = '#EFF6FF'; }}
+                  >
+                    <div style={{ width: '22px', height: '22px', borderRadius: '5px', background: 'linear-gradient(135deg, #4285F4, #1A73E8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ color: '#FFFFFF', fontSize: '10px', fontWeight: 900 }}>G</span>
+                    </div>
+                    Pay with Google Pay
+                  </button>
+                )}
+              </div>
+
+              {/* App Not Installed Fallback */}
+              {deepLinkFallback && (
+                <div
+                  style={{
+                    backgroundColor: '#FEF9C3',
+                    border: '1px solid #FDE047',
+                    borderRadius: '10px',
+                    padding: '0.75rem 1rem',
+                    fontSize: '0.82rem',
+                    color: '#713F12',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    animation: 'slideIn 0.2s ease',
+                  }}
+                >
+                  <AlertCircle size={16} style={{ marginTop: '1px', flexShrink: 0, color: '#D97706' }} />
+                  <div>
+                    <strong>{deepLinkFallback === 'phonepe' ? 'PhonePe' : 'Google Pay'} app not detected.</strong>
+                    {' '}You can still pay by scanning the QR code below or entering the UPI ID manually.{' '}
+                    <a
+                      href={deepLinkFallback === 'phonepe'
+                        ? 'https://play.google.com/store/apps/details?id=com.phonepe.app'
+                        : 'https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: '#1D4ED8', fontWeight: 700, textDecoration: 'underline', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      Install App <ExternalLink size={11} />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ borderBottom: '1px dashed #FDE68A' }} />
+              <div style={{ fontSize: '0.78rem', color: '#78716C', textAlign: 'center' }}>
+                Or scan the QR code / enter UPI ID manually below
+              </div>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {/* QR Code */}
@@ -590,6 +734,7 @@ export const PaymentMethod: React.FC<PaymentMethodProps> = ({
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes afd { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
         @media (max-width: 480px) {
           .payment-action-buttons {
             flex-direction: column-reverse !important;

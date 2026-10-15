@@ -24,6 +24,8 @@ export interface PaymentConfig {
   isUpiActive?: boolean;
   isBankTransferActive?: boolean;
   isCodActive?: boolean;
+  isPhonePeActive?: boolean;
+  isGooglePayActive?: boolean;
 }
 
 export interface DeliveryZone {

@@ -17,6 +17,7 @@ const Categories = lazy(() => import('../pages/admin/Categories/Categories').the
 const Reviews = lazy(() => import('../pages/admin/Reviews/Reviews').then(m => ({ default: m.Reviews })));
 const Settings = lazy(() => import('../pages/admin/Settings/Settings').then(m => ({ default: m.Settings })));
 const Coupons = lazy(() => import('../pages/admin/Coupons/Coupons').then(m => ({ default: m.Coupons })));
+const PaymentVerification = lazy(() => import('../pages/admin/PaymentVerification/PaymentVerification').then(m => ({ default: m.PaymentVerification })));
 
 export const AdminRoutes = (
   <>
@@ -130,6 +131,14 @@ export const AdminRoutes = (
       element={
         <ProtectedRoute>
           <Coupons />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="payment-verification"
+      element={
+        <ProtectedRoute>
+          <PaymentVerification />
         </ProtectedRoute>
       }
     />
