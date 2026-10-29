@@ -618,11 +618,25 @@ export const VideoShowcase: React.FC = () => {
           >
             {pages.map((pageVideos, pageIdx) => {
               const baseIdx = pageIdx * 5;
+              const count = pageVideos.length;
               const card0 = pageVideos[0];
               const card1 = pageVideos[1];
               const card2 = pageVideos[2];
               const card3 = pageVideos[3];
               const card4 = pageVideos[4];
+
+              // Auto-adjust grid columns based on actual video count
+              // 1 video  → single full-width card
+              // 2 videos → 1 tall + 1 landscape (tall spans 2 rows, landscape spans 2 rows)
+              // 3 videos → 1 tall + 2 landscape stacked (2 columns)
+              // 4 videos → 1 tall + 2 landscape + 1 landscape spanning bottom-right (or 3 columns, partial)
+              // 5 videos → full 3-column bento grid
+              const gridTemplateColumns =
+                count <= 1
+                  ? '1fr'
+                  : count <= 3
+                    ? '1.18fr 1fr'
+                    : '1.18fr 1fr 1fr';
 
               return (
                 <div
@@ -637,13 +651,12 @@ export const VideoShowcase: React.FC = () => {
                     overflowY: 'hidden',
                   }}
                 >
-                  {/* Exactly Matches Image 2: 3 Columns, 2 Rows Grid */}
                   <div
                     className="apiary-bento-grid"
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: '1.18fr 1fr 1fr',
-                      gridTemplateRows: 'repeat(2, 210px)',
+                      gridTemplateColumns,
+                      gridTemplateRows: count <= 1 ? '436px' : 'repeat(2, 210px)',
                       gap: '16px',
                       height: '436px',
                       width: '100%',
@@ -657,7 +670,7 @@ export const VideoShowcase: React.FC = () => {
                         className="apiary-card-wrapper apiary-card-tall-wrapper"
                         style={{
                           gridColumn: '1',
-                          gridRow: '1 / span 2',
+                          gridRow: count <= 1 ? '1' : '1 / span 2',
                           height: '100%',
                           width: '100%',
                           minHeight: 0,
@@ -674,13 +687,13 @@ export const VideoShowcase: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Card 1 (Middle Column: Row 1 Landscape Card) */}
+                    {/* Card 1 */}
                     {card1 && (
                       <div
                         className="apiary-card-wrapper"
                         style={{
                           gridColumn: '2',
-                          gridRow: '1 / span 1',
+                          gridRow: count === 2 ? '1 / span 2' : '1 / span 1',
                           height: '100%',
                           width: '100%',
                           minHeight: 0,
@@ -691,13 +704,13 @@ export const VideoShowcase: React.FC = () => {
                         <ApiaryVideoCard
                           video={card1}
                           index={baseIdx + 1}
-                          isTall={false}
+                          isTall={count === 2}
                           onSelect={handleCardClick}
                         />
                       </div>
                     )}
 
-                    {/* Card 2 (Middle Column: Row 2 Landscape Card) */}
+                    {/* Card 2 */}
                     {card2 && (
                       <div
                         className="apiary-card-wrapper"
@@ -726,7 +739,7 @@ export const VideoShowcase: React.FC = () => {
                         className="apiary-card-wrapper"
                         style={{
                           gridColumn: '3',
-                          gridRow: '1 / span 1',
+                          gridRow: count === 4 ? '1 / span 2' : '1 / span 1',
                           height: '100%',
                           width: '100%',
                           minHeight: 0,
@@ -737,7 +750,7 @@ export const VideoShowcase: React.FC = () => {
                         <ApiaryVideoCard
                           video={card3}
                           index={baseIdx + 3}
-                          isTall={false}
+                          isTall={count === 4}
                           onSelect={handleCardClick}
                         />
                       </div>
